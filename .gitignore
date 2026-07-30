@@ -1,0 +1,79 @@
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Operating system files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Editors and IDEs
+.idea/
+.vscode/
+*.code-workspace
+*.suo
+*.user
+*.swp
+*.swo
+*~
+
+# Logs and runtime files
+*.log
+logs/
+*.pid
+*.pid.lock
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.bak
+
+# Test coverage and reports
+coverage/
+.coverage
+htmlcov/
+test-results/
+playwright-report/
+
+# JavaScript and TypeScript
+node_modules/
+.npm/
+.yarn/
+.pnpm-store/
+.next/
+.nuxt/
+.svelte-kit/
+dist/
+build/
+out/
+*.tsbuildinfo
+
+# Python
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# Java and Kotlin
+.gradle/
+target/
+*.class
+
+# Database and local data
+*.db
+*.sqlite
+*.sqlite3
+
+# Package archives
+*.zip
+*.tar
+*.tar.gz
+
