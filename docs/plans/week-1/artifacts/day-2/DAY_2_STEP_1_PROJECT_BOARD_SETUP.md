@@ -16,7 +16,10 @@
 | 关联代码仓库 | `Caiqwe123/MahjongFlow` |
 | 项目说明 | 追踪已批准的 P0、P1 和 Post-MVP 工作，并遵循 9 周实现计划 |
 
-GitHub 只允许 Project 与同一所有者名下的仓库建立仓库级链接。由于 Project 所有者为 `Josscui516`，仓库所有者为 `Caiqwe123`，平台拒绝建立仓库级链接。该限制不影响把 `Caiqwe123/MahjongFlow` 的 issue 和 Pull Request 添加到项目中；后续步骤应直接把仓库工作项加入此 Project。
+GitHub 只允许 Project 与同一所有者名下的仓库建立仓库级链接。Project
+所有者为 `Josscui516`，仓库所有者为 `Caiqwe123`，因此平台拒绝建立
+仓库级链接。该限制不影响把 `Caiqwe123/MahjongFlow` 的 Issue 和 Pull
+Request 添加到项目中；后续步骤应直接把仓库工作项加入此 Project。
 
 ## 3. 工作流状态
 
@@ -39,13 +42,16 @@ Backlog → Ready → In Progress → Review → Testing → Done
 
 | 字段 | 类型 | 选项或用途 |
 |---|---|---|
-| `Status` | Single select | `Backlog`、`Ready`、`In Progress`、`Review`、`Testing`、`Done` |
+| `Status` | Single select | 六阶段工作流，详见上一节 |
 | `Priority` | Single select | `P0`、`P1`、`Post-MVP` |
-| `Module` | Single select | Foundation & Auth、Meetings、Decision to Task、Tasks & Dashboard、Events、Registration、Check-in、Dinner Verification |
+| `Module` | Single select | 八个 P0 业务模块 |
 | `Assignees` | GitHub 内置字段 | 记录负责人 |
 | `Effort` | Number | 记录相对工作量；具体估算将在 backlog 拆分时填写 |
 | `Dependencies` | Text | 记录前置和后续依赖 |
 | `Target Development Week` | Single select | `Week 2` 至 `Week 10` |
+
+`Module` 的八个选项为 Foundation & Auth、Meetings、Decision to Task、
+Tasks & Dashboard、Events、Registration、Check-in 和 Dinner Verification。
 
 ## 5. 视图配置
 
@@ -81,7 +87,9 @@ GitHub Projects API 已接受全部权限配置请求。`Josscui516` 作为项�
 Backlog → Ready → In Progress → Review → Testing → Done
 ```
 
-最终查询确认任务位于 `Done`，所有测试字段均正确保存。该任务保留在项目中，作为步骤 1 的可见验收证据。
+测试时的最终查询确认任务位于 `Done`，所有测试字段均正确保存。步骤 8
+复核时，该测试草稿已从 Project 移除；当前 Project 只保留 37 个正式 P0
+Issue，不让验证数据混入 Product Backlog。
 
 ## 8. 验收结果
 
@@ -91,9 +99,11 @@ Backlog → Ready → In Progress → Review → Testing → Done
 - [x] 模块、负责人、工作量、依赖和目标开发周字段已配置；
 - [x] 状态、优先级和模块工作视图已配置；
 - [x] 仓库协作者已获得项目编辑权限；
-- [x] 虚构测试任务已完成全部状态流转；
+- [x] 虚构测试任务已完成全部状态流转，并在验证后移除；
 - [x] 未创建 Git 分支、commit、push 或 Pull Request。
 
 ## 9. 后续步骤输入
 
-步骤 2 创建 issue 模板后，应使用模板创建示例 issue，并把示例加入本 Project。步骤 3 拆分 P0 backlog 时，所有仓库 issue 都应填写本记录定义的字段和状态。
+步骤 2 创建 Issue 模板后，应使用模板创建示例 Issue，并把示例加入本
+Project。步骤 3 拆分 P0 Backlog 时，所有仓库 Issue 都应填写本记录定义的
+字段和状态。

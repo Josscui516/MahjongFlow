@@ -71,7 +71,6 @@ The approved application structure uses `src/app`, `src/features`, `src/componen
 |---|---|
 | [MVP project proposal](docs/project/MVP_PROJECT_PROPOSAL.md) | Authoritative product scope, roles, roadmap, and delivery baseline |
 | [Week 1 implementation plan](docs/plans/week-1/WEEK_1_IMPLEMENTATION_PLAN.md) | Five-day planning and preparation schedule |
-| [Week 1 artefact index](docs/plans/week-1/artifacts/README.md) | Implementation outputs grouped by workday |
 | [Day 1 final review](docs/plans/week-1/artifacts/day-1/DAY_1_FINAL_REVIEW_AND_SIGNOFF.md) | Approved Day 1 results and team sign-off |
 | [P0 scope checklist](docs/plans/week-1/artifacts/day-1/DAY_1_P0_SCOPE_CHECKLIST.md) | Atomic P0 requirements and dependencies |
 | [Acceptance matrix](docs/plans/week-1/artifacts/day-1/DAY_1_P0_ACCEPTANCE_MATRIX.md) | User-story traceability and testable acceptance scenarios |
