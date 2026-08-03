@@ -2,9 +2,9 @@
 
 > A lightweight meeting, task, event, and attendance coordination system for the Monash Mahjong Club.
 
-**Course:** FIT3161 Computer Science Project  
-**Team:** S1_CS_01  
-**Stage:** Planning baseline complete; application scaffold not yet created
+- **Course:** FIT3162 Computer Science Project
+- **Team:** S1_CS_01
+- **Stage:** Day 2 product and UX baseline complete; application scaffold not yet created
 
 **Project board:** [MahjongFlow MVP GitHub Project](https://github.com/users/Josscui516/projects/5)
 
@@ -30,11 +30,13 @@ The approved scope and exclusions are defined in the [MVP project proposal](docs
 
 ## Current status
 
-Day 1 scope and technical baseline work was approved on 3 August 2026. The repository currently contains project documentation only; there is no runnable Next.js application or verified installation command yet.
+Day 1 established the approved MVP scope and technical baseline. Day 2 converted that scope into a prioritised Product Backlog, information architecture, core user flows, and low-fidelity wireframes. The Day 2 review confirmed traceability for all 48 P0 and mandatory privacy requirement IDs.
 
-Next: [Day 2 — Backlog, information architecture, and UX flow](docs/plans/week-1/DAY_2_BACKLOG_AND_UX_FLOW.md).
+The GitHub Project currently contains 8 epics and 29 implementation Issues. All 29 implementation Issues have an initial assignee, but remain in `Backlog` until the data, permission, and environment readiness gates are complete.
 
-Application setup, exact dependency versions, `.env.example`, and verified local commands are scheduled for Day 4. Quality tooling and CI are scheduled for Day 5.
+Next: [Day 3 — Database, permissions, and privacy design](docs/plans/week-1/DAY_3_DATA_SECURITY_AND_PRIVACY.md).
+
+The repository still contains documentation only; there is no runnable Next.js application or verified installation command yet. Application setup, exact dependency versions, `.env.example`, and verified local commands are scheduled for Day 4. Quality tooling and CI are scheduled for Day 5.
 
 ## Technology baseline
 
@@ -74,6 +76,13 @@ The approved application structure uses `src/app`, `src/features`, `src/componen
 | [Day 1 final review](docs/plans/week-1/artifacts/day-1/DAY_1_FINAL_REVIEW_AND_SIGNOFF.md) | Approved Day 1 results and team sign-off |
 | [P0 scope checklist](docs/plans/week-1/artifacts/day-1/DAY_1_P0_SCOPE_CHECKLIST.md) | Atomic P0 requirements and dependencies |
 | [Acceptance matrix](docs/plans/week-1/artifacts/day-1/DAY_1_P0_ACCEPTANCE_MATRIX.md) | User-story traceability and testable acceptance scenarios |
+| [Day 2 plan](docs/plans/week-1/DAY_2_BACKLOG_AND_UX_FLOW.md) | Product Backlog, information architecture, and UX planning workflow |
+| [P0 Product Backlog](docs/plans/week-1/artifacts/day-2/DAY_2_STEP_3_P0_PRODUCT_BACKLOG.md) | Epics, implementation Issues, acceptance conditions, and verification methods |
+| [Prioritised Backlog](docs/plans/week-1/artifacts/day-2/DAY_2_STEP_4_PRIORITISED_BACKLOG.md) | Delivery order, dependencies, readiness gates, and target weeks |
+| [Page inventory and information architecture](docs/plans/week-1/artifacts/day-2/DAY_2_STEP_5_PAGE_INVENTORY_AND_INFORMATION_ARCHITECTURE.md) | P0 pages, navigation, role visibility, and sensitive areas |
+| [Core user flows](docs/plans/week-1/artifacts/day-2/DAY_2_STEP_6_CORE_USER_FLOWS.md) | Success, failure, and access-denied paths for core workflows |
+| [Low-fidelity wireframes](docs/plans/week-1/artifacts/day-2/DAY_2_STEP_7_LOW_FIDELITY_WIREFRAMES.md) | Page-level content, actions, states, and role differences |
+| [Day 2 traceability review](docs/plans/week-1/artifacts/day-2/DAY_2_STEP_8_TRACEABILITY_AND_DAY_REVIEW.md) | Requirement-to-Issue, page, flow, and wireframe coverage |
 | [Git collaboration agreement](docs/plans/week-1/artifacts/day-1/DAY_1_GIT_COLLABORATION_AGREEMENT.md) | Branch, PR, review, WIP, and blocker rules |
 | [Codex repository rules](AGENTS.md) | Mandatory instructions for Codex work in this repository |
 
