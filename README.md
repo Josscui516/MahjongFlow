@@ -6,6 +6,8 @@
 **Team:** S1_CS_01  
 **Stage:** Planning baseline complete; application scaffold not yet created
 
+**Project board:** [MahjongFlow MVP GitHub Project](https://github.com/users/Josscui516/projects/5)
+
 ## What MahjongFlow does
 
 MahjongFlow connects the club's core operational workflow:
@@ -24,7 +26,7 @@ The MVP focuses on:
 - activity-specific QR check-in with time-window and duplicate protection;
 - attendance-based dinner eligibility available only to authorised users.
 
-The approved scope and exclusions are defined in the [MVP project proposal](docs/project/MVP_PROJECT_PROPOSAL.md) and [Day 1 scope boundary](docs/plans/week-1/artifacts/DAY_1_SCOPE_BOUNDARIES_AND_CHANGE_CONTROL.md).
+The approved scope and exclusions are defined in the [MVP project proposal](docs/project/MVP_PROJECT_PROPOSAL.md) and [Day 1 scope boundary](docs/plans/week-1/artifacts/day-1/DAY_1_SCOPE_BOUNDARIES_AND_CHANGE_CONTROL.md).
 
 ## Current status
 
@@ -45,7 +47,7 @@ Application setup, exact dependency versions, `.env.example`, and verified local
 | Deployment | Vercel + Supabase |
 | Collaboration | GitHub Pull Requests + GitHub Projects |
 
-Exact compatible package versions will be installed, verified, and locked during Day 4. See the [technology decision record](docs/plans/week-1/artifacts/DAY_1_TECH_STACK_DECISION.md) for rationale, risks, and security boundaries.
+Exact compatible package versions will be installed, verified, and locked during Day 4. See the [technology decision record](docs/plans/week-1/artifacts/day-1/DAY_1_TECH_STACK_DECISION.md) for rationale, risks, and security boundaries.
 
 ## Repository status and planned structure
 
@@ -54,14 +56,14 @@ Current workspace content:
 ```text
 .
 ├── docs/project/          # Approved MVP proposal
-├── docs/plans/week-1/     # Week 1 plans and completed Day 1 artefacts
+├── docs/plans/week-1/     # Week 1 plans and artefacts grouped by workday
 ├── docs/templates/        # Week and day planning templates
 ├── AGENTS.md              # Repository rules for Codex
 ├── .gitignore
 └── README.md
 ```
 
-The approved application structure uses `src/app`, `src/features`, `src/components`, `src/lib`, `supabase`, and dedicated test directories. These paths will be created when the project is initialized on Day 4. See the [repository structure baseline](docs/plans/week-1/artifacts/DAY_1_REPOSITORY_STRUCTURE_BASELINE.md).
+The approved application structure uses `src/app`, `src/features`, `src/components`, `src/lib`, `supabase`, and dedicated test directories. These paths will be created when the project is initialized on Day 4. See the [repository structure baseline](docs/plans/week-1/artifacts/day-1/DAY_1_REPOSITORY_STRUCTURE_BASELINE.md).
 
 ## Documentation
 
@@ -69,10 +71,11 @@ The approved application structure uses `src/app`, `src/features`, `src/componen
 |---|---|
 | [MVP project proposal](docs/project/MVP_PROJECT_PROPOSAL.md) | Authoritative product scope, roles, roadmap, and delivery baseline |
 | [Week 1 implementation plan](docs/plans/week-1/WEEK_1_IMPLEMENTATION_PLAN.md) | Five-day planning and preparation schedule |
-| [Day 1 final review](docs/plans/week-1/artifacts/DAY_1_FINAL_REVIEW_AND_SIGNOFF.md) | Approved Day 1 results and team sign-off |
-| [P0 scope checklist](docs/plans/week-1/artifacts/DAY_1_P0_SCOPE_CHECKLIST.md) | Atomic P0 requirements and dependencies |
-| [Acceptance matrix](docs/plans/week-1/artifacts/DAY_1_P0_ACCEPTANCE_MATRIX.md) | User-story traceability and testable acceptance scenarios |
-| [Git collaboration agreement](docs/plans/week-1/artifacts/DAY_1_GIT_COLLABORATION_AGREEMENT.md) | Branch, PR, review, WIP, and blocker rules |
+| [Week 1 artefact index](docs/plans/week-1/artifacts/README.md) | Implementation outputs grouped by workday |
+| [Day 1 final review](docs/plans/week-1/artifacts/day-1/DAY_1_FINAL_REVIEW_AND_SIGNOFF.md) | Approved Day 1 results and team sign-off |
+| [P0 scope checklist](docs/plans/week-1/artifacts/day-1/DAY_1_P0_SCOPE_CHECKLIST.md) | Atomic P0 requirements and dependencies |
+| [Acceptance matrix](docs/plans/week-1/artifacts/day-1/DAY_1_P0_ACCEPTANCE_MATRIX.md) | User-story traceability and testable acceptance scenarios |
+| [Git collaboration agreement](docs/plans/week-1/artifacts/day-1/DAY_1_GIT_COLLABORATION_AGREEMENT.md) | Branch, PR, review, WIP, and blocker rules |
 | [Codex repository rules](AGENTS.md) | Mandatory instructions for Codex work in this repository |
 
 ## Contributing
@@ -90,7 +93,7 @@ Issue → short-lived branch → Pull Request → non-author review → Testing 
 - At least one non-author reviewer must approve a Pull Request.
 - Database or permission changes require a migration, rollback notes, and permission tests.
 
-Follow the full [Git collaboration agreement](docs/plans/week-1/artifacts/DAY_1_GIT_COLLABORATION_AGREEMENT.md). Codex must also follow [AGENTS.md](AGENTS.md).
+Follow the full [Git collaboration agreement](docs/plans/week-1/artifacts/day-1/DAY_1_GIT_COLLABORATION_AGREEMENT.md). Codex must also follow [AGENTS.md](AGENTS.md).
 
 ## Security and privacy
 

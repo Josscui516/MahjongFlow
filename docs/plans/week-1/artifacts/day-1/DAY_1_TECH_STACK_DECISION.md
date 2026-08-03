@@ -1,7 +1,7 @@
 # 第 1 天核心技术栈决策记录
 
-> 所属计划：[第 1 天：范围确认与技术基线冻结](../DAY_1_SCOPE_AND_TECH_BASELINE.md)
-> 产品基线：[MahjongFlow MVP 项目企划书](../../../project/MVP_PROJECT_PROPOSAL.md)
+> 所属计划：[第 1 天：范围确认与技术基线冻结](../../DAY_1_SCOPE_AND_TECH_BASELINE.md)
+> 产品基线：[MahjongFlow MVP 项目企划书](../../../../project/MVP_PROJECT_PROPOSAL.md)
 > 决策日期：2026-08-03
 > 状态：核心技术栈已冻结
 > 文档核对：Context7 官方／高信誉文档，2026-08-03

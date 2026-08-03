@@ -22,7 +22,7 @@
 
 产出：当天议程、参与者名单和决策记录文档。
 
-执行记录：[第 1 天启动会议议程与决策记录](artifacts/DAY_1_KICKOFF_MEETING.md)。
+执行记录：[第 1 天启动会议议程与决策记录](artifacts/day-1/DAY_1_KICKOFF_MEETING.md)。
 
 检查：每项议题都有明确的讨论时段及负责推动结论的人。
 
@@ -37,7 +37,7 @@
 
 产出：经确认的 P0 功能清单。
 
-执行记录：[第 1 天 P0 功能范围清单](artifacts/DAY_1_P0_SCOPE_CHECKLIST.md)。
+执行记录：[第 1 天 P0 功能范围清单](artifacts/day-1/DAY_1_P0_SCOPE_CHECKLIST.md)。
 
 检查：企划书中的每个 P0 项目都已进入清单，没有遗漏或私自新增功能。
 
@@ -52,7 +52,7 @@
 
 产出：P0 需求—用户故事—验收条件对照表。
 
-执行记录：[第 1 天 P0 用户故事与验收矩阵](artifacts/DAY_1_P0_ACCEPTANCE_MATRIX.md)。
+执行记录：[第 1 天 P0 用户故事与验收矩阵](artifacts/day-1/DAY_1_P0_ACCEPTANCE_MATRIX.md)。
 
 检查：任何成员都能根据验收条件判断功能是通过还是失败。
 
@@ -67,7 +67,7 @@
 
 产出：范围边界清单和需求变更规则。
 
-执行记录：[第 1 天范围边界与需求变更规则](artifacts/DAY_1_SCOPE_BOUNDARIES_AND_CHANGE_CONTROL.md)。
+执行记录：[第 1 天范围边界与需求变更规则](artifacts/day-1/DAY_1_SCOPE_BOUNDARIES_AND_CHANGE_CONTROL.md)。
 
 检查：团队能够明确回答“某项新需求应该放在哪里、由谁批准、会替换什么”。
 
@@ -84,7 +84,7 @@
 
 产出：技术栈决策记录。
 
-执行记录：[第 1 天核心技术栈决策记录](artifacts/DAY_1_TECH_STACK_DECISION.md)。
+执行记录：[第 1 天核心技术栈决策记录](artifacts/day-1/DAY_1_TECH_STACK_DECISION.md)。
 
 检查：不存在两个功能相同但尚未决定使用哪一个的核心工具。
 
@@ -100,7 +100,7 @@
 
 产出：仓库目录草图和命名约定。
 
-执行记录：[第 1 天仓库结构与命名基线](artifacts/DAY_1_REPOSITORY_STRUCTURE_BASELINE.md)。
+执行记录：[第 1 天仓库结构与命名基线](artifacts/day-1/DAY_1_REPOSITORY_STRUCTURE_BASELINE.md)。
 
 检查：每类预计产生的代码、数据库文件、测试和文档都有明确位置。
 
@@ -116,7 +116,7 @@
 
 产出：团队协作约定初稿。
 
-执行记录：[第 1 天 Git 与团队协作约定](artifacts/DAY_1_GIT_COLLABORATION_AGREEMENT.md)。
+执行记录：[第 1 天 Git 与团队协作约定](artifacts/day-1/DAY_1_GIT_COLLABORATION_AGREEMENT.md)。
 
 检查：团队成员知道如何开始任务、提交变更、请求审查和报告阻塞。
 
@@ -131,7 +131,7 @@
 
 产出：第 1 天评审记录和已批准的基线文档。
 
-执行记录：[第 1 天最终评审与签认记录](artifacts/DAY_1_FINAL_REVIEW_AND_SIGNOFF.md)。
+执行记录：[第 1 天最终评审与签认记录](artifacts/day-1/DAY_1_FINAL_REVIEW_AND_SIGNOFF.md)。
 
 检查：第 2 天可以直接依据已确认范围创建 backlog 和页面流程。
 

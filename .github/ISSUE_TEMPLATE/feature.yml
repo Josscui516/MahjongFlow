@@ -1,0 +1,134 @@
+name: Feature request
+description: Propose an approved MVP change or record a Post-MVP idea.
+title: "[Feature]: "
+labels: []
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for product or engineering work. Do not include credentials, production data, or real participant information.
+
+  - type: textarea
+    id: background
+    attributes:
+      label: Background and problem
+      description: Explain the current situation, affected users, and why this work is needed.
+      placeholder: Describe the problem and its impact without assuming a particular solution.
+    validations:
+      required: true
+
+  - type: textarea
+    id: user_story
+    attributes:
+      label: User story
+      description: State the user, need, and expected value.
+      placeholder: As a committee member, I want ... so that ...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Scope and priority
+      description: New requests default to Post-MVP unless formally approved as a replacement for existing scope.
+      options:
+        - P0 — approved MVP requirement
+        - P1 — optional if capacity remains
+        - Post-MVP — not part of the current MVP
+    validations:
+      required: true
+
+  - type: input
+    id: requirement_ids
+    attributes:
+      label: Requirement or backlog IDs
+      description: List the related P0, P1, Post-MVP, or backlog identifiers. Write "Pending" if no ID exists yet.
+      placeholder: P0-MTG-001, P0-TASK-003
+    validations:
+      required: true
+
+  - type: textarea
+    id: in_scope
+    attributes:
+      label: In scope
+      description: List the concrete behavior and deliverables included in this issue.
+      placeholder: |-
+        - Deliverable or behavior 1
+        - Deliverable or behavior 2
+    validations:
+      required: true
+
+  - type: textarea
+    id: out_of_scope
+    attributes:
+      label: Out of scope
+      description: State related behavior that this issue will not implement.
+      placeholder: |-
+        - Explicit exclusion 1
+        - Explicit exclusion 2
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Acceptance criteria
+      description: Add independently verifiable scenarios or checklist items, including permission and failure behavior where relevant.
+      placeholder: |-
+        - [ ] Given ..., when ..., then ...
+        - [ ] Given ..., when ..., then ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: List blocking issues, data decisions, external access, and downstream work. Write "None" when there are no known dependencies.
+      placeholder: Blocked by #123; unblocks #456
+    validations:
+      required: true
+
+  - type: textarea
+    id: test_requirements
+    attributes:
+      label: Test requirements
+      description: Describe the automated and manual checks needed to accept this issue.
+      placeholder: |-
+        - Unit or component tests
+        - Permission allow/deny scenarios
+        - Loading, empty, success, and error states
+    validations:
+      required: true
+
+  - type: dropdown
+    id: data_security_impact
+    attributes:
+      label: Permission, privacy, or sensitive-data impact
+      options:
+        - None expected
+        - Requires review of authentication or authorisation
+        - Requires review of participant or attendance data
+        - Requires database or RLS changes
+        - Uncertain — security review required before Ready
+    validations:
+      required: true
+
+  - type: textarea
+    id: notes
+    attributes:
+      label: Additional context
+      description: Add diagrams, fictional screenshots, risks, or approved scope-replacement decisions when relevant.
+
+  - type: checkboxes
+    id: readiness
+    attributes:
+      label: Readiness checklist
+      options:
+        - label: I have not included credentials, production configuration, or real participant data.
+          required: true
+        - label: The scope, acceptance criteria, dependencies, and tests are understandable without verbal context.
+          required: true
+        - label: Any new capability is classified as Post-MVP unless a formal scope replacement has been approved.
+          required: true

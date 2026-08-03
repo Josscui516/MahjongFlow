@@ -131,7 +131,7 @@
 - 范围变更及技术变更规则；
 - 待解决问题记录。
 
-执行结果：[第 1 天最终评审与签认记录](artifacts/DAY_1_FINAL_REVIEW_AND_SIGNOFF.md)。
+执行结果：[第 1 天最终评审与签认记录](artifacts/day-1/DAY_1_FINAL_REVIEW_AND_SIGNOFF.md)。
 
 完成检查：
 

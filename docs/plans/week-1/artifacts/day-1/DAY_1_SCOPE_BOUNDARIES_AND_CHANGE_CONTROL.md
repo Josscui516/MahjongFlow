@@ -1,8 +1,8 @@
 # 第 1 天范围边界与需求变更规则
 
-> 所属计划：[第 1 天：范围确认与技术基线冻结](../DAY_1_SCOPE_AND_TECH_BASELINE.md)
+> 所属计划：[第 1 天：范围确认与技术基线冻结](../../DAY_1_SCOPE_AND_TECH_BASELINE.md)
 > P0 基线：[第 1 天 P0 功能范围清单](DAY_1_P0_SCOPE_CHECKLIST.md)
-> 依据文件：[MahjongFlow MVP 项目企划书](../../../project/MVP_PROJECT_PROPOSAL.md)
+> 依据文件：[MahjongFlow MVP 项目企划书](../../../../project/MVP_PROJECT_PROPOSAL.md)
 > 确认日期：2026-08-03
 > 状态：范围边界已冻结
 

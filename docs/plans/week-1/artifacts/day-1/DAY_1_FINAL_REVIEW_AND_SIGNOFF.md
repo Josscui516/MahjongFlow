@@ -1,6 +1,6 @@
 # 第 1 天最终评审与签认记录
 
-> 所属计划：[第 1 天：范围确认与技术基线冻结](../DAY_1_SCOPE_AND_TECH_BASELINE.md)
+> 所属计划：[第 1 天：范围确认与技术基线冻结](../../DAY_1_SCOPE_AND_TECH_BASELINE.md)
 > 启动记录：[第 1 天启动会议议程与决策记录](DAY_1_KICKOFF_MEETING.md)
 > 评审日期：2026-08-03
 > 评审完成时间：19:51（Australia/Sydney）
@@ -16,7 +16,7 @@
 4. [核心技术栈决策记录](DAY_1_TECH_STACK_DECISION.md)；
 5. [仓库结构与命名基线](DAY_1_REPOSITORY_STRUCTURE_BASELINE.md)；
 6. [Git 与团队协作约定](DAY_1_GIT_COLLABORATION_AGREEMENT.md)；
-7. 根目录 [`README.md`](../../../../README.md)、[`.gitignore`](../../../../.gitignore) 和 [`AGENTS.md`](../../../../AGENTS.md) 的同步结果。
+7. 根目录 [`README.md`](../../../../../README.md)、[`.gitignore`](../../../../../.gitignore) 和 [`AGENTS.md`](../../../../../AGENTS.md) 的同步结果。
 
 本次评审验证的是范围、设计和工程基线是否完整且可执行，不代表尚未实现的业务功能已经通过运行测试。
 

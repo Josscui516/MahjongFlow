@@ -1,12 +1,12 @@
 # 第 1 天 Git 与团队协作约定
 
-> 所属计划：[第 1 天：范围确认与技术基线冻结](../DAY_1_SCOPE_AND_TECH_BASELINE.md)
+> 所属计划：[第 1 天：范围确认与技术基线冻结](../../DAY_1_SCOPE_AND_TECH_BASELINE.md)
 > 范围基线：[第 1 天范围边界与需求变更规则](DAY_1_SCOPE_BOUNDARIES_AND_CHANGE_CONTROL.md)
 > 结构基线：[第 1 天仓库结构与命名基线](DAY_1_REPOSITORY_STRUCTURE_BASELINE.md)
 > 确认日期：2026-08-03
 > 状态：协作规则已冻结
 
-面向 Codex 的强制执行摘要已同步到仓库根目录的 [`AGENTS.md`](../../../../AGENTS.md#codex-git-操作规范)；本文件保留完整团队协作基线。
+面向 Codex 的强制执行摘要已同步到仓库根目录的 [`AGENTS.md`](../../../../../AGENTS.md#codex-git-操作规范)；本文件保留完整团队协作基线。
 
 ## 1. 当前仓库基线
 

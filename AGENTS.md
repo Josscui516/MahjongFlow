@@ -24,7 +24,7 @@
 
 ## Codex Git 操作规范
 
-Codex 在本仓库执行任何 Git 操作时，必须遵守[《Git 与团队协作约定》](docs/plans/week-1/artifacts/DAY_1_GIT_COLLABORATION_AGREEMENT.md)。以下规则是面向 Codex 的强制执行摘要。
+Codex 在本仓库执行任何 Git 操作时，必须遵守[《Git 与团队协作约定》](docs/plans/week-1/artifacts/day-1/DAY_1_GIT_COLLABORATION_AGREEMENT.md)。以下规则是面向 Codex 的强制执行摘要。
 
 ### 1. 操作授权边界
 

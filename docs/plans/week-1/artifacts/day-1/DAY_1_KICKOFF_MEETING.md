@@ -1,7 +1,7 @@
 # 第 1 天启动会议议程与决策记录
 
-> 所属计划：[第 1 天：范围确认与技术基线冻结](../DAY_1_SCOPE_AND_TECH_BASELINE.md)
-> 依据文件：[MahjongFlow MVP 项目企划书](../../../project/MVP_PROJECT_PROPOSAL.md)
+> 所属计划：[第 1 天：范围确认与技术基线冻结](../../DAY_1_SCOPE_AND_TECH_BASELINE.md)
+> 依据文件：[MahjongFlow MVP 项目企划书](../../../../project/MVP_PROJECT_PROPOSAL.md)
 > 日期：2026-08-03（Australia/Sydney）
 > 计划会议窗口：19:00–20:40
 > 实际完成时间：19:51

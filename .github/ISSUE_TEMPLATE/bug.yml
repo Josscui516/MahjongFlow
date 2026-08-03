@@ -1,0 +1,123 @@
+name: Bug report
+description: Report reproducible incorrect behavior in MahjongFlow.
+title: "[Bug]: "
+labels: []
+assignees: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Provide a minimal reproduction using fictional or anonymised data. Never paste credentials, tokens, production logs, or real participant information.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary and impact
+      description: Describe the failure, affected users, frequency, and operational impact.
+    validations:
+      required: true
+
+  - type: input
+    id: requirement_ids
+    attributes:
+      label: Related requirement or issue IDs
+      description: List the affected P0, P1, Post-MVP, issue, or Pull Request identifiers. Write "Unknown" if not yet identified.
+      placeholder: P0-ATT-004, #123
+    validations:
+      required: true
+
+  - type: dropdown
+    id: severity
+    attributes:
+      label: Severity
+      options:
+        - Blocker — data exposure, security failure, or core flow unavailable
+        - High — major P0 flow fails with no safe workaround
+        - Medium — important behavior fails but a safe workaround exists
+        - Low — limited impact or cosmetic defect
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Local development
+        - Automated test or CI
+        - Vercel preview
+        - Demonstration or production
+        - Multiple environments
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment_details
+    attributes:
+      label: Environment details
+      description: Include browser, device, commit or deployment identifier, and relevant dependency versions. Do not include secrets or real environment values.
+      placeholder: Windows 11; Chrome; commit abc1234; fictional test account
+    validations:
+      required: true
+
+  - type: textarea
+    id: prerequisites
+    attributes:
+      label: Preconditions
+      description: Describe the role, fictional data state, feature state, and setup required before reproducing the bug.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction_steps
+    attributes:
+      label: Reproduction steps
+      placeholder: |-
+        1. Sign in as ...
+        2. Open ...
+        3. Submit ...
+        4. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual_result
+    attributes:
+      label: Actual result
+      description: State exactly what happened, including safe error text or status codes when useful.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected_result
+    attributes:
+      label: Expected result
+      description: State the behavior required by the acceptance baseline.
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Sanitised evidence
+      description: Add fictional screenshots, anonymised logs, or a minimal reproduction. Redact credentials and personal data.
+
+  - type: textarea
+    id: regression_tests
+    attributes:
+      label: Regression and permission tests
+      description: Identify tests that must fail before the fix and pass afterward, including allow/deny cases for sensitive flows.
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety checklist
+      options:
+        - label: I reproduced this with fictional or anonymised data.
+          required: true
+        - label: I have not included credentials, tokens, real environment values, or unsanitised logs.
+          required: true
+        - label: I searched existing issues for the same defect.
+          required: true

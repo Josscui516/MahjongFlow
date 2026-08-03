@@ -1,6 +1,6 @@
 # 第 1 天仓库结构与命名基线
 
-> 所属计划：[第 1 天：范围确认与技术基线冻结](../DAY_1_SCOPE_AND_TECH_BASELINE.md)
+> 所属计划：[第 1 天：范围确认与技术基线冻结](../../DAY_1_SCOPE_AND_TECH_BASELINE.md)
 > 技术输入：[第 1 天核心技术栈决策记录](DAY_1_TECH_STACK_DECISION.md)
 > P0 输入：[第 1 天 P0 功能范围清单](DAY_1_P0_SCOPE_CHECKLIST.md)
 > 决策日期：2026-08-03

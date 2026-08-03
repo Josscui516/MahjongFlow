@@ -1,8 +1,8 @@
 # 第 1 天 P0 用户故事与验收矩阵
 
-> 所属计划：[第 1 天：范围确认与技术基线冻结](../DAY_1_SCOPE_AND_TECH_BASELINE.md)
+> 所属计划：[第 1 天：范围确认与技术基线冻结](../../DAY_1_SCOPE_AND_TECH_BASELINE.md)
 > 范围输入：[第 1 天 P0 功能范围清单](DAY_1_P0_SCOPE_CHECKLIST.md)
-> 用户故事依据：[MahjongFlow MVP 项目企划书第 7 节](../../../project/MVP_PROJECT_PROPOSAL.md#7-核心用户故事与验收条件)
+> 用户故事依据：[MahjongFlow MVP 项目企划书第 7 节](../../../../project/MVP_PROJECT_PROPOSAL.md#7-核心用户故事与验收条件)
 > 评审日期：2026-08-03
 > 状态：已核对，可作为后续 Backlog、测试与验收输入
 

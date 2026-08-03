@@ -1,7 +1,7 @@
 # 第 1 天 P0 功能范围清单
 
-> 所属计划：[第 1 天：范围确认与技术基线冻结](../DAY_1_SCOPE_AND_TECH_BASELINE.md)
-> 上游依据：[MahjongFlow MVP 项目企划书第 6.1 节](../../../project/MVP_PROJECT_PROPOSAL.md#61-p0必须交付)
+> 所属计划：[第 1 天：范围确认与技术基线冻结](../../DAY_1_SCOPE_AND_TECH_BASELINE.md)
+> 上游依据：[MahjongFlow MVP 项目企划书第 6.1 节](../../../../project/MVP_PROJECT_PROPOSAL.md#61-p0必须交付)
 > 评审日期：2026-08-03
 > 范围状态：已核对，全部条目标记为“本轮必须交付”
 

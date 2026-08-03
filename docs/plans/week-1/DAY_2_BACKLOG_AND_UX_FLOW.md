@@ -26,6 +26,8 @@
 
 检查：创建一个测试任务并完整移动各状态，确认字段和权限正常。
 
+执行结果：[步骤 1：GitHub Project 与工作流配置记录](artifacts/day-2/DAY_2_STEP_1_PROJECT_BOARD_SETUP.md)。
+
 ### 步骤 2：建立 issue 与 Pull Request 模板
 
 1. 创建 feature issue 模板；
@@ -39,6 +41,8 @@
 产出：feature、bug 和 Pull Request 模板。
 
 检查：模板能够支持协作者在不口头补充背景的情况下理解任务或变更。
+
+执行结果：[步骤 2：Issue 与 Pull Request 模板及验证记录](artifacts/day-2/DAY_2_STEP_2_ISSUE_AND_PR_TEMPLATES.md)。
 
 ### 步骤 3：将 P0 范围拆分为 backlog
 
