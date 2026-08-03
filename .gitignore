@@ -71,6 +71,16 @@ target/
 *.db
 *.sqlite
 *.sqlite3
+*.dump
+*.backup
+.supabase/
+supabase/.temp/
+supabase/.env
+supabase/.env.*
+!supabase/.env.example
+
+# Deployment platform local state
+.vercel/
 
 # Package archives
 *.zip
