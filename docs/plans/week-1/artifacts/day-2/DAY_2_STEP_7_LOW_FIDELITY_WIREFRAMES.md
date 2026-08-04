@@ -243,7 +243,7 @@ flowchart TB
 flowchart TB
     EVENT["当前活动最小信息<br/>名称 · 日期时间 · 地点"]
     WINDOW["签到窗口状态<br/>Open / Not open / Expired"]
-    FORM["本人最小身份匹配字段<br/>第 3 天最终确认"]
+    FORM["本人最小身份匹配字段<br/>Email · 条件 Student ID"]
     FEED["[Feedback] 无效／过期／重复／系统错误<br/>不泄露参与者是否存在"]
     ACTION["[Primary] Check in"]
     RESULT["本人结果<br/>Success / Already processed"]

@@ -4,111 +4,73 @@
 
 - **Course:** FIT3162 Computer Science Project
 - **Team:** S1_CS_01
-- **Stage:** Day 2 product and UX baseline complete; application scaffold not yet created
+- **Stage:** Day 3 planning baseline complete; application setup begins on Day 4
+- **Project board:** [MahjongFlow MVP GitHub Project](https://github.com/users/Josscui516/projects/5)
 
-**Project board:** [MahjongFlow MVP GitHub Project](https://github.com/users/Josscui516/projects/5)
+## Overview
 
-## What MahjongFlow does
-
-MahjongFlow connects the club's core operational workflow:
+MahjongFlow connects the club's operational workflow:
 
 ```text
-Meeting → Decision → Task → Event preparation → Registration → Check-in → Dinner verification → Dashboard
+Meeting → Decision → Task → Event → Registration → Check-in → Dinner verification
 ```
 
-The MVP focuses on:
+The MVP provides:
 
-- committee authentication with predefined committee and authorised roles;
-- meeting records, discussion points, decisions, and decision-to-task traceability;
-- task ownership, deadlines, status, filtering, overdue calculation, and dashboard summaries;
-- weekly session and tournament management with related preparation tasks;
-- authorised back-office participant registration;
-- activity-specific QR check-in with time-window and duplicate protection;
-- attendance-based dinner eligibility available only to authorised users.
+- committee authentication with predefined `committee` and `authorised` roles;
+- traceable meetings, decisions, tasks, deadlines, and dashboard summaries;
+- weekly session and tournament planning with authorised registration management;
+- event-specific QR check-in with window and duplicate protection;
+- attendance-derived dinner eligibility for authorised users.
 
-The approved scope and exclusions are defined in the [MVP project proposal](docs/project/MVP_PROJECT_PROPOSAL.md) and [Day 1 scope boundary](docs/plans/week-1/artifacts/day-1/DAY_1_SCOPE_BOUNDARIES_AND_CHANGE_CONTROL.md).
+The approved scope and exclusions are defined in the [MVP project proposal](docs/project/MVP_PROJECT_PROPOSAL.md).
 
 ## Current status
 
-Day 1 established the approved MVP scope and technical baseline. Day 2 converted that scope into a prioritised Product Backlog, information architecture, core user flows, and low-fidelity wireframes. The Day 2 review confirmed traceability for all 48 P0 and mandatory privacy requirement IDs.
+Days 1–3 are complete. The MVP scope, backlog, UX flows, 11-entity data model, permissions, privacy rules, and migration plan have passed review.
 
-The GitHub Project currently contains 8 epics and 29 implementation Issues. All 29 implementation Issues have an initial assignee, but remain in `Backlog` until the data, permission, and environment readiness gates are complete.
+The repository is still documentation-only. There is no runnable application or verified installation command yet. [Day 4](docs/plans/week-1/DAY_4_PROJECT_SETUP_AND_ENVIRONMENT.md) will create and verify the application scaffold, dependencies, Supabase baseline, environment configuration, and local commands.
 
-Next: [Day 3 — Database, permissions, and privacy design](docs/plans/week-1/DAY_3_DATA_SECURITY_AND_PRIVACY.md).
+## Technology
 
-The repository still contains documentation only; there is no runnable Next.js application or verified installation command yet. Application setup, exact dependency versions, `.env.example`, and verified local commands are scheduled for Day 4. Quality tooling and CI are scheduled for Day 5.
-
-## Technology baseline
-
-| Area | Decision |
+| Area | Baseline |
 |---|---|
-| Web application | Next.js App Router + TypeScript + React |
+| Application | Next.js App Router, React, TypeScript |
 | Styling | Tailwind CSS v4 |
-| Database and authentication | Supabase PostgreSQL + Supabase Auth |
-| Authorisation | Next.js server-side checks + Supabase Row Level Security |
-| Deployment | Vercel + Supabase |
-| Collaboration | GitHub Pull Requests + GitHub Projects |
+| Database and authentication | Supabase PostgreSQL and Auth |
+| Authorisation | Server-side checks and Supabase RLS |
+| Deployment | Vercel and Supabase |
+| Collaboration | GitHub Issues, Projects, and Pull Requests |
 
-Exact compatible package versions will be installed, verified, and locked during Day 4. See the [technology decision record](docs/plans/week-1/artifacts/day-1/DAY_1_TECH_STACK_DECISION.md) for rationale, risks, and security boundaries.
+Exact compatible dependency versions will be verified and locked during Day 4.
 
-## Repository status and planned structure
+## Security essentials
 
-Current workspace content:
+- Use only fictional or anonymised participant data in development, tests, documentation, and demonstrations.
+- Never commit credentials, tokens, real environment values, or real participant records.
+- Enforce sensitive access in both server-side code and Supabase RLS; hiding UI is not authorisation.
+- Committee users may see aggregate attendance counts, but participant details require the `authorised` role.
+- Store check-in token digests only, keep secret keys server-side, and apply database changes through timestamped migrations.
 
-```text
-.
-├── docs/project/          # Approved MVP proposal
-├── docs/plans/week-1/     # Week 1 plans and artefacts grouped by workday
-├── docs/templates/        # Week and day planning templates
-├── AGENTS.md              # Repository rules for Codex
-├── .gitignore
-└── README.md
-```
-
-The approved application structure uses `src/app`, `src/features`, `src/components`, `src/lib`, `supabase`, and dedicated test directories. These paths will be created when the project is initialized on Day 4. See the [repository structure baseline](docs/plans/week-1/artifacts/day-1/DAY_1_REPOSITORY_STRUCTURE_BASELINE.md).
-
-## Documentation
+## Key documentation
 
 | Document | Purpose |
 |---|---|
-| [MVP project proposal](docs/project/MVP_PROJECT_PROPOSAL.md) | Authoritative product scope, roles, roadmap, and delivery baseline |
-| [Week 1 implementation plan](docs/plans/week-1/WEEK_1_IMPLEMENTATION_PLAN.md) | Five-day planning and preparation schedule |
-| [Day 1 final review](docs/plans/week-1/artifacts/day-1/DAY_1_FINAL_REVIEW_AND_SIGNOFF.md) | Approved Day 1 results and team sign-off |
-| [P0 scope checklist](docs/plans/week-1/artifacts/day-1/DAY_1_P0_SCOPE_CHECKLIST.md) | Atomic P0 requirements and dependencies |
-| [Acceptance matrix](docs/plans/week-1/artifacts/day-1/DAY_1_P0_ACCEPTANCE_MATRIX.md) | User-story traceability and testable acceptance scenarios |
-| [Day 2 plan](docs/plans/week-1/DAY_2_BACKLOG_AND_UX_FLOW.md) | Product Backlog, information architecture, and UX planning workflow |
-| [P0 Product Backlog](docs/plans/week-1/artifacts/day-2/DAY_2_STEP_3_P0_PRODUCT_BACKLOG.md) | Epics, implementation Issues, acceptance conditions, and verification methods |
-| [Prioritised Backlog](docs/plans/week-1/artifacts/day-2/DAY_2_STEP_4_PRIORITISED_BACKLOG.md) | Delivery order, dependencies, readiness gates, and target weeks |
-| [Page inventory and information architecture](docs/plans/week-1/artifacts/day-2/DAY_2_STEP_5_PAGE_INVENTORY_AND_INFORMATION_ARCHITECTURE.md) | P0 pages, navigation, role visibility, and sensitive areas |
-| [Core user flows](docs/plans/week-1/artifacts/day-2/DAY_2_STEP_6_CORE_USER_FLOWS.md) | Success, failure, and access-denied paths for core workflows |
-| [Low-fidelity wireframes](docs/plans/week-1/artifacts/day-2/DAY_2_STEP_7_LOW_FIDELITY_WIREFRAMES.md) | Page-level content, actions, states, and role differences |
-| [Day 2 traceability review](docs/plans/week-1/artifacts/day-2/DAY_2_STEP_8_TRACEABILITY_AND_DAY_REVIEW.md) | Requirement-to-Issue, page, flow, and wireframe coverage |
-| [Git collaboration agreement](docs/plans/week-1/artifacts/day-1/DAY_1_GIT_COLLABORATION_AGREEMENT.md) | Branch, PR, review, WIP, and blocker rules |
-| [Codex repository rules](AGENTS.md) | Mandatory instructions for Codex work in this repository |
+| [MVP project proposal](docs/project/MVP_PROJECT_PROPOSAL.md) | Authoritative scope, roles, roadmap, and acceptance baseline |
+| [Week 1 plan](docs/plans/week-1/WEEK_1_IMPLEMENTATION_PLAN.md) | Five-day preparation and setup plan |
+| [P0 backlog](docs/plans/week-1/artifacts/day-2/DAY_2_STEP_3_P0_PRODUCT_BACKLOG.md) | Epics, Issues, acceptance conditions, and dependencies |
+| [Database ERD](docs/plans/week-1/artifacts/day-3/DAY_3_STEP_3_DATABASE_ERD.md) | Entities and core business relationships |
+| [Permission matrix](docs/plans/week-1/artifacts/day-3/DAY_3_STEP_5_PERMISSION_MATRIX_AND_CONTROL_POINTS.md) | Role permissions and enforcement points |
+| [Day 3 final review](docs/plans/week-1/artifacts/day-3/DAY_3_STEP_8_CROSS_DOCUMENT_REVIEW.md) | Data, privacy, UX, and Day 4 readiness review |
+| [Git collaboration agreement](docs/plans/week-1/artifacts/day-1/DAY_1_GIT_COLLABORATION_AGREEMENT.md) | Branch, review, testing, and merge rules |
 
 ## Contributing
 
-The team workflow is:
-
 ```text
-Issue → short-lived branch → Pull Request → non-author review → Testing → merge to main
+Issue → short-lived branch → Pull Request → non-author review → Testing → merge
 ```
 
-- Every branch must reference a GitHub Issue.
-- Team branches use `<type>/<issue-number>-<description>`.
-- Codex-created branches use `codex/<issue-number>-<description>`.
-- Do not commit directly to `main`.
-- At least one non-author reviewer must approve a Pull Request.
-- Database or permission changes require a migration, rollback notes, and permission tests.
-
-Follow the full [Git collaboration agreement](docs/plans/week-1/artifacts/day-1/DAY_1_GIT_COLLABORATION_AGREEMENT.md). Codex must also follow [AGENTS.md](AGENTS.md).
-
-## Security and privacy
-
-- Use only fictional or anonymised participant data during development, testing, and demonstrations.
-- Never commit credentials, tokens, real environment values, production configuration, or real participant records.
-- Sensitive access must be enforced by both server-side authorisation and Supabase RLS, not by hiding UI controls.
-- Supabase secret/service-role keys must never be exposed to browser code.
+Do not commit directly to `main`. Every branch and Pull Request must reference a real Issue. Database or permission changes require migrations and role-specific tests. See the [Git collaboration agreement](docs/plans/week-1/artifacts/day-1/DAY_1_GIT_COLLABORATION_AGREEMENT.md).
 
 ## Team
 
@@ -116,4 +78,4 @@ FIT3161 Team S1_CS_01: Joshua Xingjian Cui, Li Zhang, Shiying Liao, Xuanwei Xu, 
 
 ## Licence
 
-This is an academic project. No open-source licence has been selected; the repository must not be copied, redistributed, or reused outside the project without permission.
+This academic project has no open-source licence and may not be copied, redistributed, or reused without permission.
