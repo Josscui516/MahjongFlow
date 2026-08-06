@@ -4,7 +4,7 @@
 
 ## 课程第 {X} 周（开发第 {Y} 周）：{本周主题}
 
-> 本计划依据[《MVP 项目企划书》](../../project/MVP_PROJECT_PROPOSAL.md)编制。本周范围为：{范围及边界}。
+> 本计划依据[《MVP 项目企划书》](../project/MVP_PROJECT_PROPOSAL.md)编制。本周范围为：{范围及边界}。
 
 ## 1. 本周目标
 
