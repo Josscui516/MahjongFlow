@@ -10,8 +10,9 @@
 ## 1. 执行结论
 
 已按第 1 天冻结基线建立单一 Next.js 应用的路由、共享组件、业务 feature、
-基础设施、公共类型、Supabase、测试和文档目录。所有尚未使用的目录均包含简短
-README 或由同级 README 明确说明职责，能够被 Git 保留并供新成员理解。
+基础设施、公共类型、Supabase、测试和文档目录。执行本步骤时，尚未使用的目录
+通过简短 README 保留在 Git 中并说明职责；2026-08-06 按仓库文档维护约定将这些
+占位 README 合并为根目录 README 和专题文档，空目录将在加入实际文件时重新出现。
 
 本步骤只落实目录和职责边界，没有提前创建业务 `page.tsx`、Route Handler、
 Supabase client、数据库 schema、RLS policy 或业务测试。生产构建仍只公开根 `/`
@@ -33,8 +34,8 @@ Supabase client、数据库 schema、RLS policy 或业务测试。生产构建�
 | 公开签到 | `check-in/[token]/` | 已记录受限 token 边界 |
 | 签到 API | `api/check-in/[token]/` | 未创建 `route.ts`，当前不公开 API |
 
-Route group 只组织文件，不视为权限控制。对应 README 明确要求未来页面、Server
-Action、Route Handler 和 Supabase RLS 分别执行授权。
+Route group 只组织文件，不视为权限控制。仓库结构基线和权限文档明确要求未来
+页面、Server Action、Route Handler 和 Supabase RLS 分别执行授权。
 
 ## 3. 应用代码目录
 
@@ -61,7 +62,6 @@ supabase/
 │   ├── constraints/
 │   └── rls/
 ├── .gitignore
-├── README.md
 └── seed.sql
 ```
 
@@ -99,7 +99,8 @@ supabase/
 | `docs/operations/` | 本地运行、部署、migration、备份和恢复 |
 | `docs/decisions/` | 跨周长期有效的 ADR |
 
-每个新增文档目录包含范围说明，且明确不记录密钥、真实环境值或真实参与者数据。
+目录职责集中记录在本结构文档及对应专题文档中，且明确不记录密钥、真实环境值或
+真实参与者数据。
 
 ## 7. 重复用途与边界检查
 
@@ -117,7 +118,7 @@ supabase/
 
 | 检查 | 结果 |
 |---|---|
-| 45 个要求目录逐项存在检查 | 通过 |
+| 步骤执行时的 45 个要求目录逐项存在检查 | 通过；占位 README 合并后，空目录不再由 Git 保留 |
 | 当前公开特殊路由文件检查 | 仅根 `layout.tsx` 与根 `page.tsx` |
 | `npm run lint` | 通过 |
 | `npm exec tsc -- --noEmit` | 通过 |
@@ -133,7 +134,7 @@ supabase/
 - [x] 已建立 Supabase migration、seed 和数据库策略测试目录；
 - [x] 已建立应用测试和测试辅助目录；
 - [x] 已建立产品、架构、安全、运行和决策文档目录；
-- [x] 尚未使用的目录均有简短职责说明；
+- [x] 尚未使用目录的职责已集中记录在结构基线和专题文档中；
 - [x] 已核对实际目录与第 1 天批准结构；
 - [x] 代码、数据库、测试和文档不存在重复用途目录；
 - [x] 未提前实现业务功能、数据库 schema 或权限策略。

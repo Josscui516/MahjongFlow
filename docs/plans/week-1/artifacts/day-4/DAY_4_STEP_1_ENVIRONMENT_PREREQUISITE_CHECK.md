@@ -4,7 +4,7 @@
 > 技术基线：[第 1 天核心技术栈决策记录](../day-1/DAY_1_TECH_STACK_DECISION.md)
 > 协作基线：[第 1 天 Git 与团队协作约定](../day-1/DAY_1_GIT_COLLABORATION_AGREEMENT.md)
 > 检查日期：2026-08-06
-> 状态：本地、GitHub 和 Supabase 项目前置条件已完成；Vercel 创建权限待准备
+> 状态：本地、GitHub、Supabase 和 Vercel 项目前置条件均已完成
 
 ## 1. 检查结论
 
@@ -12,39 +12,39 @@
 仓库权限和现有文件保护检查已经完成。当前机器可以使用选定的 Node.js 与 npm
 版本继续初始化。用户先前于 2026-08-06 确认尚无 Supabase 开发项目，随后确认
 项目已经创建，并已填写本地项目 URL 与 publishable key；安全检查验证了配置存在、
-格式合理且未被 Git 跟踪。当前仍暂时不能在目标 Vercel 账号或团队中创建项目。
-
-剩余远程前置项只有：准备目标 Vercel 账号或团队的项目创建权限。
+格式合理且未被 Git 跟踪。仓库现已转移至 `Josscui516`，Vercel 项目已经创建并连接
+到新仓库，Supabase 也已连接该 GitHub 仓库与 Vercel Production。
 
 用户同时明确 Day 4 暂不要求 GitHub Issue，项目 Issue 从 Week 2 开始使用。
 因此 Day 4 Issue 不再作为本步骤阻塞项。由于当前仍在 `main`，且没有创建工作分支
 的明确授权，本步骤没有执行任何分支、暂存、提交或推送操作。
 
-Supabase client 和远程可达性仍由步骤 5 实际验证，不能仅凭配置存在描述为已经连接。
-Vercel 权限准备完成前，步骤 7 继续明确标记为阻塞。
+Supabase client 和本地开发项目可达性已由步骤 5 验证。步骤 7 后续已完成 Production
+重新部署、Preview 建立以及两个环境的 Supabase 健康复验。
 
 ## 2. GitHub 仓库与默认分支
 
 | 检查项 | 实际结果 | 状态 |
 |---|---|---|
-| 仓库地址 | `https://github.com/Caiqwe123/MahjongFlow.git` | 通过 |
-| 远程名称 | `origin` | 通过 |
+| canonical 仓库地址 | `https://github.com/Josscui516/MahjongFlow.git` | 通过 |
+| 远程名称 | `origin`；本地仍保存原所有者 URL，当前依赖 GitHub redirect | 待规范化 |
 | 默认分支 | 远程 `HEAD` 指向 `main` | 通过 |
 | 当前本地分支 | `main` | 已记录；不得直接提交 Day 4 实现 |
 | 本地跟踪关系 | 本地 `main` 跟踪 `origin/main`，检查时为最新 | 通过 |
 | 工作树 | `git status --short` 无输出 | 通过 |
-| 当前账号仓库权限 | GitHub 返回 `WRITE` | 通过 |
+| 当前账号仓库权限 | GitHub 返回 `ADMIN` | 通过 |
 
 检查使用只读命令完成，没有创建分支、暂存、提交、推送或修改远程设置。
 
 ## 3. 团队仓库权限
 
-GitHub 当前返回 4 名仓库协作者。权限汇总如下：
+GitHub 当前返回 5 名仓库协作者。权限汇总如下：
 
 | GitHub 账号 | 仓库角色 | 拉取 | 推送 | 状态 |
 |---|---|---:|---:|---|
-| `Caiqwe123` | admin | 是 | 是 | 通过 |
-| `Josscui516` | write | 是 | 是 | 通过 |
+| `Josscui516` | admin | 是 | 是 | 通过 |
+| `Caiqwe123` | write | 是 | 是 | 通过 |
+| `Kaia-Zhang` | write | 是 | 是 | 通过 |
 | `Scarletthekiller` | write | 是 | 是 | 通过 |
 | `YUHAN2233` | write | 是 | 是 | 通过 |
 
@@ -101,13 +101,13 @@ Supabase CLI 的官方流程为先登录，再使用项目 reference 执行链�
 
 | 检查项 | 结果 | 状态 |
 |---|---|---|
-| 目标 Vercel 账号／团队已确定 | 尚未准备完成 | 未满足 |
-| 当前执行者可以创建项目 | 用户确认暂时不能，稍后解决 | 未满足 |
-| GitHub 仓库连接权限 | GitHub 侧当前账号具有仓库写权限 | 部分通过；仍需 Vercel 侧确认 |
+| 目标 Vercel 账号／团队已确定 | `Joshua's projects`（Hobby） | 通过 |
+| 当前执行者可以创建项目 | `mahjong-flow` 已创建 | 通过 |
+| GitHub 仓库连接权限 | Vercel 已连接 `Josscui516/MahjongFlow` | 通过 |
 | Vercel token／环境值 | 未读取、未输出、未写入仓库 | 安全检查通过 |
 
-步骤 7 前必须确认目标账号／团队、项目创建权限以及 GitHub provider 连接状态。
-本步骤没有创建 Vercel 项目、部署或环境变量。
+以上权限在 2026-08-06 复核时已经满足。步骤 7 随后独立完成了 Production 健康状态、
+Preview 部署和环境作用域验证，没有只凭“项目已创建”宣称部署完成。
 
 ## 7. 现有文件保护检查
 
@@ -155,10 +155,10 @@ Issue 编号时，也不会创建带虚构编号的 `codex/` 分支。
 ## 10. 步骤 1 验收清单
 
 - [x] 已确认 GitHub 仓库地址和默认分支；
-- [x] 已确认当前 4 名 GitHub 协作者具有仓库写入或管理员权限；
+- [x] 已确认当前 5 名 GitHub 协作者具有仓库写入或管理员权限；
 - [x] 已选择 Node.js `24.x` 与 npm `11.16.0` 版本策略；
 - [x] 已创建 Supabase 开发项目并确认当前执行者能够取得所需公开配置；
-- [ ] 已准备目标 Vercel 账号／团队及当前执行者的项目创建权限；
+- [x] 已准备目标 Vercel 账号／团队及当前执行者的项目创建权限；
 - [x] 已检查现有仓库文件并记录防覆盖要求；
 - [x] 已记录当前实际运行时和包管理器版本；
 - [x] 已确认 Week 1 Day 4 暂不要求 Issue，项目 Issue 从 Week 2 开始；
@@ -170,8 +170,8 @@ Issue 编号时，也不会创建带虚构编号的 `codex/` 分支。
 完整执行 Day 4 远程连接与部署前必须满足：
 
 1. [已满足] Supabase 开发项目存在，且当前执行者能够取得所需公开配置；
-2. [待满足] 目标 Vercel 账号或团队已经确定，且当前执行者可创建项目；
+2. [已满足] 目标 Vercel 账号或团队已经确定，且项目已创建并连接仓库；
 3. [已满足] 初始化继续使用本文确定的 Node.js `24.x` 与 npm `11.16.0` 策略。
 
-步骤 5 现在可以开始 Supabase client 和真实连接验证。步骤 7 仍等待 Vercel 权限。
-如需任何 Git 写操作，仍须单独授权。
+步骤 1 的所有前置条件均已满足，步骤 7 也已完成。如需任何 Git 写操作或后续远程
+设置变更，仍须单独授权。

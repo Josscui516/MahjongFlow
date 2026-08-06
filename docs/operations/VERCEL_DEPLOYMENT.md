@@ -1,0 +1,81 @@
+# Vercel deployment operations
+
+> Project setup plan: [Day 4: Project setup and environment](../plans/week-1/DAY_4_PROJECT_SETUP_AND_ENVIRONMENT.md)
+> Environment guide: [Environment configuration](ENVIRONMENT_CONFIGURATION.md)
+> Last checked: 2026-08-06
+
+## 1. Current topology
+
+| Component | Current setting | Audit result |
+|---|---|---|
+| GitHub repository | `Josscui516/MahjongFlow` | Connected |
+| Vercel project | `mahjong-flow` | Connected as Next.js |
+| Production branch | `main` | Connected |
+| Production URL | <https://mahjong-flow.vercel.app> | Root returned HTTP `200` |
+| Preview deployment | <https://mahjong-flow-5bl9x7us6-joshuas-projects-e2e6b817.vercel.app> | `Ready`; protected access |
+| Supabase Production sync | Enabled | URL and publishable key verified by health check |
+| Vercel Preview public variables | URL and publishable key present | Shared Supabase project |
+| Supabase full Preview credential sync | Disabled | Avoids service-role and database credentials |
+| Supabase Development sync | Disabled | Local `.env.local` remains authoritative |
+
+## 2. Environment boundaries
+
+Vercel Production is built from `main`. Non-production Git branches and Pull Requests create Preview
+deployments, while Development variables are intended for local Vercel CLI workflows. Variables are
+captured by a deployment when it is built; changing a project variable does not update an existing
+deployment. Trigger a new deployment after adding or rotating variables.
+
+The application requires `NEXT_PUBLIC_SUPABASE_URL` and
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`. These names are present in Production. Values must remain
+hidden and must never be copied into documentation, logs, Issues or Pull Requests. `SUPABASE_SECRET_KEY`,
+service-role keys and database credentials are server-only and should not be added to Preview unless an
+approved server operation explicitly requires them.
+
+## 3. Production verification
+
+1. Trigger a new Production deployment from the current `main` after the Supabase variable sync;
+2. confirm the deployment reaches `Ready` and is sourced from the expected commit;
+3. open `/` and expect HTTP `200`;
+4. request `/api/health/supabase` and expect HTTP `200` with only the minimal service status;
+5. inspect logs for configuration failures without printing environment values;
+6. if health remains HTTP `503`, verify variable scope and names, then redeploy again after corrections.
+
+The initial 2026-08-06 deployment returned HTTP `503` from the health endpoint. A fresh Production
+deployment using the latest project settings reached `Ready`; `/` and `/api/health/supabase` then
+returned HTTP `200`. Build-error checks were clean and no runtime error clusters were found in the
+following one-hour verification window.
+
+## 4. Preview strategy
+
+The current Supabase Free project does not provide database branching. The available approaches are:
+
+1. preferred: use a separate fictional-data Supabase development／preview project and scope only its
+   public URL and publishable key to Vercel Preview;
+2. temporary shared project: explicitly accept that Preview and Production use the same database,
+   scope only the required public variables, and prohibit destructive or real-data testing.
+
+For the Day 4 baseline, the user explicitly approved the temporary shared-project approach. The
+Vercel Preview scope contains `NEXT_PUBLIC_SUPABASE_URL` and
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`; service-role and database credentials were not added.
+Supabase's full Preview sync remains disabled because its confirmation explicitly includes those
+high-privilege credentials. A direct Preview deployment from the verified source reached `Ready`.
+Authenticated checks returned HTTP `200` from both `/` and `/api/health/supabase`.
+
+The Preview deployment is protected by Vercel Authentication. Anonymous requests redirect to sign-in;
+team members must use an authorised Vercel session or a short-lived share link. This protection should
+remain enabled. Future Git branches and Pull Requests should still verify their own generated Preview
+deployments before merge.
+
+## 5. Git safety
+
+Both Vercel and Supabase monitor `main`. Protect `main` before Week 2 with required Pull Requests,
+non-author approval, no force pushes or deletion, and required CI checks when available. Never use a
+direct push merely to test deployment automation.
+
+## 6. References
+
+- [Vercel Git deployments](https://vercel.com/docs/git)
+- [Vercel environment variables](https://vercel.com/docs/environment-variables)
+- [Vercel deployment environments](https://vercel.com/docs/deployments/environments)
+- [Supabase Vercel integration](https://supabase.com/docs/guides/integrations/vercel-marketplace)
+- [Supabase GitHub integration](https://supabase.com/docs/guides/deployment/branching/github-integration)

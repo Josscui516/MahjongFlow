@@ -95,8 +95,7 @@ MahjongFlow/
 │   ├── tests/
 │   │   ├── constraints/
 │   │   └── rls/
-│   ├── .gitignore
-│   └── README.md
+│   └── .gitignore
 ├── tests/
 │   ├── unit/
 │   ├── integration/
@@ -194,10 +193,10 @@ feature-name/
 |---|---|---|
 | `supabase/config.toml` | 是 | Supabase CLI 本地项目配置；敏感值使用环境变量，不直接写入 |
 | `supabase/migrations/` | 是 | 所有 schema、约束、函数、触发器、索引和 RLS policy 的有序 SQL 变更 |
-| `supabase/seed.sql` | 是 | 仅包含虚构或匿名化开发数据；必须可重复运行或在 README 写明重置前置条件 |
+| `supabase/seed.sql` | 是 | 仅包含虚构或匿名化开发数据；必须可重复运行，重置前置条件记录在数据库运维文档中 |
 | `supabase/tests/constraints/` | 是 | 唯一约束、外键、状态和计算相关数据库测试 |
 | `supabase/tests/rls/` | 是 | 普通委员会、授权人员和匿名角色的数据库策略测试 |
-| `supabase/README.md` | 是 | migration、重置、种子、类型生成和回滚说明 |
+| `docs/operations/DATABASE_MIGRATIONS.md` | 是 | 集中记录 migration、重置、种子、类型生成和回滚说明 |
 | `supabase/.env*` | 否 | 本地 Supabase 环境值和个人覆盖 |
 | `.supabase/` | 否 | CLI checkout 本地状态、链接信息和运行状态 |
 

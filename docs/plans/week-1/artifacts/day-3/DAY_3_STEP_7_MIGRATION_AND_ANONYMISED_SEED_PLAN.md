@@ -63,7 +63,7 @@
 | `supabase/seeds/` | 按职责拆分的本地 seed SQL（若 config 支持多路径） | 是 | 文件名排序明确；不含 token／secret／真实资料 |
 | `supabase/tests/constraints/` | 主键、外键、唯一、状态、派生规则测试 | 是 | 每项测试自行建立／回滚虚构数据 |
 | `supabase/tests/rls/` | committee、authorised、anonymous 权限测试 | 是 | 使用虚构 JWT claim／fixture；不使用真实 session |
-| `supabase/README.md` | reset、seed、test、type、rollback 流程 | 是 | 命令默认 local；远程操作单列且需授权 |
+| `docs/operations/DATABASE_MIGRATIONS.md` | reset、seed、test、type、rollback 流程 | 是 | 命令默认 local；远程操作单列且需授权 |
 | `src/types/database.generated.ts` | CLI 生成数据库类型 | 是 | 不手工编辑；schema 变化后重生成 |
 | `tests/fixtures/` | 应用层虚构工厂／fixture | 是 | 不重复维护真实数据库 secret 或可用 token |
 
@@ -206,7 +206,7 @@ RLS。远程部署前先在干净本地环境完整 reset 和测试。
 3. 若使用 SQL 创建本地 Auth fixture，将其隔离在 local-only seed 文件并通过
    Auth 登录测试验证，禁止复制未经验证的内部 schema SQL；
 4. 如果当前版本不提供稳定 SQL fixture 路径，则使用仓库脚本调用本地 Auth
-   Admin API 创建两个用户，再运行 business seed；README 和统一 `db:reset`
+   Admin API 创建两个用户，再运行 business seed；数据库运维文档和统一 `db:reset`
    wrapper 必须保证顺序可重复；
 5. 无论采用哪种方式，都不得把真实密码、真实邮箱、access token 或远程 Auth
    用户放进 seed。
@@ -304,7 +304,7 @@ seed 提交前必须执行：
 3. 搜索疑似真实 student ID、电话号码、生日、住址和付款资料；
 4. 检查姓名均为明确测试标签，不对应团队或参与者；
 5. 检查 token 表没有可用明文 token，测试 token 只在运行时内存存在；
-6. 检查演示截图和 README 不复制 URL 地址栏中的 token；
+6. 检查演示截图和仓库文档不复制 URL 地址栏中的 token；
 7. 由非作者复核 seed 数据最小化与角色覆盖。
 
 发现疑似真实凭据或个人数据时停止传播，不在 Issue／PR／日志中复述，立即评估
@@ -391,7 +391,7 @@ diff，确认只有与本次 schema 相关的类型变化。
 
 ### 14.3 每个 migration 的说明模板内容
 
-每个 migration 的 PR／数据库 README 记录：
+每个 migration 的 PR／数据库运维文档记录：
 
 - migration 名称和目的；
 - 依赖与预期应用顺序；

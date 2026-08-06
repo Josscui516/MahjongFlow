@@ -57,7 +57,9 @@ Vercel 本地状态 `.vercel/` 已由根 `.gitignore` 忽略。Preview 与 Produ
 4. 默认保持 `SUPABASE_SECRET_KEY` 为空；
 5. 重启开发服务器；
 6. 在步骤 5 运行不输出值的连接检查；
-7. 在 Vercel 权限可用后，为 Preview 和 Production 分别配置所需变量。
+7. Production 由 Supabase integration 同步；Vercel Preview 作用域包含同一项目的公开
+   URL／publishable key，但 Supabase 全量 Preview 凭据同步保持关闭，不加入
+   service-role 或数据库连接凭据。
 
 不得把 Dashboard 值复制到文档、聊天、Issue、PR、截图、测试 fixture 或终端回显。
 Supabase CLI access token 和数据库密码不属于应用变量，不进入 `.env.example`。

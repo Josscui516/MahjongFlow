@@ -2,8 +2,9 @@
 
 > Project setup plan: [Day 4: Project setup and environment](../plans/week-1/DAY_4_PROJECT_SETUP_AND_ENVIRONMENT.md)
 > Security baseline: [Day 1 technology stack decision](../plans/week-1/artifacts/day-1/DAY_1_TECH_STACK_DECISION.md)
+> New-member setup: [Root README](../../README.md#prerequisites)
 > Last checked: 2026-08-06
-> Current state: local Supabase public values configured and development connection verified
+> Current state: local, Vercel Production and protected Preview connections verified
 
 ## 1. Configuration files
 
@@ -51,9 +52,18 @@ CLI credentials, not application variables, and must not be stored in `.env.exam
 
 ## 4. Vercel configuration
 
-When Vercel access becomes available, configure the project URL and publishable key independently
-for Preview and Production. Add a server-only secret only if its use has been reviewed. Do not copy
-Production values into Preview by default, and do not use `vercel env pull` output as a committed file.
+The Supabase integration syncs Production. `NEXT_PUBLIC_SUPABASE_URL` and
+`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` are also present in the Vercel Preview scope; their values
+were not read or copied during verification. Supabase's full Preview credential sync remains disabled
+because its confirmation would also add the service-role key, database password and Postgres
+connection variables. Development sync remains off.
+
+The current Supabase Free project does not provide database branching. The user explicitly approved
+sharing the existing project with Preview at this stage. Production and Preview therefore reach the
+same Supabase project even though their Vercel variables are separately scoped. Preview may use only
+fictional data and non-destructive tests. Add a server-only secret only if its use has been reviewed,
+and never expose secret, service-role or database password variables to browser code. Do not commit
+output from `vercel env pull`.
 
 ## 5. Current state and limitation
 
@@ -68,7 +78,12 @@ returned HTTP `200` without exposing configuration or upstream response details.
 reachability only; it does not validate business tables, migrations, RLS policies or authenticated
 sessions. See the [step 5 connection record](../plans/week-1/artifacts/day-4/DAY_4_STEP_5_SUPABASE_CONNECTION.md).
 
-Vercel project creation permission is still unavailable, so step 7 remains blocked.
+Vercel Production is connected to `Josscui516/MahjongFlow`, uses `main`, and serves
+<https://mahjong-flow.vercel.app>. After redeployment with the latest project settings, the root page
+and `/api/health/supabase` both returned HTTP `200`. A protected Preview deployment was created from
+the same verified source; its root page and health endpoint also returned HTTP `200` through
+authenticated access. See the [deployment guide](VERCEL_DEPLOYMENT.md) and
+[step 7 audit](../plans/week-1/artifacts/day-4/DAY_4_STEP_7_VERCEL_ENVIRONMENT_AUDIT.md).
 
 ## 6. Safety checks
 

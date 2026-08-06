@@ -13,13 +13,13 @@
 | 名称 | `MahjongFlow MVP` |
 | 所有者 | `Josscui516` |
 | 可见性 | Private |
-| 关联代码仓库 | `Caiqwe123/MahjongFlow` |
+| 关联代码仓库 | `Josscui516/MahjongFlow` |
 | 项目说明 | 追踪已批准的 P0、P1 和 Post-MVP 工作，并遵循 9 周实现计划 |
 
-GitHub 只允许 Project 与同一所有者名下的仓库建立仓库级链接。Project
-所有者为 `Josscui516`，仓库所有者为 `Caiqwe123`，因此平台拒绝建立
-仓库级链接。该限制不影响把 `Caiqwe123/MahjongFlow` 的 Issue 和 Pull
-Request 添加到项目中；后续步骤应直接把仓库工作项加入此 Project。
+仓库已于 2026-08-06 转移到 Project 所有者 `Josscui516` 名下，原先因为所有者不同
+而无法建立仓库级链接的限制已经消失。现有 Issue 和 Pull Request 链接应使用
+`Josscui516/MahjongFlow`。本次只确认所有权条件已经满足，没有宣称仓库级 Project
+链接已在 GitHub 设置中重新建立；该链接仍需在 Project／仓库设置中单独复核。
 
 ## 3. 工作流状态
 
@@ -70,6 +70,10 @@ Tasks & Dashboard、Events、Registration、Check-in 和 Dinner Verification。
 - `YUHAN2233`。
 
 GitHub Projects API 已接受全部权限配置请求。`Josscui516` 作为项目所有者保留项目管理权限。
+
+2026-08-06 仓库权限复核还发现 `Kaia-Zhang` 具有仓库 push 权限；本次没有读取或
+修改 Project 成员设置，因此不能推断其 Project `WRITER` 权限。开始分配 Project
+任务前应在 Project 的 Manage access 中单独复核。
 
 ## 7. 工作流验证
 

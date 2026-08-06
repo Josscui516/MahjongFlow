@@ -26,7 +26,7 @@
 
 产出：环境前置条件检查记录。
 
-执行记录：[第 4 天步骤 1：环境前置条件检查记录](artifacts/day-4/DAY_4_STEP_1_ENVIRONMENT_PREREQUISITE_CHECK.md)。当前本地、GitHub、版本策略和 Supabase 项目前置检查已完成；用户已确认 Week 1 Day 4 暂不要求 Issue。Vercel 项目创建权限仍暂不可用，因此步骤 7 继续等待对应条件满足。
+执行记录：[第 4 天步骤 1：环境前置条件检查记录](artifacts/day-4/DAY_4_STEP_1_ENVIRONMENT_PREREQUISITE_CHECK.md)。当前本地、GitHub、版本策略、Supabase 与 Vercel 项目前置条件均已满足；仓库已转移到 `Josscui516`，Vercel 项目已连接。用户已确认 Week 1 Day 4 暂不要求 Issue。
 
 检查：缺失权限或版本冲突已经解决，不会在初始化中途阻塞。
 
@@ -125,6 +125,8 @@
 
 产出：可访问的 Vercel 预览部署。
 
+执行记录：[第 4 天步骤 7：Vercel 与远程环境审计记录](artifacts/day-4/DAY_4_STEP_7_VERCEL_ENVIRONMENT_AUDIT.md)。Production 已在最新环境设置下重新部署，受保护的 Preview deployment 也已建立；两者均为 `Ready`，根页面与 Supabase 健康接口均返回 HTTP `200`。现阶段 Preview 经用户明确批准共用现有 Supabase 项目，只同步公开 URL 与 publishable key，并限制为虚构数据和非破坏性测试。步骤 7 已完成。
+
 检查：预览部署成功，页面可访问，环境变量范围正确。
 
 ### 步骤 8：完善安装和启动文档
@@ -139,6 +141,8 @@
 8. 确保文档不依赖撰写者的本地绝对路径。
 
 产出：可供新成员使用的环境安装与启动说明。
+
+执行记录：[第 4 天步骤 8：安装与启动文档验收记录](artifacts/day-4/DAY_4_STEP_8_INSTALLATION_AND_STARTUP_GUIDE.md)。根 README 已形成从权限与运行时前置条件、克隆安装、环境配置、启动和健康检查到 lint、typecheck、生产构建及可选本地数据库流程的完整路径，并集中记录 Supabase／Vercel 配置入口、安全警告和常见故障处理。
 
 检查：未参与搭建的人可以仅依靠文档理解所有步骤。
 
@@ -185,16 +189,16 @@
 
 ## 5. 当日验收清单
 
-- [ ] 项目能够在本地正常启动；
-- [ ] 项目能够连接 Supabase 开发环境；
+- [x] 项目能够在本地正常启动；
+- [x] 项目能够连接 Supabase 开发环境；
 - [x] 数据库迁移目录和规则已经建立；
-- [ ] Vercel 预览部署可访问；
-- [ ] `.env.example` 不包含真实值；
-- [ ] Git 未追踪本地环境文件或密钥；
-- [ ] 仓库中不含真实参与者数据；
+- [x] Vercel 预览部署可访问；
+- [x] `.env.example` 不包含真实值；
+- [x] Git 未追踪本地环境文件或密钥；
+- [x] 仓库中不含真实参与者数据；
 - [ ] 另一名成员已完成干净安装和构建；
-- [ ] 项目骨架未越过本周范围实现业务功能；
-- [ ] 第 5 天的质量配置可以直接开始。
+- [x] 项目骨架未越过本周范围实现业务功能；
+- [x] 第 5 天的质量配置可以直接开始。
 
 ## 6. 未完成项处理
 

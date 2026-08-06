@@ -128,5 +128,5 @@ database reset。
 - [x] 未提前实现业务 schema、RLS、Auth fixture 或 seed；
 - [x] 未执行任何远程数据库写操作。
 
-步骤 6 已完成。步骤 7 仍等待 Vercel 项目创建权限，不影响当前 Supabase 本地迁移
-基线的可复现性。
+步骤 6 已完成。步骤 7 后续也已完成 Production 重新部署、Preview deployment 与
+两个环境的 Supabase 健康复验。这不影响当前 Supabase 本地迁移基线的可复现性。

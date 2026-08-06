@@ -12,7 +12,7 @@
 
 | 项目 | 当前结论 |
 |---|---|
-| GitHub 仓库 | `Caiqwe123/MahjongFlow` |
+| GitHub 仓库 | `Josscui516/MahjongFlow` |
 | 远程名称 | `origin` |
 | 基线分支 | `main` |
 | 工作方式 | Issue → 短生命周期分支 → Pull Request → Review → Testing → Merge |
@@ -236,6 +236,14 @@ PR 描述不得只写 Issue 链接或“完成了”。审查人必须能仅根�
 | lint、typecheck、测试和构建命令 | 第 5 天 |
 | CI workflow 与必需状态检查 | 第 5 天 |
 | `main` 远程分支保护 | 第 5 天配置并验证 |
+
+### 13.1 2026-08-06 所有权转移与自动部署补充
+
+仓库已转移至 `Josscui516/MahjongFlow`，默认分支仍为 `main`。Vercel Production 与
+Supabase GitHub integration 均监听 `main`；因此合并或直接推送到 `main` 可能同时触发
+应用生产部署和数据库 migration。审计时 `main` 尚未配置 branch protection／ruleset。
+该保护必须在 Week 2 业务开发前完成：要求 Pull Request、至少一名非作者批准、禁止
+force push 和删除，并在第 5 天 CI 可用后加入必需状态检查。
 
 ## 14. 步骤 7 完成检查
 

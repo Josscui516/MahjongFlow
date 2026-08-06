@@ -25,43 +25,43 @@
 
 | Rank | Issue | 交付切片 | 目标周 | Blocked by |
 |---:|---|---|---|---|
-| 1 | [#1 Foundation, authentication, roles, and shared states](https://github.com/Caiqwe123/MahjongFlow/issues/1) | 共享基础 epic | Week 2 | None |
-| 2 | [#9 登录、登出、会话和受保护路由](https://github.com/Caiqwe123/MahjongFlow/issues/9) | 认证入口 | Week 2 | None |
-| 3 | [#10 两级角色、服务端授权与 RLS](https://github.com/Caiqwe123/MahjongFlow/issues/10) | 权限基础 | Week 2 | #9 |
-| 4 | [#11 共享 loading、empty、success 和 error 状态](https://github.com/Caiqwe123/MahjongFlow/issues/11) | 共享反馈 | Week 2 | #9 |
-| 5 | [#2 Meeting records and decision capture](https://github.com/Caiqwe123/MahjongFlow/issues/2) | 会议 epic | Week 3 | #1 |
-| 6 | [#12 创建、查看和更新会议及基础字段](https://github.com/Caiqwe123/MahjongFlow/issues/12) | 会议基础 | Week 3 | #10、#11 |
-| 7 | [#13 讨论点与关键决策](https://github.com/Caiqwe123/MahjongFlow/issues/13) | 决策来源 | Week 3 | #12 |
-| 8 | [#14 会议历史与非破坏性边界](https://github.com/Caiqwe123/MahjongFlow/issues/14) | 会议历史 | Week 3 | #12 |
-| 9 | [#4 Task management and Dashboard follow-up](https://github.com/Caiqwe123/MahjongFlow/issues/4) | 任务 epic | Week 5 | #1 |
-| 10 | [#15 任务 CRUD 与状态约束](https://github.com/Caiqwe123/MahjongFlow/issues/15) | 任务基础 | Week 5 | #10、#11 |
-| 11 | [#16 悉尼日期的临期与逾期计算](https://github.com/Caiqwe123/MahjongFlow/issues/16) | 到期规则 | Week 5 | #15 |
-| 12 | [#3 Convert meeting decisions into traceable tasks](https://github.com/Caiqwe123/MahjongFlow/issues/3) | 决策转任务 epic | Week 4 | #2、#4 |
-| 13 | [#23 从决策或讨论点创建任务并保留来源](https://github.com/Caiqwe123/MahjongFlow/issues/23) | 来源追踪 | Week 4 | #13、#15 |
-| 14 | [#24 校验转换字段并限制单一负责人](https://github.com/Caiqwe123/MahjongFlow/issues/24) | 转换校验 | Week 4 | #23、#10 |
-| 15 | [#25 会议与来源任务双向导航](https://github.com/Caiqwe123/MahjongFlow/issues/25) | 双向追踪 | Week 4 | #23、#12 |
-| 16 | [#5 Event management and preparation progress](https://github.com/Caiqwe123/MahjongFlow/issues/5) | 活动 epic | Week 6 | #1、#4 |
-| 17 | [#17 周常活动与比赛 CRUD](https://github.com/Caiqwe123/MahjongFlow/issues/17) | 活动基础 | Week 6 | #10、#11 |
-| 18 | [#18 活动筹备任务与简单进度](https://github.com/Caiqwe123/MahjongFlow/issues/18) | 活动任务 | Week 6 | #17、#15 |
-| 19 | [#19 即将到来的活动](https://github.com/Caiqwe123/MahjongFlow/issues/19) | 活动时间线 | Week 6 | #17 |
-| 20 | [#20 负责人、状态、日期和活动筛选](https://github.com/Caiqwe123/MahjongFlow/issues/20) | 任务筛选 | Week 5 | #15、#17 |
-| 21 | [#21 Dashboard 汇总](https://github.com/Caiqwe123/MahjongFlow/issues/21) | 协调汇总 | Week 5 | #16、#20、#19 |
-| 22 | [#22 仅站内临期与逾期提醒](https://github.com/Caiqwe123/MahjongFlow/issues/22) | 任务提醒 | Week 5 | #16、#21 |
-| 23 | [#6 Privacy-minimised participant registration](https://github.com/Caiqwe123/MahjongFlow/issues/6) | 报名 epic | Week 6 | #1、#5 |
-| 24 | [#26 最小参与者身份字段](https://github.com/Caiqwe123/MahjongFlow/issues/26) | 数据最小化 | Week 6 | #10、#17 |
-| 25 | [#27 报名状态与唯一约束](https://github.com/Caiqwe123/MahjongFlow/issues/27) | 报名一致性 | Week 6 | #26 |
-| 26 | [#28 隐私确认与报名／签到分离](https://github.com/Caiqwe123/MahjongFlow/issues/28) | 隐私边界 | Week 6 | #27 |
-| 27 | [#7 Secure QR and manual event check-in](https://github.com/Caiqwe123/MahjongFlow/issues/7) | 签到 epic | Week 7 | #1、#5、#6 |
-| 28 | [#30 活动 token、URL、QR 与有效窗口](https://github.com/Caiqwe123/MahjongFlow/issues/30) | 签到入口 | Week 7 | #17 |
-| 29 | [#31 服务端签到校验与原子防重复](https://github.com/Caiqwe123/MahjongFlow/issues/31) | 签到一致性 | Week 7 | #30、#26、#10 |
-| 30 | [#32 QR／人工签到元数据](https://github.com/Caiqwe123/MahjongFlow/issues/32) | 签到审计 | Week 7 | #31 |
-| 31 | [#33 授权人工补签与更正](https://github.com/Caiqwe123/MahjongFlow/issues/33) | 授权更正 | Week 7 | #32、#10 |
-| 32 | [#34 签到明细权限与安全聚合](https://github.com/Caiqwe123/MahjongFlow/issues/34) | 敏感数据隔离 | Week 7 | #32、#10 |
-| 33 | [#8 Attendance-based dinner eligibility verification](https://github.com/Caiqwe123/MahjongFlow/issues/8) | 晚餐核验 epic | Week 7 | #1、#7 |
-| 34 | [#35 从确认签到推导晚餐资格](https://github.com/Caiqwe123/MahjongFlow/issues/35) | 资格推导 | Week 7 | #32 |
-| 35 | [#36 仅授权人员可见的核验页面](https://github.com/Caiqwe123/MahjongFlow/issues/36) | 敏感核验 | Week 7 | #35、#10 |
-| 36 | [#37 更正签到后重新计算资格](https://github.com/Caiqwe123/MahjongFlow/issues/37) | 实时一致性 | Week 7 | #35、#33 |
-| 37 | [#29 按活动清理虚构测试数据与保留规则](https://github.com/Caiqwe123/MahjongFlow/issues/29) | 集成与保留规则 | Week 8 | #27 |
+| 1 | [#1 Foundation, authentication, roles, and shared states](https://github.com/Josscui516/MahjongFlow/issues/1) | 共享基础 epic | Week 2 | None |
+| 2 | [#9 登录、登出、会话和受保护路由](https://github.com/Josscui516/MahjongFlow/issues/9) | 认证入口 | Week 2 | None |
+| 3 | [#10 两级角色、服务端授权与 RLS](https://github.com/Josscui516/MahjongFlow/issues/10) | 权限基础 | Week 2 | #9 |
+| 4 | [#11 共享 loading、empty、success 和 error 状态](https://github.com/Josscui516/MahjongFlow/issues/11) | 共享反馈 | Week 2 | #9 |
+| 5 | [#2 Meeting records and decision capture](https://github.com/Josscui516/MahjongFlow/issues/2) | 会议 epic | Week 3 | #1 |
+| 6 | [#12 创建、查看和更新会议及基础字段](https://github.com/Josscui516/MahjongFlow/issues/12) | 会议基础 | Week 3 | #10、#11 |
+| 7 | [#13 讨论点与关键决策](https://github.com/Josscui516/MahjongFlow/issues/13) | 决策来源 | Week 3 | #12 |
+| 8 | [#14 会议历史与非破坏性边界](https://github.com/Josscui516/MahjongFlow/issues/14) | 会议历史 | Week 3 | #12 |
+| 9 | [#4 Task management and Dashboard follow-up](https://github.com/Josscui516/MahjongFlow/issues/4) | 任务 epic | Week 5 | #1 |
+| 10 | [#15 任务 CRUD 与状态约束](https://github.com/Josscui516/MahjongFlow/issues/15) | 任务基础 | Week 5 | #10、#11 |
+| 11 | [#16 悉尼日期的临期与逾期计算](https://github.com/Josscui516/MahjongFlow/issues/16) | 到期规则 | Week 5 | #15 |
+| 12 | [#3 Convert meeting decisions into traceable tasks](https://github.com/Josscui516/MahjongFlow/issues/3) | 决策转任务 epic | Week 4 | #2、#4 |
+| 13 | [#23 从决策或讨论点创建任务并保留来源](https://github.com/Josscui516/MahjongFlow/issues/23) | 来源追踪 | Week 4 | #13、#15 |
+| 14 | [#24 校验转换字段并限制单一负责人](https://github.com/Josscui516/MahjongFlow/issues/24) | 转换校验 | Week 4 | #23、#10 |
+| 15 | [#25 会议与来源任务双向导航](https://github.com/Josscui516/MahjongFlow/issues/25) | 双向追踪 | Week 4 | #23、#12 |
+| 16 | [#5 Event management and preparation progress](https://github.com/Josscui516/MahjongFlow/issues/5) | 活动 epic | Week 6 | #1、#4 |
+| 17 | [#17 周常活动与比赛 CRUD](https://github.com/Josscui516/MahjongFlow/issues/17) | 活动基础 | Week 6 | #10、#11 |
+| 18 | [#18 活动筹备任务与简单进度](https://github.com/Josscui516/MahjongFlow/issues/18) | 活动任务 | Week 6 | #17、#15 |
+| 19 | [#19 即将到来的活动](https://github.com/Josscui516/MahjongFlow/issues/19) | 活动时间线 | Week 6 | #17 |
+| 20 | [#20 负责人、状态、日期和活动筛选](https://github.com/Josscui516/MahjongFlow/issues/20) | 任务筛选 | Week 5 | #15、#17 |
+| 21 | [#21 Dashboard 汇总](https://github.com/Josscui516/MahjongFlow/issues/21) | 协调汇总 | Week 5 | #16、#20、#19 |
+| 22 | [#22 仅站内临期与逾期提醒](https://github.com/Josscui516/MahjongFlow/issues/22) | 任务提醒 | Week 5 | #16、#21 |
+| 23 | [#6 Privacy-minimised participant registration](https://github.com/Josscui516/MahjongFlow/issues/6) | 报名 epic | Week 6 | #1、#5 |
+| 24 | [#26 最小参与者身份字段](https://github.com/Josscui516/MahjongFlow/issues/26) | 数据最小化 | Week 6 | #10、#17 |
+| 25 | [#27 报名状态与唯一约束](https://github.com/Josscui516/MahjongFlow/issues/27) | 报名一致性 | Week 6 | #26 |
+| 26 | [#28 隐私确认与报名／签到分离](https://github.com/Josscui516/MahjongFlow/issues/28) | 隐私边界 | Week 6 | #27 |
+| 27 | [#7 Secure QR and manual event check-in](https://github.com/Josscui516/MahjongFlow/issues/7) | 签到 epic | Week 7 | #1、#5、#6 |
+| 28 | [#30 活动 token、URL、QR 与有效窗口](https://github.com/Josscui516/MahjongFlow/issues/30) | 签到入口 | Week 7 | #17 |
+| 29 | [#31 服务端签到校验与原子防重复](https://github.com/Josscui516/MahjongFlow/issues/31) | 签到一致性 | Week 7 | #30、#26、#10 |
+| 30 | [#32 QR／人工签到元数据](https://github.com/Josscui516/MahjongFlow/issues/32) | 签到审计 | Week 7 | #31 |
+| 31 | [#33 授权人工补签与更正](https://github.com/Josscui516/MahjongFlow/issues/33) | 授权更正 | Week 7 | #32、#10 |
+| 32 | [#34 签到明细权限与安全聚合](https://github.com/Josscui516/MahjongFlow/issues/34) | 敏感数据隔离 | Week 7 | #32、#10 |
+| 33 | [#8 Attendance-based dinner eligibility verification](https://github.com/Josscui516/MahjongFlow/issues/8) | 晚餐核验 epic | Week 7 | #1、#7 |
+| 34 | [#35 从确认签到推导晚餐资格](https://github.com/Josscui516/MahjongFlow/issues/35) | 资格推导 | Week 7 | #32 |
+| 35 | [#36 仅授权人员可见的核验页面](https://github.com/Josscui516/MahjongFlow/issues/36) | 敏感核验 | Week 7 | #35、#10 |
+| 36 | [#37 更正签到后重新计算资格](https://github.com/Josscui516/MahjongFlow/issues/37) | 实时一致性 | Week 7 | #35、#33 |
+| 37 | [#29 按活动清理虚构测试数据与保留规则](https://github.com/Josscui516/MahjongFlow/issues/29) | 集成与保留规则 | Week 8 | #27 |
 
 ## 4. 并行工作流标记
 

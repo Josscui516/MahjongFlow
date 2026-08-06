@@ -1,7 +1,7 @@
 # Database migration operations
 
 > Implementation source: [Day 3 migration and anonymised seed plan](../plans/week-1/artifacts/day-3/DAY_3_STEP_7_MIGRATION_AND_ANONYMISED_SEED_PLAN.md)
-> Workspace instructions: [Supabase workspace](../../supabase/README.md)
+> Project setup: [Root README](../../README.md)
 > Last checked: 2026-08-06 with Supabase CLI `2.111.0`
 
 ## 1. Source of truth
@@ -50,3 +50,19 @@ The normal workflow is local-only. Do not run `supabase link`, `db push`, `--lin
 `--db-url`, migration repair, remote reset or restore without explicit authorization and environment
 verification. Never put database passwords, access tokens, project keys or `.env` values in commands,
 logs, documentation, Issues or Pull Requests.
+
+## 5. GitHub integration and production deployment
+
+The Supabase project is connected to `Josscui516/MahjongFlow` with working directory `.` because
+`supabase/` is at the repository root. `Deploy to production` is enabled for `main`. After a merge to
+`main`, Supabase may apply new migration files to the connected production database automatically.
+This automation does not replace migration review, local reset, lint, RLS tests, rollback planning or
+generated type review.
+
+The 2026-08-06 audit found no remote migration history yet. The repository's first migration is an
+empty, comment-only baseline, so no remote schema change was introduced by the integration itself.
+Before Week 2 migrations are merged, protect `main` with required Pull Requests and non-author review;
+direct pushes to `main` can otherwise trigger both a Vercel Production deployment and a Supabase
+production migration.
+
+Reference: [Supabase GitHub integration](https://supabase.com/docs/guides/deployment/branching/github-integration).
