@@ -1,4 +1,62 @@
-# MahjongFlow 项目文档规则
+# MahjongFlow 项目协作规则
+
+## 规则层级与来源
+
+本仓库的规则分为两层：
+
+1. **通用工程规则**：适用于代码设计、依赖边界、验证、审查和可维护性，不依赖具体业务领域。
+2. **MahjongFlow 项目规则**：适用于 MVP 范围、角色权限、参与者数据、Supabase、计划文档和 GitHub 协作。
+
+发生冲突时，按以下优先级处理：用户对当前任务的明确要求 → 本 `AGENTS.md` → `docs/project/MVP_PROJECT_PROPOSAL.md` → 对应架构、安全、运维和计划文档 → 仓库内 skill。不得把来源项目 `zero_day_fraud` 的保险、零日实验、双语文档或 Linear 约定视为本仓库规则；蒸馏记录见 `docs/project/RULES_AND_SKILLS_DISTILLATION.md`。
+
+实施前按任务读取权威文档：
+
+| 任务范围 | 必读文档 |
+|---|---|
+| MVP 范围、角色、验收和排期 | `docs/project/MVP_PROJECT_PROPOSAL.md` |
+| 仓库结构、模块边界和命名 | `docs/plans/week-1/artifacts/day-1/DAY_1_REPOSITORY_STRUCTURE_BASELINE.md` |
+| Git、Issue、PR、Review 和 Testing | `docs/plans/week-1/artifacts/day-1/DAY_1_GIT_COLLABORATION_AGREEMENT.md` |
+| 数据库、migration 和回滚 | `docs/operations/DATABASE_MIGRATIONS.md` |
+| 权限、参与者数据或 RLS | `docs/plans/week-1/artifacts/day-3/DAY_3_STEP_5_PERMISSION_MATRIX_AND_CONTROL_POINTS.md` 和相关安全文档 |
+| 环境或部署 | `docs/operations/ENVIRONMENT_CONFIGURATION.md`、`docs/operations/VERCEL_DEPLOYMENT.md` |
+
+## 通用工程实施规则
+
+1. 采用“函数式核心、命令式边界”：验证、日期计算、状态推导、资格计算和数据转换尽量使用确定性的纯函数；网络、数据库、认证、时钟、随机性、日志和文件 I/O 留在显式边界。
+2. 将 SOLID 作为设计和审查准则，而不是强制把所有逻辑改写为类。模块保持单一职责；优先使用组合、窄接口和显式依赖注入；只有存在真实可替换实现和稳定生命周期契约时才引入多态或继承。
+3. 领域逻辑不得依赖 UI、路由或具体外部客户端。适配器可以返回结果，但不得通过隐藏全局状态修改领域对象。
+4. 使用明确的 TypeScript 类型、输入校验和错误语义。不要以无界字典、服务定位器、全局可变注册表或过早的通用框架替代清晰契约。
+5. 先实现当前 Issue 的最小可验收范围，再抽象复用。没有第二个真实用例时，不为假设中的未来需求扩展公共接口或框架。
+6. 外部时间、随机数和第三方服务应可替换或注入，使关键逻辑可重复测试。跨实现的稳定端口应有契约测试；增量计算与完整重算并存时应验证结果等价。
+7. 修改行为时覆盖成功、失败和边界路径；修复缺陷时优先添加能在修复前失败、修复后通过的回归测试。
+8. 交付前检查职责泄漏、重复事实源、权限绕过、错误吞噬、隐式副作用、无关格式化和未记录假设。
+
+## MahjongFlow 实现边界
+
+1. P0、P1、Post-MVP、角色和验收基线以 `docs/project/MVP_PROJECT_PROPOSAL.md` 为准。新增能力默认进入 Post-MVP，除非有正式范围替换决定。
+2. 普通委员会用户只能访问非敏感协调数据和安全聚合；参与者、报名、签到和晚餐资格明细只允许 `authorised` 角色访问。权限必须同时在适用的路由／UI、服务端入口和 Supabase RLS 执行。
+3. Client Component 不得导入 server-only 模块、secret key 或完整敏感记录类型。所有写操作通过具备认证、授权、校验和安全错误映射的服务端入口。
+4. 所有 schema、约束、函数、索引和 RLS 变更只通过 timestamped migration 实施；生成的数据库类型只通过工具重新生成，不手工修补。
+5. UI 功能应按适用范围处理 loading、empty、success、validation error、permission denied、duplicate submission 和 system error 状态。
+6. 日期、截止和临期逻辑使用 `Australia/Sydney` 语义，并对日期边界进行测试。
+7. 编写或修改 Next.js 代码前，必须先读取当前安装版本在 `node_modules/next/dist/docs/` 中对应主题的文档，不依赖旧版本记忆。
+8. 开发、测试、文档、截图和演示只使用虚构或匿名化数据，并遵守下方密钥与真实数据规则。
+
+## GitHub Issues 与项目跟踪
+
+GitHub Issues 和 GitHub Project 取代来源项目的 Linear 工作流。Issues 记录任务存在原因、负责人、状态、依赖、阻塞、验收和交接；本地 `README.md` 与 `docs/` 仍是长期范围、架构、权限、Schema 和运维约定的权威来源。
+
+1. 当任务、分支、PR 或用户请求已关联 Issue 时，开始工作前读取 Issue 描述、评论、标签、负责人、依赖、验收条件和 Project 状态。
+2. 创建 Issue 前先搜索等价项。一个 Issue 聚焦一个可独立验收的结果；能独立验收、排序、指派或延期的步骤使用独立 Issue 或 sub-issue，不能独立验收的内部步骤使用 checklist。
+3. 普通讨论、未确认想法、同一任务内已修复的小问题、临时 QA 记录和不影响后续工作的提醒不创建 Issue。
+4. 新需求默认标记为 Post-MVP；不得仅凭 Issue 内容改写已冻结的范围、角色权限、Schema 或架构。发生冲突时先记录并请求正式决定，再同步本地权威文档。
+5. 使用仓库实际存在的标签和 Project 状态。只有开始已批准工作后才进入 `In Progress`；PR 可审查后进入 `Review`；非作者批准后进入 `Testing`；只有验收、检查、文档、合并及必要部署均满足后才进入 `Done`。
+6. 阻塞记录必须包含原因、影响、已尝试操作、所需帮助、负责人、开始时间和下次检查时间；超过一个工作日后添加 `blocked` 标签或等效状态并升级。
+7. Issue 应同步真实的分支、commit、PR、验证结果、阻塞和剩余风险，但不得复制完整 changelog。影响长期约定的决定必须回写本地权威文档。
+8. 读取和分析 Issue 不代表有权创建、编辑、评论、关闭或改变 Project 状态。只有用户明确要求相应 GitHub 写操作时才能执行；批量创建、重构 Project、改负责人或跨仓库写入必须单独确认。
+9. 无法访问正确仓库或 Project 时，报告缺失上下文，不得向猜测的仓库写入。
+
+仓库内交付流程详见 `.agents/skills/project-delivery-workflow/SKILL.md`；实现与审查流程详见 `.agents/skills/mahjongflow-development/SKILL.md`。skills 细化步骤，但不扩大本文件授予的权限。
 
 ## 统一周计划与成员周工作文档
 
