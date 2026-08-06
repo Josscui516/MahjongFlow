@@ -142,7 +142,7 @@
 
 产出：可供新成员使用的环境安装与启动说明。
 
-执行记录：[第 4 天步骤 8：安装与启动文档验收记录](artifacts/day-4/DAY_4_STEP_8_INSTALLATION_AND_STARTUP_GUIDE.md)。根 README 已形成从权限与运行时前置条件、克隆安装、环境配置、启动和健康检查到 lint、typecheck、生产构建及可选本地数据库流程的完整路径，并集中记录 Supabase／Vercel 配置入口、安全警告和常见故障处理。
+执行记录：[第 4 天步骤 8：安装与启动文档验收记录](artifacts/day-4/DAY_4_STEP_8_INSTALLATION_AND_STARTUP_GUIDE.md)。根 README 提供从权限与运行时前置条件、克隆安装、环境配置、启动和健康检查到 lint、typecheck 与生产构建的最短路径；本地数据库、Supabase／Vercel 配置、故障处理和安全细节集中保留在链接的专题文档中。
 
 检查：未参与搭建的人可以仅依靠文档理解所有步骤。
 

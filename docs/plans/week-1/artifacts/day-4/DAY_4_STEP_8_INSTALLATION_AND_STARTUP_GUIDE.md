@@ -9,7 +9,7 @@
 
 ## 1. 执行结论
 
-根目录 README 现已提供不依赖撰写者本机路径的完整新成员操作路径：
+根目录 README 现已提供不依赖撰写者本机路径的新成员最短操作路径：
 
 ```text
 确认权限与版本
@@ -22,9 +22,9 @@
 → lint、typecheck、build
 ```
 
-应用的日常启动使用托管 Supabase 开发项目，不要求本机启动数据库。只有 migration、
-数据库重建和数据库 lint／diff 工作需要 Docker Desktop 与本地 Supabase 栈。文档已将
-两条路径分开，避免新成员为普通前端启动执行不必要的数据库操作。
+应用的日常启动使用托管 Supabase 开发项目，不要求本机启动数据库。README 将本地
+数据库、平台配置和故障排查链接到专题运维文档，避免重复维护，同时让需要执行
+migration、数据库重建和数据库 lint／diff 的成员能找到 Docker Desktop 流程。
 
 ## 2. 运行时、工具与权限
 
@@ -73,6 +73,8 @@ npm run build
 RLS 或认证 session。
 
 ## 5. Supabase 与 Vercel 配置入口
+
+以下详细入口由根 README 链接的环境与部署专题文档维护：
 
 | 目的 | 入口 |
 |---|---|
@@ -133,8 +135,8 @@ Supabase 项目，仅配置公共 URL 与 publishable key，且必须继续限�
 - [x] 已记录从 `.env.example` 建立本地配置的 POSIX 和 PowerShell 方式；
 - [x] 已记录开发服务器、根页面和 Supabase 健康检查；
 - [x] 已记录 lint、typecheck 和生产构建命令；
-- [x] 已记录可选本地 Supabase 数据库流程及 Docker 前置条件；
-- [x] 已记录 Supabase 与 Vercel 配置入口和环境作用域；
+- [x] 已链接可选本地 Supabase 数据库流程并记录 Docker 前置条件；
+- [x] 已链接 Supabase 与 Vercel 配置入口和环境作用域；
 - [x] 已加入密钥、真实数据、RLS 和远程数据库操作警告；
 - [x] 文档未使用撰写者本地绝对路径；
 - [x] 文档没有包含真实环境值、token、密码或参与者数据。
