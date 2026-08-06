@@ -1,0 +1,8 @@
+-- MahjongFlow Day 4 migration baseline.
+--
+-- This intentionally makes no schema, data, role, grant, Auth, or RLS changes.
+-- It proves that timestamped migrations can be created, replayed, and reviewed
+-- before the Week 2 MVP database migrations are implemented.
+--
+-- Do not add business objects to this file. Create a new migration with:
+--   npm run db:migration:new -- <lower_snake_case_name>

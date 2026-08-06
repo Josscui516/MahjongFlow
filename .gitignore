@@ -2,6 +2,8 @@
 .env
 .env.*
 !.env.example
+.env.local
+.env.*.local
 *.pem
 *.key
 
@@ -51,6 +53,7 @@ dist/
 build/
 out/
 *.tsbuildinfo
+next-env.d.ts
 
 # Python
 __pycache__/

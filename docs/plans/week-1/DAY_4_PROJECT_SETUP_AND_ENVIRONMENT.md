@@ -26,6 +26,8 @@
 
 产出：环境前置条件检查记录。
 
+执行记录：[第 4 天步骤 1：环境前置条件检查记录](artifacts/day-4/DAY_4_STEP_1_ENVIRONMENT_PREREQUISITE_CHECK.md)。当前本地、GitHub、版本策略和 Supabase 项目前置检查已完成；用户已确认 Week 1 Day 4 暂不要求 Issue。Vercel 项目创建权限仍暂不可用，因此步骤 7 继续等待对应条件满足。
+
 检查：缺失权限或版本冲突已经解决，不会在初始化中途阻塞。
 
 ### 步骤 2：初始化应用骨架
@@ -40,6 +42,8 @@
 8. 保存初始依赖锁文件。
 
 产出：可以本地启动的 Next.js 项目。
+
+执行记录：[第 4 天步骤 2：应用骨架初始化记录](artifacts/day-4/DAY_4_STEP_2_APPLICATION_SCAFFOLD.md)。已完成 Next.js App Router、TypeScript、Tailwind CSS、ESLint 和 npm 项目初始化；初始页面、lint、typecheck 和生产构建均已验证通过。
 
 检查：开发服务器正常启动，初始页面可访问，终端无阻断错误。
 
@@ -56,6 +60,8 @@
 
 产出：标准化项目目录骨架。
 
+执行记录：[第 4 天步骤 3：仓库目录结构落实记录](artifacts/day-4/DAY_4_STEP_3_REPOSITORY_STRUCTURE.md)。已建立路由、共享组件、P0 feature、基础设施、类型、Supabase、测试和文档目录；未公开业务路由或提前实现数据库与权限功能。
+
 检查：代码、数据库、测试和文档均有明确位置，不存在重复用途目录。
 
 ### 步骤 4：配置环境变量与安全忽略规则
@@ -69,6 +75,8 @@
 7. 在 README 中说明每个变量的获取位置和用途，但不记录真实值。
 
 产出：安全的本地环境配置、`.env.example` 和配置说明。
+
+执行记录：[第 4 天步骤 4：环境变量与安全忽略规则记录](artifacts/day-4/DAY_4_STEP_4_ENVIRONMENT_AND_IGNORE_RULES.md)。变量合同、忽略规则、README 和操作说明已完成；Supabase 项目 URL 与 publishable key 已写入被忽略的 `.env.local` 并通过不回显值的安全检查。步骤 5 可以开始实现和验证真实连接。
 
 检查：仓库可共享配置结构，但 Git 不会追踪任何真实密钥。
 
@@ -84,6 +92,8 @@
 
 产出：已连接 Supabase 开发环境的应用骨架。
 
+执行记录：[第 4 天步骤 5：Supabase 开发环境连接记录](artifacts/day-4/DAY_4_STEP_5_SUPABASE_CONNECTION.md)。已建立 browser/server client 基础封装和无业务表依赖的健康接口；本地运行时连接返回 HTTP 200，lint、typecheck、build、audit 与浏览器检查均通过，且连接路径不读取或暴露 server-only secret。
+
 检查：应用可验证服务可达，浏览器构建产物中不包含服务端密钥。
 
 ### 步骤 6：建立数据库迁移基线
@@ -97,6 +107,8 @@
 7. 暂不实现第 2 周认证和业务表功能，避免越过本周范围。
 
 产出：数据库迁移目录、命名规则和执行说明。
+
+执行记录：[第 4 天步骤 6：数据库迁移基线记录](artifacts/day-4/DAY_4_STEP_6_DATABASE_MIGRATION_BASELINE.md)。已锁定 Supabase CLI `2.111.0`，由 CLI 生成空的 timestamped migration；本地 Docker 栈完成无 seed reset、migration list、database lint、schema diff 和范围查询，确认基线可重放且未创建业务表、类型或 RLS。
 
 检查：团队知道如何新增、应用和审查迁移，且基线未提前引入业务功能。
 
@@ -175,7 +187,7 @@
 
 - [ ] 项目能够在本地正常启动；
 - [ ] 项目能够连接 Supabase 开发环境；
-- [ ] 数据库迁移目录和规则已经建立；
+- [x] 数据库迁移目录和规则已经建立；
 - [ ] Vercel 预览部署可访问；
 - [ ] `.env.example` 不包含真实值；
 - [ ] Git 未追踪本地环境文件或密钥；

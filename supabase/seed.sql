@@ -1,0 +1,2 @@
+-- Reserved for fictional or anonymised development seed data.
+-- Do not add credentials, tokens, Auth secrets, or real participant records.
