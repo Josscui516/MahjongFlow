@@ -1,0 +1,4 @@
+interface:
+  display_name: "MahjongFlow 开发规范"
+  short_description: "按 MVP、权限与工程边界实现和审查 MahjongFlow"
+  default_prompt: "使用 $mahjongflow-development 按 MahjongFlow 的 MVP、架构、权限、数据和验证基线完成任务。"

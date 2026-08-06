@@ -1,0 +1,4 @@
+interface:
+  display_name: "项目交付与 GitHub 协作"
+  short_description: "管理 GitHub Issue、Git、PR、交接与恢复流程"
+  default_prompt: "使用 $project-delivery-workflow 按仓库规则协调 GitHub Issue、分支、PR、验证和交接。"
