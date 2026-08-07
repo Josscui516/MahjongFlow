@@ -112,7 +112,7 @@
 
 检查：Pull Request 上可以清楚看到每项检查结果，失败会阻止达到完成条件。
 
-执行记录：[第 5 天步骤 6：CI 工作流与必需检查验证记录](artifacts/day-5/DAY_5_STEP_6_CI_WORKFLOW_AND_REQUIRED_CHECKS.md)。已建立 `Quality` workflow，在 Draft PR #43 上依次显示 `Lint`、`Typecheck`、`Test`、`Build`；完成初始全绿、虚构 smoke test 临时失败（Test 失败、Build 跳过、PR `UNSTABLE`）和恢复后全绿三次远程验证。`main` 已将四项检查配置为 strict required checks 并对管理员生效；工作流只使用只读仓库权限和虚构 localhost 公共配置。D5-OI-02 已关闭，非作者 required review 仍留在 D5-OI-04。
+执行记录：[第 5 天步骤 6：CI 工作流与必需检查验证记录](artifacts/day-5/DAY_5_STEP_6_CI_WORKFLOW_AND_REQUIRED_CHECKS.md)。已建立 `Quality` workflow，在 Draft PR #43 上依次显示 `Lint`、`Typecheck`、`Test`、`Build`；完成初始全绿、虚构 smoke test 临时失败（Test 失败、Build 跳过、PR `UNSTABLE`）和恢复后全绿三次远程验证。`main` 曾将四项检查配置为 strict required checks 并补充 required review；用户随后临时删除全部规则并要求暂不重设，因此 D5-OI-04 重新开放。工作流本身继续保留，只使用只读仓库权限和虚构 localhost 公共配置。
 
 ### 步骤 7：检查仓库卫生与安全
 
@@ -127,6 +127,8 @@
 产出：仓库卫生与安全检查记录。
 
 检查：待交付项目骨架可以安全共享和部署到预览环境。
+
+执行记录：[第 5 天步骤 7：仓库卫生与安全检查记录](artifacts/day-5/DAY_5_STEP_7_REPOSITORY_HYGIENE_AND_SECURITY.md)。已检查 PR #43 全部变更、整个已跟踪仓库、Git 历史、忽略规则、`.env.example`、README、依赖审计和浏览器静态构建输出；未发现密钥、非空生产配置、真实参与者资料、错误跟踪的构建／依赖／测试产物或未知大文件。`.env.example` 三个变量值均为空，`npm audit --audit-level=high` 报告 0 vulnerabilities，步骤 7 扫描候选项均已复核。PR #43 已按用户明确批准的单次非作者审查例外 squash merge 至 `main`；合并后四项 Quality、Vercel Production、根页面和 Supabase health 均通过。
 
 ### 步骤 8：执行周级交付物验收
 
@@ -143,6 +145,8 @@
 
 检查：每个已勾选项目都有实际产出或验证结果支持。
 
+执行记录：[第 5 天步骤 8：周级交付物验收记录](artifacts/day-5/DAY_5_STEP_8_WEEKLY_DELIVERABLE_ACCEPTANCE.md)。步骤 8 当时周验收清单 14 项中 13 项具备证据；本地启动、Supabase health、Vercel Preview／Production、四项本地质量命令和 `main` CI 均复验通过，七个 P0 模块的验收、Backlog、页面和数据设计追踪抽查无断链。步骤 9 补充验证后 #9、#10、#11、#39、#40、#41 均为 `Ready`，当前周验收清单为 14/14；用户明确接受独立目录的干净安装证据，不要求另建跟踪问题。
+
 ### 步骤 9：准备开发第 2 周首批任务
 
 1. 根据 9 周计划选择认证、权限和数据基础相关任务；
@@ -157,6 +161,8 @@
 产出：开发第 2 周首批 `Ready` 任务列表。
 
 检查：负责人可以在下一工作日直接开始，无需重新确认范围或依赖。
+
+执行记录：[第 5 天步骤 9：开发第 2 周首批 Ready 任务记录](artifacts/day-5/DAY_5_STEP_9_WEEK_2_READY_TASKS.md)。已完成 Sprint 2 六项 refinement：#9、#11、#39、#40、#41 具备冻结输入、负责人、工作量、文件所有权和个人验证；#39 的固定虚构 Auth UUID fixture 已在本地 Supabase CLI `2.111.0` 完成 reset 后同 UUID 重建验证；#10 已明确由 `Josscui516` 负责协调。六项均为 `Ready`，所有 Acceptance Gate 继续为 `Incomplete`，当前 `In Progress` 为 0。
 
 ### 步骤 10：召开周末评审并完成交接
 
@@ -173,6 +179,8 @@
 产出：周末评审记录和开发第 2 周交接结论。
 
 检查：所有成员知道本周完成状态、现存风险和下周第一批工作。
+
+执行记录：[第 5 天步骤 10：周末评审与开发第 2 周交接记录](artifacts/day-5/DAY_5_STEP_10_WEEKEND_REVIEW_AND_HANDOFF.md)。本次工作会话已完成本地、Preview／Production、CI、Backlog、页面流程、ERD、权限与隐私证据复核；Week 1 以记录保留意见的方式接受，Sprint 2 六项均为 `Ready`。首次直接推送被当时的必需检查保护拒绝；用户随后临时删除规则并再次明确授权直接推送，评审记录因此进入远程共享仓库。其他成员的真实逐人确认仍待完成。
 
 ## 4. 当日交付物
 
@@ -192,12 +200,12 @@
 - [x] smoke test 在本地和 CI 中通过；
 - [x] 生产构建在本地和 CI 中通过；
 - [x] CI 失败能够被正确识别；
-- [ ] 仓库不包含密钥、生产配置或真实个人资料；
-- [ ] 本周交付物均有明确存放位置；
-- [ ] 周验收清单已经逐项核对；
-- [ ] 未完成项都有影响、负责人和处理期限；
-- [ ] 开发第 2 周首批任务已进入 `Ready`；
-- [ ] 周末评审结论已经记录。
+- [x] 仓库不包含密钥、生产配置或真实个人资料；
+- [x] 本周交付物均有明确存放位置；
+- [x] 周验收清单已经逐项核对；
+- [x] 未完成项都有影响、负责人和处理期限；
+- [x] 开发第 2 周首批任务已进入 `Ready`；
+- [x] 周末评审结论已经记录。
 
 ## 6. 本周通过条件
 

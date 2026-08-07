@@ -24,7 +24,7 @@
 | Shiying | `Scarletthekiller` | #11 | WP-D 共享 UI |
 | Yubo | `Caiqwe123` | #41 | WP-E 测试与验收基础 |
 
-Issue #10 保留为未分配的上层协调 Enabler，原生 sub-issues 为 #39 和 #40。
+Issue #10 由 `Josscui516` 担任上层协调负责人，原生 sub-issues 为 #39 和 #40；它不构成第六个个人工作包，也不得与 #9 同时作为 Joshua 的主要 `In Progress` Issue。
 
 ## 2. 上周输入与开始条件
 
@@ -32,7 +32,7 @@ Issue #10 保留为未分配的上层协调 Enabler，原生 sub-issues 为 #39 
 - Next.js、Supabase、Vercel、本地数据库和空 migration 基线可用；
 - 周初一次性冻结第 5 节的接口和文件所有权；
 - Issue #9、#10、#11、#39、#40、#41 已存在；五个成员工作包分别使用 #9、#39、#40、#11、#41，不再共用无法独立交付的 Issue；
-- GitHub Project 的 `Current Sprint` 视图已将 #9、#10、#39、#40、#11、#41 标记为 `Sprint 2`；进入 Sprint 不自动改变状态，开始条件满足前仍保持 `Backlog`；
+- GitHub Project 的 `Current Sprint` 视图已将 #9、#10、#39、#40、#11、#41 标记为 `Sprint 2`；Day 5 步骤 9 补充验证后六项均为 `Ready`，其中 #39 的固定 Auth UUID fixture 方法已验证，#10 只承担协调与最终验收整合；
 - 只使用虚构数据；默认只在本地数据库验证，远程写操作仍需用户明确授权。
 
 ## 3. 本周范围

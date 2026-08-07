@@ -4,7 +4,7 @@
 > 关联 Issue：[#41 — Establish the M1 test, quality, and acceptance harness](https://github.com/Josscui516/MahjongFlow/issues/41)
 > 测试 Pull Request：[#43 — chore: establish quality CI baseline](https://github.com/Josscui516/MahjongFlow/pull/43)
 > 执行日期：2026-08-07（Australia/Sydney）
-> 状态：步骤 6 完成；D5-OI-02 已关闭，D5-OI-04 的 CI 门禁部分已完成
+> 状态：步骤 6 完成；D5-OI-02 已关闭，D5-OI-04 因用户临时删除 `main` 规则而重新开放
 
 ## 1. 执行结论
 
@@ -18,7 +18,7 @@ Lint → Typecheck → Test → Build
 
 Draft PR #43 已完成“初始通过 → 安全临时失败 → 恢复通过”三次远程验证。临时失败准确使 `Test` 返回失败、后续 `Build` 被跳过，并使 PR 处于 `UNSTABLE`；恢复后四项检查再次通过。
 
-`main` 已启用 branch protection：`Lint`、`Typecheck`、`Test`、`Build` 均为 strict required status checks，对管理员同样生效，force push 和分支删除保持禁用。该设置没有顺带启用 required review；非作者批准仍属于 D5-OI-04 的后续仓库治理范围。
+本步骤曾为 `main` 启用 branch protection：`Lint`、`Typecheck`、`Test`、`Build` 均为 strict required status checks，对管理员同样生效，force push 和分支删除保持禁用；步骤 10 后续发布又曾补充 required Pull Request、至少 1 名批准、过期审批自动撤销、最后推送者之外的批准和对话解决。用户随后临时删除该规则并明确要求暂不重设，因此 D5-OI-04 重新开放；这里保留已完成的历史验证证据，不把它误报为当前远程状态。
 
 ## 2. 工作流设计
 
@@ -84,7 +84,7 @@ Vercel Preview 也在三次 PR head 更新后成功完成；Supabase Preview 明
 | Enforce for administrators | 开启 |
 | Force pushes | 禁用 |
 | Branch deletion | 禁用 |
-| Required pull request reviews | 本步骤未启用；仍由 D5-OI-04 后续处理 |
+| Required pull request reviews | 曾启用并验证；用户随后临时删除全部 `main` 规则，当前未配置 |
 
 这意味着后续 PR 的当前 head 未产生四项成功结果时不能满足 `main` 合并条件。Draft PR #43 没有被合并，也没有被错误标记为完成或 Testing。
 

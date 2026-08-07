@@ -75,16 +75,17 @@ Foundation 与共享支撑 Epic #1 以及 Enabler #9–#11、#39–#41 映射 `U
 
 | Issue | 作用 | Assignee | 当前状态 |
 |---|---|---|---|
-| [#9 登录、登出、会话和受保护路由](https://github.com/Josscui516/MahjongFlow/issues/9) | WP-A 认证与会话 | `Josscui516` | Backlog |
-| [#10 两级角色、服务端授权与 RLS](https://github.com/Josscui516/MahjongFlow/issues/10) | #39／#40 上层协调 Enabler | 未分配 | Backlog |
-| [#39 Schema、约束、seed 和生成类型](https://github.com/Josscui516/MahjongFlow/issues/39) | WP-B Schema 与约束 | `Kaia-Zhang` | Backlog |
-| [#40 RLS policies 和服务端授权](https://github.com/Josscui516/MahjongFlow/issues/40) | WP-C RLS 与服务端授权 | `YUHAN2233` | Backlog |
-| [#11 共享 loading、empty、success 和 error 状态](https://github.com/Josscui516/MahjongFlow/issues/11) | WP-D 共享 UI | `Scarletthekiller` | Backlog |
-| [#41 M1 测试、质量和验收 harness](https://github.com/Josscui516/MahjongFlow/issues/41) | WP-E 测试与验收基础 | `Caiqwe123` | Backlog |
+| [#9 登录、登出、会话和受保护路由](https://github.com/Josscui516/MahjongFlow/issues/9) | WP-A 认证与会话 | `Josscui516` | Ready |
+| [#10 两级角色、服务端授权与 RLS](https://github.com/Josscui516/MahjongFlow/issues/10) | #39／#40 上层协调 Enabler | `Josscui516` | Ready |
+| [#39 Schema、约束、seed 和生成类型](https://github.com/Josscui516/MahjongFlow/issues/39) | WP-B Schema 与约束 | `Kaia-Zhang` | Ready |
+| [#40 RLS policies 和服务端授权](https://github.com/Josscui516/MahjongFlow/issues/40) | WP-C RLS 与服务端授权 | `YUHAN2233` | Ready |
+| [#11 共享 loading、empty、success 和 error 状态](https://github.com/Josscui516/MahjongFlow/issues/11) | WP-D 共享 UI | `Scarletthekiller` | Ready |
+| [#41 M1 测试、质量和验收 harness](https://github.com/Josscui516/MahjongFlow/issues/41) | WP-E 测试与验收基础 | `Caiqwe123` | Ready |
 
-这六个 Issue 已进入 Sprint 2，但“进入 Sprint”不等于“已经可以开发”。开始
-条件、真实负责人拆分、文件所有权和依赖尚未确认时继续保持 `Backlog`；满足
-条件后才进入 `Ready`，实际开始时才进入 `In Progress`。
+这六个 Issue 已进入 Sprint 2。步骤 9 refinement 后，#9、#11、#40、#41 已满足
+独立开始条件并进入 `Ready`；#39 的本地固定 Auth UUID fixture 已完成 reset 后同 UUID
+重建验证；#10 已明确协调负责人并进入 `Ready`。实际开始实现时
+才进入 `In Progress`。
 
 ## 6. 运作规则
 
@@ -102,9 +103,10 @@ Foundation 与共享支撑 Epic #1 以及 Enabler #9–#11、#39–#41 映射 `U
 ## 7. 当前审计快照
 
 截至 2026-08-07：Project 包含 8 个 Epic 和 32 个实施／支撑 Issue，共 40 项；
-全部为 P0 且保持 `Backlog`。原先 #9–#37 对 `Josscui516` 的批量初始分配已
-清除；Sprint 2 的五个独立工作包分别分配给 #9、#39、#40、#11、#41，#10
-保留为未分配的上层协调 Enabler。未来工作在进入对应 Sprint planning 前保持
+全部为 P0。步骤 9 补充验证后六项均为 `Ready`，其余项目保持 `Backlog`。
+原先 #9–#37 对 `Josscui516` 的批量初始分配已清除；Sprint 2 的五个独立工作包
+分别分配给 #9、#39、#40、#11、#41；#10 由 Joshua 负责上层协调，但不作为第六个个人工作包。
+未来工作在进入对应 Sprint planning 前保持
 未分配，避免把路线图预测误写成个人承诺。Acceptance Gate 已在 Product
 Backlog、Current Sprint 和 Kanban 卡片中显示；8 个 Epic 因不使用该标题为
 `Not checked`，32 个实施／支撑 Issue 当前均有未完成验收项，因此为 `Incomplete`。

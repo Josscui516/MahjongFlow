@@ -7,11 +7,11 @@
 
 ## 1. 执行结论
 
-已汇总第 1 至第 4 天所有明确记录的未完成项、后续验证和已接受风险，并按相同根因去重。Day 1 没有遗留的范围、验收、技术栈、仓库结构或协作规则争议；Day 2 和 Day 3 的文档设计评审均已通过。当前共保留 10 项：
+已汇总第 1 至第 4 天所有明确记录的未完成项、后续验证和已接受风险，并按相同根因去重。Day 1 没有遗留的范围、验收、技术栈、仓库结构或协作规则争议；Day 2 和 Day 3 的文档设计评审均已通过。当前共保留 9 项：
 
 | 分类 | 数量 | 处理原则 |
 |---|---:|---|
-| 阻断本周验收 | 3 | 必须在 Week 1 标记完成前关闭并提供证据 |
+| 阻断本周验收 | 2 | 必须在 Week 1 标记完成前关闭并提供证据 |
 | 阻断下周开发 | 3 | 必须在对应 Week 2 工作包进入 `In Progress` 前关闭 |
 | 非阻断改进 | 4 | 进入既有 Issue、后续验收或本清单 backlog，不阻止当天继续 |
 
@@ -30,15 +30,18 @@
 |---|---|---|---|---:|---|---|---|
 | D5-OI-01 | 缺少独立 `typecheck` npm script | Day 4 步骤 10；执行前 `package.json` 仅能用 `npm exec tsc -- --noEmit` | 团队和 CI 没有统一类型检查入口，Day 5 步骤 3 与周质量基线不能通过 | S | Yubo Cai | 已于 Day 5 步骤 3 关闭；步骤 5 完成干净输出回归修正 | 已添加 `npm run typecheck` → `next typegen && tsc --noEmit`；在没有既有 `.next` 路由类型时仍可独立通过，详见步骤 3、5 记录 |
 | D5-OI-02 | 应用测试框架、最小 smoke test 和四项质量 CI 尚未建立 | Day 4 步骤 10；执行前没有应用测试配置，`.github/workflows/` 只有 Project 状态自动化 | 测试成功／失败无法自动识别，PR 不能执行完整质量门禁，直接阻断 Week 1 通过条件 | M | Yubo Cai | 已于 Day 5 步骤 6 关闭 | Vitest、`npm test`、smoke test 和四项有序 CI 已建立；Draft PR #43 已完成全绿、临时 Test 失败／Build 跳过和恢复后全绿验证，`main` 已要求四项 strict checks |
-| D5-OI-03 | 尚无第二名真实团队成员的干净安装、启动和构建签名证据 | Day 4 步骤 9–10；目前只有独立目录验证 | Week 1 “至少两名成员本地可启动”不能据实勾选 | S | Shiying Liao | Day 5 步骤 8 周级验收结束前 | 按 README 独立执行安装、启动、Supabase 健康检查和构建；只记录命令、版本、结果与签认，不记录环境值 |
+
+2026-08-07 用户明确决定当前 Week 1 验收接受 Day 4 的独立目录干净安装证据，
+不要求第二名真实成员另行签认，也不需要单独跟踪问题。因此原 `D5-OI-03` 已从
+活动风险清单移除；曾创建的远程问题已关闭为 `not planned`，本地文档不再引用它。
 
 ## 4. 阻断下周开发
 
 | ID | 去重后的问题 | 来源证据 | 影响 | 工作量 | 负责人 | 期限 | 处理与完成证据 |
 |---|---|---|---|---:|---|---|---|
-| D5-OI-04 | GitHub `main` 保护仍缺少非作者 required review | Day 1 Git 协作约定；Day 4 步骤 7、10；Day 5 步骤 6 | `main` 的四项 strict checks、管理员执行、禁止 force push／删除已完成；但 Week 2 PR 流程仍未由设置强制非作者批准 | S | Joshua Xingjian Cui | 2026-08-10，任何 Week 2 PR 进入 Testing 前 | 步骤 6 已建立并验证 `Lint`、`Typecheck`、`Test`、`Build` required checks；后续只补充 required review 并验证一次非作者审批门禁，不重复创建质量规则 |
-| D5-OI-05 | 固定虚构 Auth UUID fixture 的本地创建方式尚未完成可重复验证 | Day 3 步骤 8；Week 2 #39 开始条件 | #39 无法可靠建立 profiles seed，随后 #40 的 RLS 正反向测试没有稳定身份输入 | S | Li Zhang | 2026-08-10，#39 进入 `In Progress` 前 | 使用当前锁定的 Supabase CLI 验证两名虚构 Auth 用户的可重复建立方式；记录 reset 与复验结果，不写入真实密码、token 或用户资料 |
-| D5-OI-06 | Sprint 2 六项仍为 `Backlog`，首批五个工作包尚未达到 `Ready` | Day 2 步骤 8；`BACKLOG_AND_SPRINT_MANAGEMENT.md`；Week 2 周计划 | 五名负责人不能按协作规则直接开始；若提前开始会绕过依赖、接口、文件所有权和验收门禁 | M | Joshua Xingjian Cui | Day 5 步骤 9 结束前 | 逐项核对 #9、#39、#40、#11、#41 的范围、验收、依赖、负责人、工作量和文件所有权；满足者才移入 `Ready`，#10 保持协调项。GitHub 状态写入须取得用户明确授权 |
+| D5-OI-04 | GitHub `main` 保护当前未配置 | Day 1 Git 协作约定；Day 4 步骤 7、10；Day 5 步骤 6 | 保护曾补齐四项 strict checks、required review、管理员执行及 force push／删除限制，后由用户临时删除；当前直接推送不会被远程规则阻止 | S | Joshua Xingjian Cui | 用户的问题处理完毕后、任何 Week 2 PR 进入 Testing 前 | 按用户明确要求暂不重新设置；恢复时重新启用 Pull Request、至少 1 名非作者批准、四项 strict checks、对话解决、管理员执行，并禁止 force push／删除 |
+| D5-OI-05 | 固定虚构 Auth UUID fixture 的本地创建方式尚未完成可重复验证 | Day 3 步骤 8；Week 2 #39 开始条件 | #39 无法可靠建立 profiles seed，随后 #40 的 RLS 正反向测试没有稳定身份输入 | S | Li Zhang | 已于 Day 5 步骤 9 补充验证关闭 | Supabase CLI `2.111.0` 本地事务 fixture 已验证：`auth.users` 与 email `auth.identities` 使用固定虚构 UUID，reset 后可同 UUID 重建；token 字符串使用非 NULL 空字符串，测试记录已清理，未写入凭据或真实资料 |
+| D5-OI-06 | Sprint 2 六项仍为 `Backlog`，首批五个工作包尚未达到 `Ready` | Day 2 步骤 8；`BACKLOG_AND_SPRINT_MANAGEMENT.md`；Week 2 周计划 | 五名负责人不能按协作规则直接开始；若提前开始会绕过依赖、接口、文件所有权和验收门禁 | M | Joshua Xingjian Cui | 已于 Day 5 步骤 9 关闭 | #9、#11、#39、#40、#41 五个个人工作包及 #10 协调 Enabler 均为 `Ready`；#10 已明确协调负责人但不占第六个工作包；详见步骤 9 记录 |
 
 ## 5. 非阻断改进 backlog
 
@@ -61,8 +64,8 @@
 
 ## 7. 处理顺序
 
-1. 先完成 D5-OI-01、D5-OI-02 和 D5-OI-03；任一未完成时 Week 1 不得标记通过。
-2. 随后关闭 D5-OI-04、D5-OI-05 和 D5-OI-06；任一仍开放时，对应 Week 2 工作包不得进入 `In Progress`。
+1. 先完成 D5-OI-01 和 D5-OI-02；任一未完成时 Week 1 不得标记通过。
+2. D5-OI-05 和 D5-OI-06 已关闭；D5-OI-04 因用户临时删除 `main` 规则而重新开放，在规则恢复前不得让任何 Week 2 PR 进入 `Testing`。
 3. D5-OI-07 至 D5-OI-10 按触发点进入既有 Issue 或后续验收；在安全控制仍有效时不阻断 Day 5 后续步骤。
 4. 发现密钥、真实个人资料、权限绕过或 destructive Preview 操作时，立即停止传播与执行，并将事项升级为阻断本周验收。
 

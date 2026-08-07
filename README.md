@@ -4,7 +4,7 @@
 
 - **Course:** FIT3162 Computer Science Project
 - **Team:** S1_CS_01
-- **Stage:** Day 4 complete; Day 5 quality baseline is next
+- **Stage:** Week 1 accepted with recorded reservations; Week 2 foundation work is ready
 - **Project board:** [MahjongFlow MVP GitHub Project](https://github.com/users/Josscui516/projects/5)
 
 ## Overview
@@ -49,11 +49,10 @@ defines their Project field and Issue mappings.
 
 ## Current status
 
-Days 1–3 are complete. Day 4 has established the runnable application scaffold, Supabase connection,
-migration baseline, Production and protected Preview deployments, and new-member setup guide.
-Day 4 is complete: an independent clone of remote `main` passed installation, local startup,
-Supabase reachability, lint, typecheck, and production build. The recorded risks and quality inputs
-are ready for Day 5.
+Week 1 has established the approved scope, backlog, interface and data design, runnable application
+scaffold, Supabase connection, migration baseline, Production and protected Preview deployments,
+quality CI, and new-member setup guide. Local and deployed health checks pass, and all six Sprint 2
+items are `Ready`; #10 remains a coordination Enabler rather than a sixth personal work package.
 
 Production: [mahjong-flow.vercel.app](https://mahjong-flow.vercel.app)
 
