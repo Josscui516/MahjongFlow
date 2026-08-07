@@ -3,8 +3,8 @@
 > Project setup plan: [Day 4: Project setup and environment](../plans/week-1/DAY_4_PROJECT_SETUP_AND_ENVIRONMENT.md)
 > Security baseline: [Day 1 technology stack decision](../plans/week-1/artifacts/day-1/DAY_1_TECH_STACK_DECISION.md)
 > New-member setup: [Root README](../../README.md#prerequisites)
-> Last checked: 2026-08-06
-> Current state: local, Vercel Production and protected Preview connections verified
+> Last checked: 2026-08-07
+> Current state: clean local install, Vercel Production and protected Preview connections verified
 
 ## 1. Configuration files
 
@@ -77,6 +77,12 @@ server-only `GET /api/health/supabase` check reached the development project's A
 returned HTTP `200` without exposing configuration or upstream response details. This proves service
 reachability only; it does not validate business tables, migrations, RLS policies or authenticated
 sessions. See the [step 5 connection record](../plans/week-1/artifacts/day-4/DAY_4_STEP_5_SUPABASE_CONNECTION.md).
+
+On 2026-08-07, a second copy cloned from remote `main` completed `npm ci`, local environment
+configuration, development startup, root-page and health-endpoint checks, lint, typecheck and a
+production build without reusing the original workspace's dependencies or build output. No
+environment value was printed or recorded. See the
+[step 9 clean-install record](../plans/week-1/artifacts/day-4/DAY_4_STEP_9_CLEAN_INSTALL_VERIFICATION.md).
 
 Vercel Production is connected to `Josscui516/MahjongFlow`, uses `main`, and serves
 <https://mahjong-flow.vercel.app>. After redeployment with the latest project settings, the root page

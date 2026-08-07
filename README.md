@@ -4,7 +4,7 @@
 
 - **Course:** FIT3162 Computer Science Project
 - **Team:** S1_CS_01
-- **Stage:** Day 4 steps 1–8 complete; independent clean-install verification remains
+- **Stage:** Day 4 complete; Day 5 quality baseline is next
 - **Project board:** [MahjongFlow MVP GitHub Project](https://github.com/users/Josscui516/projects/5)
 
 ## Overview
@@ -51,7 +51,9 @@ defines their Project field and Issue mappings.
 
 Days 1–3 are complete. Day 4 has established the runnable application scaffold, Supabase connection,
 migration baseline, Production and protected Preview deployments, and new-member setup guide.
-Independent clean-install verification remains pending in Day 4 step 9.
+Day 4 is complete: an independent clone of remote `main` passed installation, local startup,
+Supabase reachability, lint, typecheck, and production build. The recorded risks and quality inputs
+are ready for Day 5.
 
 Production: [mahjong-flow.vercel.app](https://mahjong-flow.vercel.app)
 
