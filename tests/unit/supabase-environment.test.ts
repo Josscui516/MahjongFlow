@@ -15,6 +15,6 @@ test("loads and normalizes fictional local Supabase public configuration", () =>
 
   expect(getSupabasePublicEnvironment()).toEqual({
     publishableKey: "fictional-publishable-key",
-    url: "http://localhost:54321",
+    url: "http://localhost:9999",
   });
 });
