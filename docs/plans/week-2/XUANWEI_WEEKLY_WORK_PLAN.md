@@ -6,13 +6,14 @@
 
 ## 1. 独立目标
 
-独立完成角色 helper、最小 grants、RLS policies、服务端授权守卫和权限测试，覆盖 X-04、X-05、X-06。工作期间不改写前两个 migration、认证页面、共享 UI 或测试基础配置。
+独立完成 Issue #40，包括角色 helper、最小 grants、RLS policies、服务端授权守卫和权限测试，覆盖 X-04、X-05、X-06。工作期间不改写前两个 migration、认证页面、共享 UI 或测试基础配置。
 
 ## 2. 工作包与文件所有权
 
 - 成员姓名：Xuanwei；
+- GitHub Assignee：`YUHAN2233`；
 - 独立工作包：WP-C RLS 与服务端授权；
-- 主要 Issue：#10 的 RLS／authorization 子工作包；独立 Git 工作前须确认真实子 Issue 或安全处理方式；
+- 主要 Issue：#40；父 Issue 为 #10；
 - 允许修改：第三个新 timestamped migration、`src/lib/auth/authorization.ts`、`supabase/tests/rls/`；
 - 禁止修改：前两个 migration、seed、认证路由、共享组件、CI／验收配置；
 - 固定输入合同：冻结表／列名；`AuthenticatedUser { id }`；`AccessContext { userId, role }`；

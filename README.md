@@ -25,6 +25,28 @@ The MVP provides:
 
 The approved scope and exclusions are defined in the [MVP project proposal](docs/project/MVP_PROJECT_PROPOSAL.md).
 
+## Canonical user stories
+
+These six Story IDs are the canonical business User Stories used by the
+[GitHub Project](https://github.com/users/Josscui516/projects/5), Product Backlog,
+Sprint Backlog, and implementation Issues. Authentication, authorisation, shared UI states,
+privacy controls, and test infrastructure are supporting Enablers rather than additional
+business stories.
+
+| Story ID | User Story | Project mapping |
+|---|---|---|
+| `US-01` — Record meetings | **As a committee member, I want to save meeting discussions and decisions so that I can accurately review them after the meeting.** | Epic #2; Issues #12–#14 |
+| `US-02` — Create tasks from decisions | **As a committee member, I want to convert a meeting decision directly into a task so that action items are not lost.** | Epic #3; Issues #23–#25 |
+| `US-03` — Follow up tasks | **As a committee member, I want to quickly see my assigned, due-soon, and overdue tasks so that I can plan work and address risks.** | Epic #4; Issues #15, #16, #20–#22 |
+| `US-04` — Prepare events | **As a committee member organising an event, I want to manage event details and preparation tasks together so that I can understand preparation progress.** | Epic #5; Issues #17–#19 |
+| `US-05` — Record registration and attendance | **As an authorised user, I want to distinguish registered participants from actual attendees so that participation records are accurate.** | Epics #6–#7; Issues #26–#34 |
+| `US-06` — Verify dinner eligibility | **As an authorised user, I want to verify dinner eligibility from confirmed attendance so that dinner is not issued incorrectly.** | Epic #8; Issues #35–#37 |
+
+The complete acceptance criteria for `US-01`–`US-06` remain in the
+[MVP project proposal](docs/project/MVP_PROJECT_PROPOSAL.md),
+while the [backlog and sprint management baseline](docs/product/BACKLOG_AND_SPRINT_MANAGEMENT.md)
+defines their Project field and Issue mappings.
+
 ## Current status
 
 Days 1–3 are complete. Day 4 has established the runnable application scaffold, Supabase connection,
@@ -114,6 +136,7 @@ Detailed setup, troubleshooting and platform procedures live in the
 | Document | Purpose |
 |---|---|
 | [MVP project proposal](docs/project/MVP_PROJECT_PROPOSAL.md) | Authoritative scope, roles, roadmap, and acceptance baseline |
+| [Backlog and sprint management](docs/product/BACKLOG_AND_SPRINT_MANAGEMENT.md) | Product Backlog, Current Sprint, Kanban, fields, and canonical User Stories |
 | [Week 1 plan](docs/plans/week-1/WEEK_1_IMPLEMENTATION_PLAN.md) | Five-day preparation and setup plan |
 | [P0 backlog](docs/plans/week-1/artifacts/day-2/DAY_2_STEP_3_P0_PRODUCT_BACKLOG.md) | Epics, Issues, acceptance conditions, and dependencies |
 | [Database ERD](docs/plans/week-1/artifacts/day-3/DAY_3_STEP_3_DATABASE_ERD.md) | Entities and core business relationships |

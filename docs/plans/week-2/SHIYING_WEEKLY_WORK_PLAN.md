@@ -11,6 +11,7 @@
 ## 2. 工作包与文件所有权
 
 - 成员姓名：Shiying；
+- GitHub Assignee：`Scarletthekiller`；
 - 独立工作包：WP-D 共享 UI；
 - 主要 Issue：#11；
 - 允许修改：`src/components/layout/`、`src/components/forms/`、`src/components/feedback/`、受保护 layout、组件测试；

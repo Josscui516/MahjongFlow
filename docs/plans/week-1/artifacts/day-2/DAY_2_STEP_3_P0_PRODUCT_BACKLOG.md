@@ -6,10 +6,21 @@
 29 个可独立验收的实施 Issue，并全部加入
 [MahjongFlow MVP GitHub Project](https://github.com/users/Josscui516/projects/5)。
 
-当前 37 个 Issue 均保持 `Backlog` 状态，没有在完成第 4 步排序和 Ready
-检查前提前移动。每个实施 Issue 均包含用户价值、P0 ID、实施范围、
+Day 2 完成时的 37 个 Issue 均保持 `Backlog` 状态，没有在完成开始条件检查前提前移动。
+每个实施 Issue 均包含用户价值、P0 ID、实施范围、
 数据库与权限要求、UI 状态、验收条件、验证方式、依赖、下游任务、目标周
 和相对工作量。
+
+2026-08-07 同步复核后，Project 已增加 `Story ID`、`Item Type` 和 `Sprint`
+字段以及 `Product Backlog`、`Current Sprint` 视图。29 个实施 Issue 的正文
+均补充正式 User Story，或在横切工程工作上补充 Enabler 分类；六个规范
+User Stories 与 Issue 映射见
+[Backlog 与 Sprint 管理基线](../../../../product/BACKLOG_AND_SPRINT_MANAGEMENT.md)。
+
+2026-08-07 Week 2 refinement 又建立 #39（Li 的 Schema／constraints）、#40
+（Xuanwei 的 RLS／authorization）和 #41（Yubo 的测试／验收基础）。它们拆分
+既有 #10／#1 范围以支持独立分支、验收和负责人，不增加新的 MVP 能力。
+当前 Product Backlog 因此为 8 个 epic 和 32 个实施／支撑 Issue，共 40 项。
 
 ## 2. Epic 清单
 
@@ -33,6 +44,9 @@
 | [#9 登录、登出、会话和受保护路由](https://github.com/Josscui516/MahjongFlow/issues/9) | AUTH-01、02 | X-01、02、03 | 5 | None |
 | [#10 两级角色、服务端授权与 RLS](https://github.com/Josscui516/MahjongFlow/issues/10) | AUTH-03、04 | X-04、05、06 | 8 | #9 |
 | [#11 共享 loading、empty、success 和 error 状态](https://github.com/Josscui516/MahjongFlow/issues/11) | AUTH-05 | X-07 | 3 | #9 |
+| [#39 Schema、约束、seed 和生成类型](https://github.com/Josscui516/MahjongFlow/issues/39) | AUTH-03、04 支撑 | X-04–06 支撑 | 由 #10 汇总 | None |
+| [#40 RLS policies 和服务端授权](https://github.com/Josscui516/MahjongFlow/issues/40) | AUTH-03、04 | X-04–06 | 由 #10 汇总 | #9、#39（集成） |
+| [#41 M1 测试、质量和验收 harness](https://github.com/Josscui516/MahjongFlow/issues/41) | AUTH-01–05、PRIV-03 | X-01–07 | 支撑项 | #9、#11、#39、#40（集成） |
 
 ### 3.2 Meetings
 
@@ -125,20 +139,22 @@
 自动审计结果：
 
 - [x] 48/48 个 P0 与隐私基线 ID 至少映射到一个实施 Issue；
-- [x] 29/29 个实施 Issue 包含可勾选验收条件和明确验证方式；
-- [x] 29/29 个实施 Issue 具有正确的父 epic；
-- [x] 所有已识别依赖均同时写入正文与 GitHub 原生 blocked-by 关系；
-- [x] 8/8 个 epic 的子 Issue 数量与拆分模型一致；
-- [x] 37/37 个 Project Issue 均填写 Status、Priority、Module、Effort、
-  Dependencies 和 Target Development Week；
+- [x] 32/32 个实施／支撑 Issue 包含可勾选验收条件和明确验证方式；
+- [x] 32/32 个实施／支撑 Issue 具有正确的原生父级关系；
+- [x] Day 2 原 29 个实施 Issue 的已识别依赖同时写入正文与 GitHub 原生 blocked-by 关系；#39–#41 的独立／集成依赖按 Week 2 冻结合同记录；
+- [x] 8/8 个 epic 的 Day 2 子 Issue 拆分保持不变；#1 与 #10 仅增加 Week 2 支撑 sub-issues；
+- [x] 40/40 个 Project Issue 均填写 Status、Priority、Module、Dependencies、
+  Target Development Week、Backlog Rank、Story ID 和 Item Type；原 37 项保留
+  Effort，三个新支撑 Issue 的 Effort 由 #10／Sprint planning 汇总，不重复计数；
+- [x] Sprint 2 仅包含当前 Week 2 已批准范围 #9、#10、#39、#40、#11、#41；
 - [x] 所有 Project Issue 当前均为 `Backlog` 与 `P0`。
 
 ## 6. 负责人处理
 
 步骤 3 创建时没有足够依据把 29 个 Issue 分配给具体 GitHub 账号，因此没有
-猜测人员与账号映射。步骤 8 评审后，用户已明确指定当前登录账号
-`Josscui516` 为初始负责人，Issue #9–#37 均已完成分配。进入开发时仍须
-确保该账号同时只有一个主要 Issue 处于 `In Progress`。
+猜测人员与账号映射。步骤 8 曾把 #9–#37 临时统一分配给 `Josscui516`；
+2026-08-07 已清除该批量分配，并按 Week 2 五个独立工作包只分配 #9、#39、
+#40、#11、#41。其余未来工作继续未分配，等待对应 Sprint planning。
 
 ## 7. 第 4 步输入
 

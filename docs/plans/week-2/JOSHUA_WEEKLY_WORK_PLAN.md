@@ -11,6 +11,7 @@
 ## 2. 工作包与文件所有权
 
 - 成员姓名：Joshua；
+- GitHub Assignee：`Josscui516`；
 - 独立工作包：WP-A 认证与会话；
 - 主要 Issue：#9；
 - 允许修改：`src/app/(auth)/`、认证 session 模块、认证路由守卫文件（不含 Shiying 所有的受保护 layout）、`tests/auth/`；

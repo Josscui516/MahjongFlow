@@ -6,13 +6,14 @@
 
 ## 1. 独立目标
 
-独立建立 7 个状态类型、11 个核心表、外键、约束、索引、触发器、匿名化 seed 和数据库生成类型。工作期间不实现 RLS policies、应用认证、共享 UI 或验收框架。
+独立完成 Issue #39，建立 7 个状态类型、11 个核心表、外键、约束、索引、触发器、匿名化 seed 和数据库生成类型。工作期间不实现 RLS policies、应用认证、共享 UI 或验收框架。
 
 ## 2. 工作包与文件所有权
 
 - 成员姓名：Li；
+- GitHub Assignee：`Kaia-Zhang`；
 - 独立工作包：WP-B Schema 与约束；
-- 主要 Issue：#10 的 schema／constraints 子工作包；独立 Git 工作前须确认真实子 Issue 或团队批准的安全处理方式；
+- 主要 Issue：#39；父 Issue 为 #10；
 - 允许修改：前两个新 timestamped migration、`supabase/seed.sql`、`supabase/tests/constraints/`、`src/types/database.generated.ts`；
 - 禁止修改：第三个 RLS migration、`src/lib/auth/`、应用路由、共享组件、CI／验收配置；
 - 固定输入合同：Week 1 ERD、表／列名、`committee_role` enum、两个固定虚构 Auth UUID；
@@ -113,7 +114,7 @@
 
 | 风险／问题 | 影响 | 触发沟通条件 | 处理方式 | 负责人 | 期限 |
 |---|---|---|---|---|---|
-| #10 未拆分为可独立 Git 工作 | 无法安全建独立分支 | 准备执行 Git 写操作 | 先取得真实子 Issue 或团队决定 | 团队 | Git 操作前 |
+| #39 与 #40 的冻结 Schema 合同不一致 | 无法安全集成 RLS | Xuanwei 的测试无法引用冻结对象 | 由 Xuanwei 提变更请求，Li 只修改自己所有的 migration | Li／Xuanwei | 集成检查点 |
 | Schema 与 RLS 需要额外索引 | Xuanwei 集成受阻 | 已冻结索引不足以通过测试 | Xuanwei 提变更请求，由 Li 增加 | Li | 集成检查点 |
 
 ## 9. 未完成项处理

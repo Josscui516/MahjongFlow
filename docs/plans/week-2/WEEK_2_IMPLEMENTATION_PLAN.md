@@ -14,12 +14,25 @@
 - [Shiying：共享布局与反馈组件](SHIYING_WEEKLY_WORK_PLAN.md)
 - [Yubo：测试基础与 M1 验收工具](YUBO_WEEKLY_WORK_PLAN.md)
 
+### GitHub Project 分配
+
+| 成员 | GitHub 账号 | 主要 Issue | Project 角色 |
+|---|---|---|---|
+| Joshua | `Josscui516` | #9 | WP-A 认证与会话 |
+| Li | `Kaia-Zhang` | #39 | WP-B Schema 与约束 |
+| Xuanwei | `YUHAN2233` | #40 | WP-C RLS 与服务端授权 |
+| Shiying | `Scarletthekiller` | #11 | WP-D 共享 UI |
+| Yubo | `Caiqwe123` | #41 | WP-E 测试与验收基础 |
+
+Issue #10 保留为未分配的上层协调 Enabler，原生 sub-issues 为 #39 和 #40。
+
 ## 2. 上周输入与开始条件
 
 - Week 1 的范围、验收矩阵、ERD、权限矩阵、隐私清单和 migration 方案已评审；
 - Next.js、Supabase、Vercel、本地数据库和空 migration 基线可用；
 - 周初一次性冻结第 5 节的接口和文件所有权；
-- Issue #9、#10、#11 已存在。Li、Xuanwei 和 Yubo 若需要各自独立分支／PR，必须先由团队建立或确认真实的独立 Issue，不得虚构编号；
+- Issue #9、#10、#11、#39、#40、#41 已存在；五个成员工作包分别使用 #9、#39、#40、#11、#41，不再共用无法独立交付的 Issue；
+- GitHub Project 的 `Current Sprint` 视图已将 #9、#10、#39、#40、#11、#41 标记为 `Sprint 2`；进入 Sprint 不自动改变状态，开始条件满足前仍保持 `Backlog`；
 - 只使用虚构数据；默认只在本地数据库验证，远程写操作仍需用户明确授权。
 
 ## 3. 本周范围
@@ -27,9 +40,11 @@
 ### 3.1 必须完成
 
 - Issue #9：登录、登出、会话和受保护路由，覆盖 X-01–03；
-- Issue #10：核心 schema、约束、角色、RLS 和服务端授权，覆盖 X-04–06；
+- Issue #10：作为 AUTH-03–04 上层协调 Enabler；
+- Issue #39：核心 schema、约束、seed 和生成类型，为 X-04–06 提供数据基础；
+- Issue #40：角色、RLS 和服务端授权，覆盖 X-04–06；
 - Issue #11：共享布局、导航、表单和反馈状态，覆盖 X-07；
-- 认证、数据库约束、RLS、组件和 M1 验收测试；
+- Issue #41：测试配置、统一质量入口、X-01–07 验收 harness 和 M1 汇总；
 - 5 个工作包独立自测后完成一次集成和一次集中审查。
 
 ### 3.2 条件允许时完成
@@ -49,11 +64,11 @@
 
 | 成员 | 独立工作包 | 主要文件所有权 | 固定输入合同 | 输出合同 | 个人验证 |
 |---|---|---|---|---|---|
-| Joshua | WP-A 认证与会话 | `src/app/(auth)/`、认证 session 模块、认证路由守卫文件（不含受保护 layout）、`tests/auth/` | Supabase public env；`AuthenticatedUser { id }` | `getAuthenticatedUser()`、登录／登出动作、未认证拒绝 | X-01–03、认证测试、typecheck、build |
-| Li | WP-B Schema 与约束 | 前两个新 migration、`supabase/seed.sql`、`supabase/tests/constraints/`、生成数据库类型 | Week 1 ERD；固定 Auth UUID fixture | 11 个表、约束、索引、seed、类型 | reset、db lint、constraints、diff |
-| Xuanwei | WP-C RLS 与授权 | 第三个新 migration、`src/lib/auth/authorization.ts`、`supabase/tests/rls/` | 固定表／列名；`AuthenticatedUser { id }`；`AccessContext` 合同 | role helpers、policies、`requireBackendUser()`、`requireAuthorised()` | X-04–06、RLS 正反向与反提权 |
-| Shiying | WP-D 共享 UI | `src/components/layout/`、`src/components/forms/`、`src/components/feedback/`、受保护布局、组件测试 | `AccessContext { userId, role }`；固定认证错误码 | 布局、导航、表单、五类反馈组件 | X-07、组件测试、键盘与窄屏检查 |
-| Yubo | WP-E 测试与验收基础 | 测试配置、`tests/acceptance/`、CI／质量脚本、M1 验收记录 | X-01–07 行为合同；各工作包公开输出 | 统一测试入口、验收矩阵、脱敏证据 | 测试框架自检、质量流水线、M1 汇总 |
+| Joshua | WP-A 认证与会话（#9） | `src/app/(auth)/`、认证 session 模块、认证路由守卫文件（不含受保护 layout）、`tests/auth/` | Supabase public env；`AuthenticatedUser { id }` | `getAuthenticatedUser()`、登录／登出动作、未认证拒绝 | X-01–03、认证测试、typecheck、build |
+| Li | WP-B Schema 与约束（#39） | 前两个新 migration、`supabase/seed.sql`、`supabase/tests/constraints/`、生成数据库类型 | Week 1 ERD；固定 Auth UUID fixture | 11 个表、约束、索引、seed、类型 | reset、db lint、constraints、diff |
+| Xuanwei | WP-C RLS 与授权（#40） | 第三个新 migration、`src/lib/auth/authorization.ts`、`supabase/tests/rls/` | 固定表／列名；`AuthenticatedUser { id }`；`AccessContext` 合同 | role helpers、policies、`requireBackendUser()`、`requireAuthorised()` | X-04–06、RLS 正反向与反提权 |
+| Shiying | WP-D 共享 UI（#11） | `src/components/layout/`、`src/components/forms/`、`src/components/feedback/`、受保护布局、组件测试 | `AccessContext { userId, role }`；固定认证错误码 | 布局、导航、表单、五类反馈组件 | X-07、组件测试、键盘与窄屏检查 |
+| Yubo | WP-E 测试与验收基础（#41） | 测试配置、`tests/acceptance/`、CI／质量脚本、M1 验收记录 | X-01–07 行为合同；各工作包公开输出 | 统一测试入口、验收矩阵、脱敏证据 | 测试框架自检、质量流水线、M1 汇总 |
 
 每名成员只编辑自己的范围。共享配置若确需变更，由 Yubo 统一处理；数据库 migration 按文件所有权区分，Li 不修改第三个 migration，Xuanwei 不修改前两个 migration。
 
@@ -119,7 +134,7 @@
 |---|---|---|---|---|
 | 冻结接口设计不足 | 两个以上工作包无法独立推进 | 集成返工 | 仅召开一次接口变更沟通，由原所有者修改 | 对应接口提供者 |
 | 跨文件所有权修改 | 同一文件出现并行冲突 | 覆盖工作 | 停止修改，回到所有者处理变更请求 | 发生冲突的文件所有者 |
-| #10 无法支持两份独立 Git 工作 | Li、Xuanwei 不能安全开独立分支 | 阻断实施 | 周初确认真实子 Issue 或明确顺序；不得虚构编号 | 团队 |
+| #39 与 #40 的冻结合同不一致 | Schema 或 RLS 集成返工 | 阻断实施 | 只通过接口变更请求由原所有者修改；#10 记录协调结论 | Li／Xuanwei |
 | 集成拖到周末 | 个人包均完成但接口未接通 | M1 延迟 | 工作包自测完成后立即安排唯一集成检查点 | Yubo |
 | RLS 或秘密泄露 | committee 读取敏感数据或证据含凭据 | 高风险 | 立即停止集成并修复，不受低频沟通限制 | Xuanwei／Yubo |
 

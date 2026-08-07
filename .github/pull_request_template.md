@@ -1,6 +1,9 @@
 ## Related issue and scope
 
-Closes #<!-- issue number -->
+Relates to #<!-- one primary issue number -->
+
+<!-- Keep exactly one primary issue reference. Use a closing keyword only when every
+issue acceptance criterion has passed and the issue is already in Testing. -->
 
 - Scope classification: <!-- P0 / P1 / Post-MVP -->
 - Requirement IDs: <!-- e.g. P0-MTG-001, P0-TASK-003 -->
