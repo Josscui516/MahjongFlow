@@ -112,6 +112,8 @@
 
 检查：Pull Request 上可以清楚看到每项检查结果，失败会阻止达到完成条件。
 
+执行记录：[第 5 天步骤 6：CI 工作流与必需检查验证记录](artifacts/day-5/DAY_5_STEP_6_CI_WORKFLOW_AND_REQUIRED_CHECKS.md)。已建立 `Quality` workflow，在 Draft PR #43 上依次显示 `Lint`、`Typecheck`、`Test`、`Build`；完成初始全绿、虚构 smoke test 临时失败（Test 失败、Build 跳过、PR `UNSTABLE`）和恢复后全绿三次远程验证。`main` 已将四项检查配置为 strict required checks 并对管理员生效；工作流只使用只读仓库权限和虚构 localhost 公共配置。D5-OI-02 已关闭，非作者 required review 仍留在 D5-OI-04。
+
 ### 步骤 7：检查仓库卫生与安全
 
 1. 查看所有新增和修改文件；
@@ -185,11 +187,11 @@
 
 ## 5. 当日验收清单
 
-- [ ] lint 在本地和 CI 中通过；
-- [ ] typecheck 在本地和 CI 中通过；
-- [ ] smoke test 在本地和 CI 中通过；
-- [ ] 生产构建在本地和 CI 中通过；
-- [ ] CI 失败能够被正确识别；
+- [x] lint 在本地和 CI 中通过；
+- [x] typecheck 在本地和 CI 中通过；
+- [x] smoke test 在本地和 CI 中通过；
+- [x] 生产构建在本地和 CI 中通过；
+- [x] CI 失败能够被正确识别；
 - [ ] 仓库不包含密钥、生产配置或真实个人资料；
 - [ ] 本周交付物均有明确存放位置；
 - [ ] 周验收清单已经逐项核对；

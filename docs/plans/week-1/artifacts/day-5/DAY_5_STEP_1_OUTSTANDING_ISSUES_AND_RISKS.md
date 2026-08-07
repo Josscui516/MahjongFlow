@@ -29,14 +29,14 @@
 | ID | 去重后的问题 | 来源证据 | 影响 | 工作量 | 负责人 | 期限 | 处理与完成证据 |
 |---|---|---|---|---:|---|---|---|
 | D5-OI-01 | 缺少独立 `typecheck` npm script | Day 4 步骤 10；执行前 `package.json` 仅能用 `npm exec tsc -- --noEmit` | 团队和 CI 没有统一类型检查入口，Day 5 步骤 3 与周质量基线不能通过 | S | Yubo Cai | 已于 Day 5 步骤 3 关闭；步骤 5 完成干净输出回归修正 | 已添加 `npm run typecheck` → `next typegen && tsc --noEmit`；在没有既有 `.next` 路由类型时仍可独立通过，详见步骤 3、5 记录 |
-| D5-OI-02 | 应用测试框架、最小 smoke test 和四项质量 CI 尚未建立 | Day 4 步骤 10；执行前没有应用测试配置，`.github/workflows/` 只有 Project 状态自动化 | 测试成功／失败无法自动识别，PR 不能执行完整质量门禁，直接阻断 Week 1 通过条件 | M | Yubo Cai | 本地测试部分已于步骤 4 完成；CI 部分须在步骤 6 结束前关闭 | Vitest、`npm test` 和 smoke test 已建立，并验证失败退出码 1、恢复后退出码 0；D5-OI-02 保持开放，待步骤 6 补齐 PR CI 证据 |
+| D5-OI-02 | 应用测试框架、最小 smoke test 和四项质量 CI 尚未建立 | Day 4 步骤 10；执行前没有应用测试配置，`.github/workflows/` 只有 Project 状态自动化 | 测试成功／失败无法自动识别，PR 不能执行完整质量门禁，直接阻断 Week 1 通过条件 | M | Yubo Cai | 已于 Day 5 步骤 6 关闭 | Vitest、`npm test`、smoke test 和四项有序 CI 已建立；Draft PR #43 已完成全绿、临时 Test 失败／Build 跳过和恢复后全绿验证，`main` 已要求四项 strict checks |
 | D5-OI-03 | 尚无第二名真实团队成员的干净安装、启动和构建签名证据 | Day 4 步骤 9–10；目前只有独立目录验证 | Week 1 “至少两名成员本地可启动”不能据实勾选 | S | Shiying Liao | Day 5 步骤 8 周级验收结束前 | 按 README 独立执行安装、启动、Supabase 健康检查和构建；只记录命令、版本、结果与签认，不记录环境值 |
 
 ## 4. 阻断下周开发
 
 | ID | 去重后的问题 | 来源证据 | 影响 | 工作量 | 负责人 | 期限 | 处理与完成证据 |
 |---|---|---|---|---:|---|---|---|
-| D5-OI-04 | GitHub `main` 尚未配置保护／ruleset | Day 1 Git 协作约定；Day 4 步骤 7、10 | `main` push 会同时触发 Vercel Production 和 Supabase production migration；Week 2 PR 流程缺少非作者批准、禁止 force push／删除和 required checks | M | Joshua Xingjian Cui | 2026-08-10，任何 Week 2 分支 push 前 | 在质量 CI 可用后由仓库管理员配置并验证 ruleset；记录设置与一次 PR 门禁证据。该远程写操作须取得用户明确授权 |
+| D5-OI-04 | GitHub `main` 保护仍缺少非作者 required review | Day 1 Git 协作约定；Day 4 步骤 7、10；Day 5 步骤 6 | `main` 的四项 strict checks、管理员执行、禁止 force push／删除已完成；但 Week 2 PR 流程仍未由设置强制非作者批准 | S | Joshua Xingjian Cui | 2026-08-10，任何 Week 2 PR 进入 Testing 前 | 步骤 6 已建立并验证 `Lint`、`Typecheck`、`Test`、`Build` required checks；后续只补充 required review 并验证一次非作者审批门禁，不重复创建质量规则 |
 | D5-OI-05 | 固定虚构 Auth UUID fixture 的本地创建方式尚未完成可重复验证 | Day 3 步骤 8；Week 2 #39 开始条件 | #39 无法可靠建立 profiles seed，随后 #40 的 RLS 正反向测试没有稳定身份输入 | S | Li Zhang | 2026-08-10，#39 进入 `In Progress` 前 | 使用当前锁定的 Supabase CLI 验证两名虚构 Auth 用户的可重复建立方式；记录 reset 与复验结果，不写入真实密码、token 或用户资料 |
 | D5-OI-06 | Sprint 2 六项仍为 `Backlog`，首批五个工作包尚未达到 `Ready` | Day 2 步骤 8；`BACKLOG_AND_SPRINT_MANAGEMENT.md`；Week 2 周计划 | 五名负责人不能按协作规则直接开始；若提前开始会绕过依赖、接口、文件所有权和验收门禁 | M | Joshua Xingjian Cui | Day 5 步骤 9 结束前 | 逐项核对 #9、#39、#40、#11、#41 的范围、验收、依赖、负责人、工作量和文件所有权；满足者才移入 `Ready`，#10 保持协调项。GitHub 状态写入须取得用户明确授权 |
 
