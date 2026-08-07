@@ -28,6 +28,8 @@
 
 检查：不存在无负责人或无法判断影响的遗留问题。
 
+执行记录：[第 5 天步骤 1：遗留问题与风险分级清单](artifacts/day-5/DAY_5_STEP_1_OUTSTANDING_ISSUES_AND_RISKS.md)。已从第 1 至第 4 天的计划、执行产物、周验收与 Week 2 开始条件中去重汇总 10 项：3 项阻断本周验收、3 项阻断下周开发、4 项非阻断改进；每项均已记录影响、工作量、负责人、期限和处理证据。未执行未经授权的 GitHub、Git 或远程配置写操作。
+
 ### 步骤 2：配置并验证 lint
 
 1. 检查项目当前的 lint 配置；
@@ -43,6 +45,8 @@
 
 检查：团队成员使用同一入口能得到一致结果，基线代码无 lint 错误。
 
+执行记录：[第 5 天步骤 2：lint 配置与验证记录](artifacts/day-5/DAY_5_STEP_2_LINT_BASELINE.md)。项目保留 Next.js Core Web Vitals 与 TypeScript 推荐规则，统一入口明确为 `npm run lint` → `eslint .`，并补齐生成文件、构建输出、测试报告及本地平台状态的忽略范围；没有关闭规则或增加无说明例外。
+
 ### 步骤 3：配置并验证 typecheck
 
 1. 检查 TypeScript 严格性设置是否符合项目基线；
@@ -56,6 +60,8 @@
 产出：可重复运行且通过的 typecheck 配置与脚本。
 
 检查：类型检查可以独立于开发服务器运行，当前代码无类型错误。
+
+执行记录：[第 5 天步骤 3：typecheck 配置与验证记录](artifacts/day-5/DAY_5_STEP_3_TYPECHECK_BASELINE.md)。现有 `tsconfig.json` 已启用完整 `strict` 与 `noEmit`，应用、配置、Next.js 生成类型及未来的 TypeScript 测试均在检查范围内；统一入口为 `npm run typecheck` → `next typegen && tsc --noEmit`，可在没有旧 `.next` 输出时先生成路由类型再检查，D5-OI-01 已关闭。
 
 ### 步骤 4：配置测试框架和最小 smoke test
 
@@ -72,6 +78,8 @@
 
 检查：测试成功与失败都能被命令行和后续 CI 正确识别。
 
+执行记录：[第 5 天步骤 4：测试框架与 smoke test 验证记录](artifacts/day-5/DAY_5_STEP_4_TEST_FRAMEWORK_AND_SMOKE_TEST.md)。项目已采用 Vitest 4.1.10，建立 `npm test` → `vitest run` 和 Node 环境测试配置；最小 smoke test 只使用虚构本地配置，已验证成功退出码 `0`、可控失败退出码 `1` 以及恢复后的再次通过。D5-OI-02 的本地测试部分已完成，CI 部分留待步骤 6。
+
 ### 步骤 5：验证生产构建
 
 1. 清理本地构建输出；
@@ -85,6 +93,8 @@
 产出：通过的本地生产构建记录。
 
 检查：干净环境和 Vercel 均能使用已记录配置完成构建。
+
+执行记录：[第 5 天步骤 5：生产构建验证记录](artifacts/day-5/DAY_5_STEP_5_PRODUCTION_BUILD_VERIFICATION.md)。已在 `npm ci` 后两次核实并清理仓库内 `.next`，修正干净输出下路由类型未生成的 typecheck 入口，再完成 lint、typecheck、smoke test 和最终 `npm run build`；Next.js 16.3.0/Turbopack 构建无错误或警告并生成 `BUILD_ID`。最新 Vercel Production 为同一 HEAD、状态 `READY`，版本、bundler、入口和路由输出一致，根页面与 Supabase 健康接口均为 HTTP `200`；未部署当前未提交变更。
 
 ### 步骤 6：建立 CI 工作流
 
