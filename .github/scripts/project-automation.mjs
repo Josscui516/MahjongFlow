@@ -45,6 +45,11 @@ export function issueNumberFromBranch(branch = "") {
   return match ? Number(match[1]) : null;
 }
 
+export function sprintNumberFromBranch(branch = "") {
+  const match = branch.match(/^sprint\/(\d+)-[a-z0-9][a-z0-9-]*$/);
+  return match ? Number(match[1]) : null;
+}
+
 export function issueNumbersFromPullRequest(body = "", branch = "") {
   const numbers = new Set();
   const referencePattern =
@@ -55,6 +60,39 @@ export function issueNumbersFromPullRequest(body = "", branch = "") {
   const branchNumber = issueNumberFromBranch(branch);
   if (branchNumber) numbers.add(branchNumber);
   return [...numbers];
+}
+
+export function includedIssueNumbersFromPullRequest(body = "") {
+  const lines = body.split(/\r?\n/);
+  const start = lines.findIndex((line) =>
+    /^#{1,6}\s+included work package issues\s*$/i.test(line.trim()),
+  );
+  if (start < 0) return [];
+
+  const numbers = new Set();
+  for (const line of lines.slice(start + 1)) {
+    if (/^#{1,6}\s+/.test(line.trim())) break;
+    const match = line.match(/^\s*[-*+]\s+(?:\[[ xX]\]\s+)?#(\d+)\b/);
+    if (match) numbers.add(Number(match[1]));
+  }
+  return [...numbers];
+}
+
+export function pullRequestRoute(pull) {
+  const baseSprint = sprintNumberFromBranch(pull.base?.ref ?? "");
+  const headSprint = sprintNumberFromBranch(pull.head?.ref ?? "");
+  const headIssue = issueNumberFromBranch(pull.head?.ref ?? "");
+
+  if (baseSprint && headIssue) {
+    return { kind: "work-package", sprint: baseSprint };
+  }
+  if (pull.base?.ref === "main" && headSprint) {
+    return { kind: "sprint-integration", sprint: headSprint };
+  }
+  throw new Error(
+    `Invalid Pull Request route '${pull.head?.ref ?? "unknown"}' -> '${pull.base?.ref ?? "unknown"}'. ` +
+      "Work-package PRs must target sprint/<number>-<theme>; only Sprint integration PRs may target main.",
+  );
 }
 
 export function checksPassed(checkRuns = [], statuses = []) {
@@ -117,7 +155,7 @@ class GitHubClient {
   }
 }
 
-class ProjectAutomation {
+export class ProjectAutomation {
   constructor({ client, owner, number, actor, repository }) {
     this.client = client;
     this.owner = owner;
@@ -194,8 +232,22 @@ class ProjectAutomation {
   }
 
   statusOf(item) {
-    return item?.fieldValues.nodes.find((value) => value?.field?.name === "Status")
+    return this.singleSelectValue(item, "Status");
+  }
+
+  singleSelectValue(item, fieldName) {
+    return item?.fieldValues.nodes.find((value) => value?.field?.name === fieldName)
       ?.name;
+  }
+
+  assertSprint(context, sprint) {
+    const actual = this.singleSelectValue(context.item, "Sprint");
+    const expected = `Sprint ${sprint}`;
+    if (actual !== expected) {
+      throw new Error(
+        `Issue #${context.issue.number} belongs to '${actual ?? "no Sprint"}', expected '${expected}'.`,
+      );
+    }
   }
 
   async ensureItem(project, issue) {
@@ -342,6 +394,7 @@ class ProjectAutomation {
 
   async handlePullRequest(action, payload) {
     const pull = payload.pull_request;
+    const route = pullRequestRoute(pull);
     const numbers = issueNumbersFromPullRequest(pull.body ?? "", pull.head.ref);
     if (numbers.length !== 1) {
       throw new Error(
@@ -349,16 +402,50 @@ class ProjectAutomation {
       );
     }
     const context = await this.prepareIssue(numbers[0]);
+    this.assertSprint(context, route.sprint);
+    const includedNumbers = includedIssueNumbersFromPullRequest(pull.body ?? "");
+
+    if (route.kind === "work-package" && includedNumbers.length > 0) {
+      throw new Error("A work-package PR must not declare included work-package issues.");
+    }
+    if (route.kind === "sprint-integration") {
+      if (includedNumbers.length === 0) {
+        throw new Error("A Sprint integration PR must list included work-package issues.");
+      }
+      if (includedNumbers.includes(context.issue.number)) {
+        throw new Error("The Sprint integration primary issue must not be repeated as an included issue.");
+      }
+    }
 
     if (
       (action === "opened" || action === "reopened" || action === "ready_for_review") &&
       !pull.draft
     ) {
-      await this.transition(context, ["In Progress"], "Review");
+      if (route.kind === "sprint-integration") {
+        if (action === "opened" && context.status !== "Testing") {
+          throw new Error(
+            `Sprint integration primary issue #${context.issue.number} must be in Testing before the Sprint PR opens.`,
+          );
+        }
+        const included = await Promise.all(
+          includedNumbers.map((number) => this.prepareIssue(number)),
+        );
+        for (const item of included) {
+          this.assertSprint(item, route.sprint);
+          if (item.status !== "Testing") {
+            throw new Error(
+              `Included issue #${item.issue.number} must be in Testing before the Sprint PR opens.`,
+            );
+          }
+        }
+        await this.transition(context, ["In Progress", "Testing"], "Review");
+      } else {
+        await this.transition(context, ["In Progress"], "Review");
+      }
       return;
     }
-    if (action === "synchronize" && context.status === "Testing") {
-      await this.transition(context, ["Testing"], "Review");
+    if (action === "synchronize" && ["In Progress", "Testing"].includes(context.status)) {
+      await this.transition(context, ["In Progress", "Testing"], "Review");
       return;
     }
     if (action === "converted_to_draft" || (action === "closed" && !pull.merged)) {
@@ -369,20 +456,45 @@ class ProjectAutomation {
     }
     if (action === "closed" && pull.merged) {
       const evidence = await this.pullRequestEvidence(pull.number);
-      if (pull.base.ref !== "main") throw new Error("Only a merge to main can complete an issue.");
       if (context.gate.name !== "Passed") {
         throw new Error(`Issue #${context.issue.number} acceptance criteria are not all checked.`);
       }
       if (!evidence.approved) throw new Error("A non-author approval is required.");
       if (!evidence.checksPassed) throw new Error("All configured checks must pass, and at least one check is required.");
       if (evidence.unresolvedThreads > 0) throw new Error("All review threads must be resolved.");
-      await this.transition(context, ["Testing"], "Done");
-      if (context.issue.state !== "closed") {
-        await this.client.request(`/repos/${this.repository}/issues/${context.issue.number}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ state: "closed", state_reason: "completed" }),
-        });
+
+      if (route.kind === "work-package") {
+        if (context.status !== "Testing") {
+          throw new Error(`Integrated issue #${context.issue.number} must remain in Testing.`);
+        }
+        console.log(
+          `Work-package issue #${context.issue.number} is integrated into Sprint ${route.sprint} and remains in Testing.`,
+        );
+        return;
+      }
+
+      const included = await Promise.all(
+        includedNumbers.map((number) => this.prepareIssue(number)),
+      );
+      for (const item of included) {
+        this.assertSprint(item, route.sprint);
+        if (item.gate.name !== "Passed") {
+          throw new Error(`Included issue #${item.issue.number} acceptance criteria are not all checked.`);
+        }
+        if (item.status !== "Testing") {
+          throw new Error(`Included issue #${item.issue.number} must be in Testing before Sprint completion.`);
+        }
+      }
+
+      for (const item of [...included, context]) {
+        await this.transition(item, ["Testing"], "Done");
+        if (item.issue.state !== "closed") {
+          await this.client.request(`/repos/${this.repository}/issues/${item.issue.number}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ state: "closed", state_reason: "completed" }),
+          });
+        }
       }
     }
   }
@@ -390,11 +502,13 @@ class ProjectAutomation {
   async handleReview(action, payload) {
     if (action !== "submitted" && action !== "dismissed") return;
     const pull = payload.pull_request;
+    const route = pullRequestRoute(pull);
     const numbers = issueNumbersFromPullRequest(pull.body ?? "", pull.head.ref);
     if (numbers.length !== 1) {
       throw new Error(`Pull Request #${pull.number} must reference exactly one primary issue.`);
     }
     const context = await this.prepareIssue(numbers[0]);
+    this.assertSprint(context, route.sprint);
     const state = payload.review?.state;
     if (state === "changes_requested" && ["Review", "Testing"].includes(context.status)) {
       await this.transition(context, ["Review", "Testing"], "In Progress");

@@ -6,6 +6,17 @@
 
 完成里程碑 M1：账号可登录、保持会话并登出；后台路由受保护；核心 schema、约束、RLS 和匿名化 seed 可重放；`committee` 与 `authorised` 权限在服务端和数据库生效；共享布局与反馈组件可复用；X-01 至 X-07 通过验收。
 
+### Sprint 交付路线
+
+- GitHub Sprint：`Sprint 2`；
+- Sprint 集成分支：`sprint/2-auth-foundation`，由仓库管理员从最新 `main` 创建；
+- 集成负责人：Yubo；
+- Sprint 总 PR 主要 Issue：#41；
+- Sprint 总 PR：`sprint/2-auth-foundation` → `main`；
+- 纳入工作包／协调 Issues：#9、#10、#11、#39、#40；
+- #41 的测试基础先通过成员 PR 进入 Sprint 分支，再作为 Sprint 总 PR 的主要验收 Issue；
+- 远程分支、PR retarget、Project 字段、ruleset 和 token 权限由仓库管理员在 GitHub 完成，本计划不虚构其已完成状态。
+
 ### 成员独立工作文档
 
 - [Joshua：认证与会话](JOSHUA_WEEKLY_WORK_PLAN.md)
@@ -25,6 +36,7 @@
 | Yubo | `Caiqwe123` | #41 | WP-E 测试与验收基础 |
 
 Issue #10 由 `Josscui516` 担任上层协调负责人，原生 sub-issues 为 #39 和 #40；它不构成第六个个人工作包，也不得与 #9 同时作为 Joshua 的主要 `In Progress` Issue。
+Joshua 在 #9 的成员 PR 合并且 #9 进入 `Testing` 后，才可顺序开始 #10 的协调集成分支和 PR；#10 负责把 #9、#39、#40 的公开输出组合为 X-04–06 验收输入。
 
 ## 2. 上周输入与开始条件
 
@@ -34,6 +46,7 @@ Issue #10 由 `Josscui516` 担任上层协调负责人，原生 sub-issues 为 #
 - Issue #9、#10、#11、#39、#40、#41 已存在；五个成员工作包分别使用 #9、#39、#40、#11、#41，不再共用无法独立交付的 Issue；
 - GitHub Project 的 `Current Sprint` 视图已将 #9、#10、#39、#40、#11、#41 标记为 `Sprint 2`；Day 5 步骤 9 补充验证后六项均为 `Ready`，其中 #39 的固定 Auth UUID fixture 方法已验证，#10 只承担协调与最终验收整合；
 - 只使用虚构数据；默认只在本地数据库验证，远程写操作仍需用户明确授权。
+- 仓库管理员已创建 `sprint/2-auth-foundation` 并确认所有成员 PR 以其为 base 后，成员才可打开或 retarget PR；
 
 ## 3. 本周范围
 
@@ -64,11 +77,24 @@ Issue #10 由 `Josscui516` 担任上层协调负责人，原生 sub-issues 为 #
 
 | 成员 | 独立工作包 | 主要文件所有权 | 固定输入合同 | 输出合同 | 个人验证 |
 |---|---|---|---|---|---|
-| Joshua | WP-A 认证与会话（#9） | `src/app/(auth)/`、认证 session 模块、认证路由守卫文件（不含受保护 layout）、`tests/auth/` | Supabase public env；`AuthenticatedUser { id }` | `getAuthenticatedUser()`、登录／登出动作、未认证拒绝 | X-01–03、认证测试、typecheck、build |
+| Joshua | WP-A 认证与会话（#9） | `src/app/(auth)/`（含仅服务该路由的 colocated tests）、认证 session 模块、认证路由守卫文件（不含受保护 layout）、`tests/unit/auth/`、`tests/integration/auth/`、`tests/e2e/auth.spec.ts` | Supabase public env；`AuthenticatedUser { id }` | `getAuthenticatedUser()`、登录／登出动作、未认证拒绝 | X-01–03、认证测试、typecheck、build |
 | Li | WP-B Schema 与约束（#39） | 前两个新 migration、`supabase/seed.sql`、`supabase/tests/constraints/`、生成数据库类型 | Week 1 ERD；固定 Auth UUID fixture | 11 个表、约束、索引、seed、类型 | reset、db lint、constraints、diff |
 | Xuanwei | WP-C RLS 与授权（#40） | 第三个新 migration、`src/lib/auth/authorization.ts`、`supabase/tests/rls/` | 固定表／列名；`AuthenticatedUser { id }`；`AccessContext` 合同 | role helpers、policies、`requireBackendUser()`、`requireAuthorised()` | X-04–06、RLS 正反向与反提权 |
 | Shiying | WP-D 共享 UI（#11） | `src/components/layout/`、`src/components/forms/`、`src/components/feedback/`、受保护布局、组件测试 | `AccessContext { userId, role }`；固定认证错误码 | 布局、导航、表单、五类反馈组件 | X-07、组件测试、键盘与窄屏检查 |
 | Yubo | WP-E 测试与验收基础（#41） | 测试配置、`tests/acceptance/`、CI／质量脚本、M1 验收记录 | X-01–07 行为合同；各工作包公开输出 | 统一测试入口、验收矩阵、脱敏证据 | 测试框架自检、质量流水线、M1 汇总 |
+
+### PR 路线与集成顺序
+
+| 工作包 | Issue 分支 | PR base | 合并条件 | 顺序 |
+|---|---|---|---|---|
+| WP-B / #39 | `feature/39-schema-baseline` | `sprint/2-auth-foundation` | schema、约束、seed、类型和非作者 review 通过 | 1 |
+| WP-C / #40 | `feature/40-rls-authorisation` | `sprint/2-auth-foundation` | RLS 正反向、授权测试和 review 通过 | 2 |
+| WP-A / #9 | `feature/9-auth-session-route-protection` | `sprint/2-auth-foundation` | X-01–03、真实会话集成证据和 review 通过 | 3 |
+| #10 协调集成 | `feature/10-auth-authorisation-integration` | `sprint/2-auth-foundation` | #9、#39、#40 已集成；X-04–06 输入兼容 | 4 |
+| WP-D / #11 | `feature/11-shared-feedback-ui` | `sprint/2-auth-foundation` | X-07、可访问性、角色 UI 和 review 通过 | 5 |
+| WP-E / #41 | `test/41-m1-acceptance-harness` | `sprint/2-auth-foundation` | 质量入口、adapter、脱敏证据和 review 通过 | 6 |
+
+所有成员／协调 PR 只关联各自主要 Issue，合并后 Issue 保持 `Testing`。Yubo 最后以 #41 为主要 Issue 创建 Sprint 总 PR，并在 `Included work package issues` 中列出 #9、#10、#11、#39、#40。
 
 每名成员只编辑自己的范围。共享配置若确需变更，由 Yubo 统一处理；数据库 migration 按文件所有权区分，Li 不修改第三个 migration，Xuanwei 不修改前两个 migration。
 
@@ -96,13 +122,17 @@ Issue #10 由 `Josscui516` 担任上层协调负责人，原生 sub-issues 为 #
 
 进入条件：5 个工作包分别完成个人验收。
 
-集成顺序：Li schema → Xuanwei RLS → Joshua 会话／守卫 → Shiying UI → Yubo 验收入口。只修复接口不一致和阻断缺陷，不在集成阶段重构他人工作。
+集成顺序：Li schema → Xuanwei RLS → Joshua 会话／守卫 → #10 授权协调集成 → Shiying UI → Yubo 验收入口。只修复接口不一致和阻断缺陷，不在集成阶段重构他人工作。
+
+所有工作包使用成员 PR 合并到 `sprint/2-auth-foundation`。Review 发现必须先判断是否属于当前 Issue、当前输出合同、另一工作包或既有缺陷；不得要求作者跨文件所有权顺手修复。
 
 ### 检查点 3：周末验收
 
 - 集中执行一次非作者审查；
 - 运行 reset、lint、typecheck、全部测试和 build；
 - 执行 X-01–07 并形成 M1 结论；
+- 所有纳入 Issues 达到 `Testing` 后创建以 #41 为主要 Issue 的 Sprint 总 PR 到 `main`；
+- 总 PR 独立审查与完整 checks 通过后，另行取得合并授权；
 - 非阻断建议统一进入 backlog。
 
 ## 7. 本周交付物
@@ -124,6 +154,9 @@ Issue #10 由 `Josscui516` 担任上层协调负责人，原生 sub-issues 为 #
 - [ ] 共享布局和五类反馈状态通过；
 - [ ] 固定接口在单次集成中兼容；
 - [ ] 每个工作包完成一次集中非作者审查；
+- [ ] 每条 review 缺陷已归属到当前 Issue、接口提供者、其他工作包或既有 backlog；
+- [ ] #9、#10、#11、#39、#40、#41 均已通过成员／协调 PR 集成且保持 `Testing`；
+- [ ] #41 Sprint 总 PR 正确列出其余五个 Issues 并以 `main` 为 base；
 - [ ] lint、typecheck、应用测试、数据库测试和 build 通过；
 - [ ] 仓库与证据不含秘密或真实资料；
 - [ ] 阻断缺陷为零，下周输入达到 Ready。
@@ -148,6 +181,7 @@ Issue #10 由 `Josscui516` 担任上层协调负责人，原生 sub-issues 为 #
 6. 权限、隐私和密钥检查通过；
 7. 阻断问题为零，非阻断遗留项有负责人和期限；
 8. 课程第 4 周会议模块输入达到 Ready。
+9. Sprint 总 PR 合并到 `main` 后，#9、#10、#11、#39、#40、#41 才进入 `Done`。
 
 ## 11. 未完成项处理
 

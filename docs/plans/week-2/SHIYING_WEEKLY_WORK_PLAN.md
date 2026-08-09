@@ -14,6 +14,11 @@
 - GitHub Assignee：`Scarletthekiller`；
 - 独立工作包：WP-D 共享 UI；
 - 主要 Issue：#11；
+- GitHub Sprint：`Sprint 2`；
+- Sprint 集成分支：`sprint/2-auth-foundation`；
+- Issue 分支：`feature/11-shared-feedback-ui`；
+- 成员 PR base：`sprint/2-auth-foundation`；
+- Sprint 总 PR 主要 Issue：#41；
 - 允许修改：`src/components/layout/`、`src/components/forms/`、`src/components/feedback/`、受保护 layout、组件测试；
 - 禁止修改：认证 session／actions、`src/lib/auth/authorization.ts`、`supabase/`、CI／验收配置；
 - 固定输入合同：认证错误码；`AccessContext { userId, role }`；
@@ -107,6 +112,9 @@
 - [ ] 不以 UI 隐藏替代服务端权限；
 - [ ] lint、typecheck、组件测试和 build 通过；
 - [ ] 交接包可独立消费；
+- [ ] 成员 PR 只关联 #11 并合并到 `sprint/2-auth-foundation`；
+- [ ] Review 发现已区分 #11 UI 状态缺陷与 #9／#40 服务端合同缺陷；
+- [ ] 合并后 #11 保持 `Testing`，未提前关闭；
 - [ ] 未完成项有负责人、期限和下次检查时间。
 
 ## 8. 风险与问题
@@ -129,4 +137,5 @@
 - 未完成：按实际结果记录；
 - 输出合同：组件 props、状态合同和测试入口；
 - 集成注意事项：UI 只消费可信服务端角色，不负责授权；
+- Sprint PR 纳入证据：#11 的五类状态、可访问性、角色 UI、review 和检查摘要；
 - 下周建议：会议页面复用现有组件，不另建平行体系。

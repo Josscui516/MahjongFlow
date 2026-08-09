@@ -14,6 +14,11 @@
 - GitHub Assignee：`YUHAN2233`；
 - 独立工作包：WP-C RLS 与服务端授权；
 - 主要 Issue：#40；父 Issue 为 #10；
+- GitHub Sprint：`Sprint 2`；
+- Sprint 集成分支：`sprint/2-auth-foundation`；
+- Issue 分支：`feature/40-rls-authorisation`；
+- 成员 PR base：`sprint/2-auth-foundation`；
+- Sprint 总 PR 主要 Issue：#41；
 - 允许修改：第三个新 timestamped migration、`src/lib/auth/authorization.ts`、`supabase/tests/rls/`；
 - 禁止修改：前两个 migration、seed、认证路由、共享组件、CI／验收配置；
 - 固定输入合同：冻结表／列名；`AuthenticatedUser { id }`；`AccessContext { userId, role }`；
@@ -107,6 +112,9 @@
 - [ ] 未使用 service secret 绕过普通请求；
 - [ ] db lint、RLS tests、typecheck 和模块测试通过；
 - [ ] 交接包可独立消费；
+- [ ] 成员 PR 只关联 #40 并合并到 `sprint/2-auth-foundation`；
+- [ ] Review 发现已区分 #40 policy／授权缺陷与 #39 schema 或 #9 会话输出缺陷；
+- [ ] 合并后 #40 保持 `Testing`，未提前关闭；
 - [ ] 未完成项有负责人、期限和下次检查时间。
 
 ## 8. 风险与问题
@@ -129,4 +137,5 @@
 - 未完成：按实际结果记录；
 - 输出合同：`AccessContext`、两个授权守卫和测试入口；
 - 集成注意事项：普通后台请求必须携带用户 JWT；
+- Sprint PR 纳入证据：#40 的 RLS allow/deny、反提权、授权模块、review 和回滚摘要；
 - 下周建议：会议模块直接调用后台守卫并依赖 RLS。

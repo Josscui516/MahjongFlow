@@ -147,10 +147,14 @@ Detailed setup, troubleshooting and platform procedures live in the
 ## Contributing
 
 ```text
-Issue → short-lived branch → Pull Request → non-author review → Testing → merge
+Sprint branch from main
+→ Issue branches → work-package PRs → non-author review → Sprint branch
+→ integrated Testing → Sprint PR → main
 ```
 
-Do not commit directly to `main`. Every branch and Pull Request must reference a real Issue. Database or permission changes require migrations and role-specific tests. See the [Git collaboration agreement](docs/plans/week-1/artifacts/day-1/DAY_1_GIT_COLLABORATION_AGREEMENT.md).
+Do not commit directly to `main`, and do not target a work-package PR at `main`. Every branch and Pull Request must reference a real Issue; the weekly plan identifies the Sprint branch and integration/acceptance Issue. Database or permission changes require migrations and role-specific tests. See the [Git collaboration agreement](docs/plans/week-1/artifacts/day-1/DAY_1_GIT_COLLABORATION_AGREEMENT.md).
+
+Write all new repository documentation, plans, handoffs, ADRs, Issue bodies, Pull Request bodies, and substantive new sections in English. Existing Chinese historical records may remain unchanged unless a task explicitly requests translation or substantially rewrites them.
 
 ## Team
 

@@ -14,6 +14,11 @@
 - GitHub Assignee：`Kaia-Zhang`；
 - 独立工作包：WP-B Schema 与约束；
 - 主要 Issue：#39；父 Issue 为 #10；
+- GitHub Sprint：`Sprint 2`；
+- Sprint 集成分支：`sprint/2-auth-foundation`；
+- Issue 分支：`feature/39-schema-baseline`；
+- 成员 PR base：`sprint/2-auth-foundation`；
+- Sprint 总 PR 主要 Issue：#41；
 - 允许修改：前两个新 timestamped migration、`supabase/seed.sql`、`supabase/tests/constraints/`、`src/types/database.generated.ts`；
 - 禁止修改：第三个 RLS migration、`src/lib/auth/`、应用路由、共享组件、CI／验收配置；
 - 固定输入合同：Week 1 ERD、表／列名、`committee_role` enum、两个固定虚构 Auth UUID；
@@ -108,6 +113,9 @@
 - [ ] reset、db lint、tests、diff 和 typecheck 通过；
 - [ ] 无真实资料、密码、token 或 secret；
 - [ ] 交接包可独立消费；
+- [ ] 成员 PR 只关联 #39 并合并到 `sprint/2-auth-foundation`；
+- [ ] Review 发现已区分 #39 schema 输出缺陷与 #40 policy／其他工作包缺陷；
+- [ ] 合并后 #39 保持 `Testing`，未提前关闭；
 - [ ] 未完成项有负责人、期限和下次检查时间。
 
 ## 8. 风险与问题
@@ -130,4 +138,5 @@
 - 未完成：按实际结果记录；
 - 输出合同：表／列、enum、fixture、索引和验证命令；
 - 集成注意事项：第三个 migration 只能引用冻结对象，不改写前两层；
+- Sprint PR 纳入证据：#39 的 migration、constraint、seed、类型、review 和回滚摘要；
 - 下周建议：会议功能复用现有表和 migration 流程。

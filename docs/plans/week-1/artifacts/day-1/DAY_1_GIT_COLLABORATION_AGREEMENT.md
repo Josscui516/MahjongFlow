@@ -15,12 +15,12 @@
 | GitHub 仓库 | `Josscui516/MahjongFlow` |
 | 远程名称 | `origin` |
 | 基线分支 | `main` |
-| 工作方式 | Issue → 短生命周期分支 → Pull Request → Review → Testing → Merge |
+| 工作方式 | Issue 分支 → 成员 PR → Sprint 集成分支 → Sprint 总 PR → `main` |
 | 项目板状态 | `Backlog → Ready → In Progress → Review → Testing → Done` |
 | `.github` 模板 | 第 2 天创建，不在本步骤提前执行 |
 | CI 与远程分支保护 | 第 5 天配置和验证；配置前仍须执行本约定中的人工检查 |
 
-`main` 是可部署基线。禁止直接在 `main` 上完成日常功能或修复；远程设置允许后，应要求 Pull Request、至少一名审查者和必需状态检查。
+`main` 是可部署基线，只接收 Sprint 总 PR 或明确批准的例外。禁止直接在 `main` 上完成日常功能或修复；成员 PR 必须先进入统一周计划指定的 Sprint 集成分支。
 
 ## 2. 开始任务的条件
 
@@ -33,7 +33,7 @@
 5. 已指定主要负责人和建议审查人；
 6. 已给出工作量估算；
 7. 该负责人当前没有另一个主要任务处于 `In Progress`；
-8. 从最新 `main` 创建了一个短生命周期分支。
+8. Sprint 集成分支已从最新 `main` 建立，成员从该分支创建短生命周期 Issue 分支。
 
 任何缺少验收条件或范围归属的 Issue 不得进入 `Ready`。
 
@@ -56,6 +56,7 @@
 | `refactor/` | 不改变行为的代码整理 | `refactor/73-task-queries` |
 | `chore/` | 工具、依赖或配置 | `chore/9-ci-baseline` |
 | `codex/` | Codex 桌面任务创建的受控分支 | `codex/42-meeting-to-task` |
+| `sprint/` | 当前 Sprint 唯一集成分支 | `sprint/2-auth-foundation` |
 
 规则：
 
@@ -64,12 +65,13 @@
 - 一个分支只解决一个主要 Issue；
 - 不使用成员姓名、`new`、`update`、`final` 等无法说明范围的名称；
 - 分支目标生命周期不超过两个工作日；超过时必须拆分、更新 Issue 或说明阻塞；
-- 合并后删除远程功能分支；不得长期复用已合并分支。
+- 合并完成且用户明确授权后才删除远程功能分支；不得长期复用已合并分支。
 
 ### 3.2 分支同步
 
-- 创建分支前获取最新 `main`；
-- 打开 PR 前再次同步 `main` 并解决冲突；
+- Sprint 集成分支从最新 `main` 创建，命名为 `sprint/<number>-<short-kebab-theme>`；
+- 成员 Issue 分支从统一周计划指定的 Sprint 集成分支创建；
+- 打开成员 PR 前同步 Sprint 集成分支；打开 Sprint 总 PR 前同步 `main`；
 - 不对其他成员正在使用的共享分支执行强制推送；
 - 已进入审查的分支若必须重写历史，应先通知审查人；
 - 不使用会删除他人未提交工作的命令处理冲突。
@@ -98,13 +100,32 @@ docs: record repository structure baseline
 - 修复审查意见时优先产生清晰的小 commit，合并策略由仓库设置决定；
 - commit 信息不得包含密钥、真实参与者资料或其他敏感内容。
 
-## 5. Pull Request 必填内容
+## 5. 两级 Pull Request
+
+### 5.1 成员工作包 PR
+
+- head 为一个规范 Issue 分支，base 为本周 `sprint/<number>-<theme>`；
+- 只关联一个主要 Issue，不使用 closing keyword；
+- 非作者审查、checks 和个人验收通过后合并到 Sprint 分支；
+- 合并后 Issue 保持 `Testing`，等待 Sprint 总 PR。
+
+### 5.2 Sprint 总 PR
+
+- head 为 Sprint 集成分支，base 为 `main`；
+- 使用统一周计划指定的集成／验收 Issue 作为唯一主要 Issue；
+- 在 `Included work package issues` 中列出其余 Sprint Issues；
+- 汇总完整集成、回归、权限、隐私、migration 顺序、部署和回滚证据；
+- 所有纳入 Issue 均为 `Testing` 且 Acceptance Gate 为 `Passed` 后才能合并；
+- 合并后才关闭整组 Issues 并更新为 `Done`。
+
+### 5.3 PR 必填内容
 
 每个 PR 必须包含：
 
 | 字段 | 要求 |
 |---|---|
 | 关联 Issue | 使用可自动关闭或明确关联的 Issue 编号 |
+| 交付路线 | PR 类型、Sprint、integration branch、base/head；Sprint 总 PR 还需列出纳入 Issues |
 | 范围 | 列出 P0/P1/Post-MVP ID；没有范围 ID 时说明原因 |
 | 变更摘要 | 说明做了什么以及为什么 |
 | 验收标准 | 逐项引用并勾选对应验收场景 ID |
@@ -117,7 +138,7 @@ docs: record repository structure baseline
 
 PR 描述不得只写 Issue 链接或“完成了”。审查人必须能仅根据 PR、Issue 和链接文档判断是否满足验收标准。
 
-## 6. 审查与合并规则
+## 6. 审查、缺陷归属与合并规则
 
 1. PR 作者先完成自查和相关测试，再请求审查；
 2. 至少一名非作者成员批准；作者不能批准自己的 PR；
@@ -126,9 +147,14 @@ PR 描述不得只写 Issue 链接或“完成了”。审查人必须能仅根�
 5. 作者回应每项审查意见，修复后重新请求必要审查；
 6. PR 进入 `Review` 时必须已有可审查实现，不把空 PR 当作完成进度；
 7. 审查通过后进入 `Testing`，按验收场景执行验证；
-8. 所有必需检查通过、无未解决阻塞意见后才能合并到 `main`；
+8. 所有必需检查通过、无未解决阻塞意见后，成员 PR 才能合并到 Sprint 分支；只有完成整组验收的 Sprint 总 PR 才能合并到 `main`；
 9. 合并后确认 Issue、项目板、文档和部署状态，再判断是否进入 `Done`；
 10. 不因排期紧张跳过权限、数据约束或核心回归测试。
+11. 审查每个发现前必须对照主要 Issue、成员工作文档、文件所有权、冻结接口和 PR base，判断是否由当前 PR 引入并属于当前作者责任。
+12. 当前 PR 违反自身验收、输出合同或引入回归时，作为阻塞意见由当前作者修复。
+13. 缺陷属于另一工作包、已有代码或冻结合同本身时，不要求当前作者跨所有权修改；将问题退回正确 Issue／所有者。只有安全、数据丢失、权限绕过、全局构建阻断或直接阻止集成时才阻塞当前 PR 或 Sprint 总 PR。
+14. 范围和权威文档冲突时暂停修改并取得团队决定。每条阻塞意见写明分类、负责 Issue／所有者、阻塞层级和复验方法。
+15. 成员 PR 只能合并到 Sprint 分支；只有 Sprint 总 PR 可按正常流程合并到 `main`。
 
 审查请求应在一个工作日内得到首次回应；无法及时审查时，审查人应主动转交给其他成员，避免 PR 静默等待。
 
@@ -205,23 +231,24 @@ PR 描述不得只写 Issue 链接或“完成了”。审查人必须能仅根�
 | `Ready` | 验收条件、依赖、负责人、估算齐备 | `In Progress` |
 | `In Progress` | 实现、自查和 PR 描述齐备 | `Review` |
 | `Review` | 非作者审查批准，阻塞意见已解决 | `Testing` |
-| `Testing` | 自动和手动验收通过，文档与部署要求满足 | `Done` |
+| `Testing` | 成员 PR 已集成到 Sprint 分支；Sprint 总 PR 完整验收并合并到 `main` | `Done` |
 
 失败的 Review 或 Testing 返回 `In Progress`，并在 Issue 中记录原因。`Done` 只表示满足 Definition of Done，不等同于“代码已写完”。
 
 ## 12. 日常操作流程
 
 ```text
-选择 Ready Issue
+确认 Sprint、统一周计划、集成分支和 Ready Issue
 → 确认验收条件和依赖
 → 指定负责人及审查人
-→ 创建短生命周期分支
+→ 从 Sprint 集成分支创建短生命周期 Issue 分支
 → 实现并本地验证
-→ 打开关联 Issue 的 PR
-→ 非作者审查
-→ Testing 验收
-→ 合并 main
-→ 更新 Issue、项目板、文档和部署状态
+→ 打开以 Sprint 分支为 base 的成员 PR
+→ 按缺陷归属完成非作者审查
+→ 合并 Sprint 分支并保持 Testing
+→ 全部工作包完成后打开 Sprint 总 PR 到 main
+→ 完成整组验收并经授权合并
+→ 批量更新 Issue、项目板、文档和部署状态
 ```
 
 ## 13. 当前待后续执行项

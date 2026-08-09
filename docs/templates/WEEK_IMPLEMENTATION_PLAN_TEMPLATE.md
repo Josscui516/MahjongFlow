@@ -1,134 +1,164 @@
-# MahjongFlow 统一周实现计划模板
+# MahjongFlow Unified Weekly Implementation Plan Template
 
-> 使用说明：复制到 `docs/plans/week-N/WEEK_N_IMPLEMENTATION_PLAN.md`，替换全部 `{占位内容}` 并删除本说明。统一周计划由 5 个低耦合工作包组成，不创建日计划。
+> Usage: copy this file to `docs/plans/week-N/WEEK_N_IMPLEMENTATION_PLAN.md`, replace every `{placeholder}`, and remove this note. A weekly plan contains five low-coupling work packages and does not create daily plans.
 
-## 课程第 {X} 周（开发第 {Y} 周）：{本周主题}
+## Course Week {X} (Development Week {Y}): {Weekly theme}
 
-> 本计划依据[《MVP 项目企划书》](../project/MVP_PROJECT_PROPOSAL.md)编制。本周范围为：{范围及边界}。
+> This plan follows the [MVP Project Proposal](../project/MVP_PROJECT_PROPOSAL.md). The approved scope for this week is: {scope and boundaries}.
 
-## 1. 本周目标
+## 1. Weekly objective
 
-{本周结束时必须形成且可验收的能力。}
+{Describe the independently verifiable capability that must exist by the end of the week.}
 
-### 成员独立工作文档
+### Sprint delivery route
 
-- [{成员 1 姓名}]({成员1英文大写姓名}_WEEKLY_WORK_PLAN.md)
-- [{成员 2 姓名}]({成员2英文大写姓名}_WEEKLY_WORK_PLAN.md)
-- [{成员 3 姓名}]({成员3英文大写姓名}_WEEKLY_WORK_PLAN.md)
-- [{成员 4 姓名}]({成员4英文大写姓名}_WEEKLY_WORK_PLAN.md)
-- [{成员 5 姓名}]({成员5英文大写姓名}_WEEKLY_WORK_PLAN.md)
+- GitHub Sprint: `Sprint {N}`
+- Sprint integration branch: `sprint/{N}-{short-kebab-theme}`
+- Integration owner: {member name}
+- Sprint PR primary Issue: #{real integration or acceptance Issue}
+- Sprint PR route: `sprint/{N}-{short-kebab-theme}` → `main`
+- Other included work-package or coordination Issues: {real Sprint Issues excluding the primary Issue, or `None`}
+- Remote branch, Project fields, and branch protection owner: {repository administrator or owner}
 
-## 2. 上周输入与开始条件
+### Member work plans
 
-- {已完成基线}；
-- {技术、数据或环境输入}；
-- {账号、权限或工具}；
-- {必须先解决的阻断项}。
+- [{Member 1 name}]({MEMBER_1_UPPERCASE_NAME}_WEEKLY_WORK_PLAN.md)
+- [{Member 2 name}]({MEMBER_2_UPPERCASE_NAME}_WEEKLY_WORK_PLAN.md)
+- [{Member 3 name}]({MEMBER_3_UPPERCASE_NAME}_WEEKLY_WORK_PLAN.md)
+- [{Member 4 name}]({MEMBER_4_UPPERCASE_NAME}_WEEKLY_WORK_PLAN.md)
+- [{Member 5 name}]({MEMBER_5_UPPERCASE_NAME}_WEEKLY_WORK_PLAN.md)
 
-## 3. 本周范围
+## 2. Prior-week inputs and start conditions
 
-### 3.1 必须完成
+- {completed baseline}
+- {technical, data, or environment input}
+- {accounts, permissions, or tools}
+- {blocker that must be resolved before work starts}
 
-- {P0 工作项 1}；
-- {P0 工作项 2}；
-- {P0 工作项 3}。
+## 3. Weekly scope
 
-### 3.2 条件允许时完成
+### 3.1 Must complete
 
-- {非阻断改进}。
+- {P0 item 1}
+- {P0 item 2}
+- {P0 item 3}
 
-### 3.3 明确不做
+### 3.2 Complete if capacity permits
 
-- {后续功能}；
-- {P1／Post-MVP 能力}；
-- {范围蔓延事项}。
+- {non-blocking improvement}
 
-## 4. 五个独立工作包
+### 3.3 Explicitly out of scope
 
-| 成员 | 独立工作包 | 主要文件所有权 | 固定输入合同 | 输出合同 | 个人验证 |
+- {later capability}
+- {P1 or Post-MVP capability}
+- {scope-expansion item}
+
+## 4. Five independent work packages
+
+| Member | Work package | Primary file ownership | Frozen input contract | Output contract | Individual verification |
 |---|---|---|---|---|---|
-| {成员 1} | {任务} | {文件／目录} | {输入} | {输出} | {检查} |
-| {成员 2} | {任务} | {文件／目录} | {输入} | {输出} | {检查} |
-| {成员 3} | {任务} | {文件／目录} | {输入} | {输出} | {检查} |
-| {成员 4} | {任务} | {文件／目录} | {输入} | {输出} | {检查} |
-| {成员 5} | {任务} | {文件／目录} | {输入} | {输出} | {检查} |
+| {Member 1} | {task} | {files or directories} | {input} | {output} | {checks} |
+| {Member 2} | {task} | {files or directories} | {input} | {output} | {checks} |
+| {Member 3} | {task} | {files or directories} | {input} | {output} | {checks} |
+| {Member 4} | {task} | {files or directories} | {input} | {output} | {checks} |
+| {Member 5} | {task} | {files or directories} | {input} | {output} | {checks} |
 
-独立执行规则：
+### PR route and integration order
 
-1. 每名成员只修改其文件所有权范围；
-2. 依赖未实现时使用已冻结的类型、mock 或 fixture 独立推进；
-3. 不持续结对，不跨工作包顺手修改；
-4. 接口变化通过统一变更记录处理，不在私下同步后直接改动；
-5. 各工作包先自测通过，再进入单次集成。
-
-## 5. 固定接口与文件边界
-
-| 合同／边界 | 提供者 | 使用者 | 冻结内容 | 允许变更条件 |
+| Work package | Issue branch | PR base | Entry condition for Sprint branch | Integration order |
 |---|---|---|---|---|
-| {合同 A} | {成员} | {成员} | {字段、函数或行为} | {阻断原因与确认方式} |
-| {合同 B} | {成员} | {成员} | {字段、函数或行为} | {阻断原因与确认方式} |
+| {Work package 1} | `{type}/{issue}-{description}` | `sprint/{N}-{theme}` | {individual acceptance, review, checks} | 1 |
+| {Work package 2} | `{type}/{issue}-{description}` | `sprint/{N}-{theme}` | {conditions} | 2 |
+| {Work package 3} | `{type}/{issue}-{description}` | `sprint/{N}-{theme}` | {conditions} | 3 |
+| {Work package 4} | `{type}/{issue}-{description}` | `sprint/{N}-{theme}` | {conditions} | 4 |
+| {Work package 5} | `{type}/{issue}-{description}` | `sprint/{N}-{theme}` | {conditions} | 5 |
 
-冲突规则：文件所有者保留当前周编辑权。需要跨边界修改时，提出者只记录所需变更和理由，由所有者实施或明确交接。
+Independent execution rules:
 
-## 6. 三个团队检查点
+1. Each member changes only their owned file range.
+2. When a dependency is unavailable, use the frozen type, mock, adapter, or fixture.
+3. Do not continuously pair or make opportunistic changes in another work package.
+4. Record interface changes through the shared decision process; do not change a frozen contract after a private conversation.
+5. Each work package completes its own verification before the single integration checkpoint.
+6. Feature owners provide the minimum unit, integration, route, and regression tests required by their Issue. The test/acceptance owner provides shared test configuration, cross-package harnesses, CI, fixtures, and Sprint-level evidence.
+7. Route/page owners implement the actual UI surface. Authentication owners implement protection for the frozen route namespaces without taking ownership of those pages.
 
-### 检查点 1：周初合同冻结
+## 5. Frozen interfaces and file boundaries
 
-- 确认 5 个工作包、文件所有权、输入／输出合同和真实 Issue；
-- 确认每名成员可以独立开始；
-- 冻结后不安排日常全员同步。
-
-### 检查点 2：单次集成
-
-- 每个工作包先完成个人验收；
-- 按依赖顺序接入，不在集成时重写他人工作；
-- 只处理接口不一致和阻断缺陷。
-
-### 检查点 3：周末验收
-
-- 集中执行非作者审查、回归、质量检查和周完成判断；
-- 非阻断建议进入 backlog，不反复打断已完成工作包。
-
-## 7. 本周交付物
-
-- {5 个独立工作包产出及位置}；
-- {固定接口与变更记录}；
-- {集成、测试和评审证据}；
-- {风险、未完成项与下周输入}。
-
-## 8. 本周验收清单
-
-- [ ] 5 个独立工作包分别完成个人验收；
-- [ ] 没有成员越过文件所有权覆盖他人改动；
-- [ ] 固定接口在单次集成中兼容；
-- [ ] 每个交付物完成一次集中非作者审查；
-- [ ] lint、typecheck、测试和构建通过；
-- [ ] 权限、隐私和敏感数据要求通过；
-- [ ] 阻断级缺陷为零；
-- [ ] 下周 Ready 输入已准备完成。
-
-## 9. 风险与应对
-
-| 风险 | 信号 | 影响 | 应对 | 所有者 |
+| Contract or boundary | Provider | Consumers | Frozen content | Conditions for change |
 |---|---|---|---|---|
-| {风险 1} | {信号} | {影响} | {措施} | {成员} |
-| {风险 2} | {信号} | {影响} | {措施} | {成员} |
+| {Contract A} | {member} | {members} | {fields, function, or behavior} | {blocking reason and approval path} |
+| {Contract B} | {member} | {members} | {fields, function, or behavior} | {blocking reason and approval path} |
 
-## 10. 本周完成定义
+The file owner retains edit authority for the week. A cross-boundary change request records the required change and reason; the owner implements it or explicitly hands over the file.
 
-1. {核心目标通过验收}；
-2. 5 个工作包均有独立交付物和个人验证证据；
-3. 单次集成与集中非作者审查完成；
-4. lint、typecheck、测试和构建通过；
-5. 权限、隐私和数据关系已验证；
-6. 阻断问题为零；
-7. 非阻断遗留项有负责人和期限；
-8. 下周首批任务达到 Ready。
+## 6. Three team checkpoints
 
-## 11. 未完成项处理
+### Checkpoint 1: start-of-week contract freeze
 
-- {阻断项升级方式}；
-- {接口变化处理方式}；
-- {非阻断项进入 backlog 的方式}；
-- 未经验证的结果不得描述为完成；
-- 新需求不得替代未完成的 P0 工作。
+- Confirm five work packages, file ownership, input/output contracts, and real Issues.
+- Confirm that every member can start independently.
+- Do not schedule routine whole-team syncs after the freeze.
+
+### Checkpoint 2: single integration
+
+- Each work package completes individual acceptance first.
+- Each work-package PR targets the Sprint branch and references exactly one primary Issue.
+- Integrate in dependency order without rewriting another member's work.
+- Address only interface mismatches and blocking defects.
+
+### Checkpoint 3: end-of-week acceptance
+
+- Perform concentrated non-author review, regression, quality checks, and weekly completion assessment.
+- Open the Sprint PR to `main` using the designated integration/acceptance Issue.
+- List every included work-package Issue; mark the group `Done` only after the Sprint PR merges.
+- Send non-blocking suggestions to the backlog instead of repeatedly interrupting completed work packages.
+
+## 7. Weekly deliverables
+
+- {outputs and locations for the five work packages}
+- {frozen interfaces and change records}
+- {integration, test, and review evidence}
+- {risks, unfinished items, and next-week inputs}
+
+## 8. Weekly acceptance checklist
+
+- [ ] All five work packages completed individual acceptance.
+- [ ] No member overwrote another member's owned files.
+- [ ] Frozen interfaces were compatible at the integration checkpoint.
+- [ ] Every deliverable received one concentrated non-author review.
+- [ ] Review findings were attributed to the current Issue, a frozen contract, another work package, or pre-existing behavior.
+- [ ] Feature-owned verification was not confused with shared acceptance-platform ownership.
+- [ ] All work-package PRs merged into the Sprint branch and their Issues remain in `Testing`.
+- [ ] The Sprint PR has the correct primary Issue, included Issues, base/head, and integrated acceptance evidence.
+- [ ] Lint, typecheck, tests, and build passed.
+- [ ] Permission, privacy, and sensitive-data requirements passed.
+- [ ] No blocking defects remain.
+- [ ] The first next-week inputs are `Ready`.
+
+## 9. Risks and responses
+
+| Risk | Signal | Impact | Response | Owner |
+|---|---|---|---|---|
+| {Risk 1} | {signal} | {impact} | {action} | {member} |
+| {Risk 2} | {signal} | {impact} | {action} | {member} |
+
+## 10. Definition of Done
+
+1. {Core objective passes acceptance.}
+2. All five work packages have independent deliverables and verification evidence.
+3. The single integration checkpoint and concentrated non-author review are complete.
+4. Lint, typecheck, tests, and build pass.
+5. Permission, privacy, and data relationships are verified.
+6. No blocking issue remains.
+7. Every non-blocking remainder has an owner and due date.
+8. The first next-week tasks are `Ready`.
+9. Only after the Sprint PR merges into `main` do the accepted Issues enter `Done`.
+
+## 11. Unfinished-item handling
+
+- {blocker escalation path}
+- {interface-change process}
+- {how non-blocking items enter the backlog}
+- Do not describe an unverified result as complete.
+- New requests do not replace unfinished P0 work without an approved scope decision.
