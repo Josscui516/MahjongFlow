@@ -80,10 +80,10 @@ npm run build
 
 测试证据映射：
 
-- X-01：`tests/integration/auth/session-cookie-flow.test.ts` 通过真实 Supabase SSR cookie adapter 覆盖登录写入、下一次服务端请求保持认证、登出清除和登出后拒绝；`src/app/(auth)/actions.test.ts` 与 `src/proxy.test.ts` 保留动作合同和刷新响应的单元覆盖；
-- X-02：`tests/integration/auth/session-cookie-flow.test.ts` 验证拒绝凭据不会创建 session cookie；`src/lib/auth/credentials.test.ts` 与 `src/app/(auth)/actions.test.ts` 覆盖未知账号／错误密码的统一安全错误；
-- X-03：`src/proxy.test.ts` 与 `src/app/(auth)/api/backoffice/session/route.test.ts` 覆盖匿名页面跳转、直接 API 拒绝和无后台数据；
-- 共享安全边界：`src/lib/auth/authenticated-user.test.ts` 覆盖失效 session 与 provider 故障；`src/lib/auth/redirect.test.ts` 覆盖开放重定向拒绝。
+- X-01：`tests/integration/auth/session-cookie-flow.test.ts` 通过真实 Supabase SSR cookie adapter 覆盖登录写入、下一次服务端请求保持认证、登出清除和登出后拒绝；`src/app/(auth)/actions.test.ts` 与 `tests/integration/auth/proxy.test.ts` 保留动作合同和刷新响应覆盖；
+- X-02：`tests/integration/auth/session-cookie-flow.test.ts` 验证拒绝凭据不会创建 session cookie；`tests/unit/auth/credentials.test.ts` 与 `src/app/(auth)/actions.test.ts` 覆盖未知账号／错误密码的统一安全错误；
+- X-03：`tests/integration/auth/proxy.test.ts` 与 `src/app/(auth)/api/backoffice/session/route.test.ts` 覆盖匿名页面跳转、直接 API 拒绝和无后台数据；
+- 共享安全边界：`tests/unit/auth/authenticated-user.test.ts` 覆盖失效 session 与 provider 故障；`tests/unit/auth/redirect.test.ts` 覆盖开放重定向拒绝。
 
 手动浏览器验收必须使用专用虚构账号，不得把邮箱、密码、session、token、cookie 或真实参与者资料保存到命令、日志、截图、Issue、PR 或本文件：
 

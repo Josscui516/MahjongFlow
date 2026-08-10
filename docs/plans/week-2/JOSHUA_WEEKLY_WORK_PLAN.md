@@ -14,7 +14,7 @@
 - GitHub Assignee：`Josscui516`；
 - 独立工作包：WP-A 认证与会话；
 - 主要 Issue：#9；
-- 允许修改：`src/app/(auth)/`、认证 session 模块、认证路由守卫文件（不含 Shiying 所有的受保护 layout）、`tests/auth/`；
+- 允许修改：`src/app/(auth)/`、认证 session 模块、认证路由守卫文件（不含 Shiying 所有的受保护 layout）、`tests/unit/auth/`、`tests/integration/auth/`；
 - 禁止修改：`supabase/migrations/`、`supabase/seed.sql`、RLS tests、共享组件目录、CI／测试配置；
 - 固定输入合同：Supabase public env；`AuthenticatedUser { id: string }`；未认证统一返回拒绝；
 - 输出合同：`getAuthenticatedUser()`、登录／登出服务端动作、受保护路由入口和认证测试命令；
@@ -95,13 +95,13 @@
 - 可信会话和当前用户模块；
 - 登录／登出服务端动作；
 - 受保护路由和服务端入口；
-- `tests/integration/auth/` 与 X-01–03 证据；
+- `tests/unit/auth/`、`tests/integration/auth/` 与 X-01–03 证据；
 - 认证接口和集成说明。
 
 ## 7. 个人验收清单
 
 - [x] X-01、X-02、X-03 通过——73 个自动化测试覆盖三项合同，其中真实 `@supabase/ssr` cookie adapter 集成测试验证登录写入、跨请求保持、登出清除、登出后拒绝以及错误密码／未知账号无 session；X-03 另有匿名生产运行时证据，且 2026-08-09 的虚构账号浏览器验收未记录凭据或 session；
-- [x] 只修改允许文件范围——本变更的 22 个路径均属于 Joshua 的认证／会话／路由守卫范围、`tests/integration/auth/` 或本人的计划与交接材料；
+- [x] 只修改允许文件范围——本变更的 22 个路径均属于 Joshua 的认证／会话／路由守卫范围、`tests/unit/auth/`、`tests/integration/auth/` 或本人的计划与交接材料；
 - [x] `AuthenticatedUser` 输出符合冻结合同——成功结果仅为 `{ id: string }`，失败结果仅为固定认证错误码；
 - [x] 错误不泄露账号、session 或 token——未知账号与错误密码映射为同一错误，客户端边界及构建产物敏感标记扫描通过；
 - [x] lint、typecheck、认证测试和 build 通过——2026-08-10 复跑结果为 8 个测试文件、73 个测试通过，四条质量命令退出码均为 0；
