@@ -115,5 +115,15 @@ export async function proxy(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/backoffice/:path*", "/api/backoffice/:path*"],
+  matcher: [
+    "/backoffice/:path*",
+    "/dashboard/:path*",
+    "/meetings/:path*",
+    "/tasks/:path*",
+    "/events/:path*",
+    "/registrations/:path*",
+    "/attendance/:path*",
+    "/dinner-verification/:path*",
+    "/api/backoffice/:path*",
+  ],
 };

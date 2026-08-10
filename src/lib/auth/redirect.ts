@@ -1,5 +1,21 @@
 const FALLBACK_BACKOFFICE_PATH = "/backoffice";
 const REDIRECT_ORIGIN = "https://mahjongflow.invalid";
+const PROTECTED_BACKOFFICE_PATH_PREFIXES = [
+  FALLBACK_BACKOFFICE_PATH,
+  "/dashboard",
+  "/meetings",
+  "/tasks",
+  "/events",
+  "/registrations",
+  "/attendance",
+  "/dinner-verification",
+] as const;
+
+function isProtectedBackofficePath(pathname: string) {
+  return PROTECTED_BACKOFFICE_PATH_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
 
 export function getSafeBackofficeRedirectPath(value: unknown) {
   if (typeof value !== "string" || !value.startsWith("/")) {
@@ -9,9 +25,7 @@ export function getSafeBackofficeRedirectPath(value: unknown) {
   try {
     const redirectUrl = new URL(value, REDIRECT_ORIGIN);
     const isSameOrigin = redirectUrl.origin === REDIRECT_ORIGIN;
-    const isBackofficePath =
-      redirectUrl.pathname === FALLBACK_BACKOFFICE_PATH ||
-      redirectUrl.pathname.startsWith(`${FALLBACK_BACKOFFICE_PATH}/`);
+    const isBackofficePath = isProtectedBackofficePath(redirectUrl.pathname);
 
     if (!isSameOrigin || !isBackofficePath) {
       return FALLBACK_BACKOFFICE_PATH;

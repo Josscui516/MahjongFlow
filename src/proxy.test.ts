@@ -51,8 +51,17 @@ describe("authentication proxy", () => {
   test.each([
     ["/backoffice", true],
     ["/backoffice/tasks", true],
+    ["/dashboard", true],
+    ["/meetings/fictional-meeting-id", true],
+    ["/tasks/fictional-task-id", true],
+    ["/events/fictional-event-id", true],
+    ["/registrations", true],
+    ["/attendance/fictional-event-id", true],
+    ["/dinner-verification/fictional-event-id", true],
     ["/api/backoffice/session", true],
     ["/login", false],
+    ["/check-in/fictional-token", false],
+    ["/api/check-in/fictional-token", false],
     ["/api/health/supabase", false],
   ])("matches only protected routes", (url, expected) => {
     expect(
@@ -64,21 +73,33 @@ describe("authentication proxy", () => {
     ).toBe(expected);
   });
 
-  test("X-03 redirects an anonymous page request to the constrained login path", async () => {
-    mocks.getUser.mockResolvedValue({
-      data: { user: null },
-      error: { name: "AuthSessionMissingError", status: 400 },
-    });
+  test.each([
+    "/backoffice/tasks?filter=mine",
+    "/dashboard?view=mine",
+    "/meetings/fictional-meeting-id",
+    "/tasks/fictional-task-id",
+    "/events/fictional-event-id",
+    "/registrations",
+    "/attendance/fictional-event-id",
+    "/dinner-verification/fictional-event-id",
+  ])(
+    "X-03 redirects an anonymous %s request to the constrained login path",
+    async (path) => {
+      mocks.getUser.mockResolvedValue({
+        data: { user: null },
+        error: { name: "AuthSessionMissingError", status: 400 },
+      });
 
-    const response = await proxy(
-      new NextRequest("https://mahjongflow.test/backoffice/tasks?filter=mine"),
-    );
+      const response = await proxy(
+        new NextRequest(`https://mahjongflow.test${path}`),
+      );
 
-    expect(response.status).toBe(307);
-    expect(response.headers.get("location")).toBe(
-      "https://mahjongflow.test/login?next=%2Fbackoffice%2Ftasks%3Ffilter%3Dmine",
-    );
-  });
+      expect(response.status).toBe(307);
+      expect(response.headers.get("location")).toBe(
+        `https://mahjongflow.test/login?next=${encodeURIComponent(path)}`,
+      );
+    },
+  );
 
   test("X-03 denies an anonymous direct API request with no protected data", async () => {
     mocks.getUser.mockResolvedValue({
