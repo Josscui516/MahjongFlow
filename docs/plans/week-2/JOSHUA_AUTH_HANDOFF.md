@@ -61,7 +61,7 @@ getAuthenticatedUser(): Promise<AuthenticatedUserResult>
 | `/api/backoffice` 及其子路径 | 继续请求并保留刷新后的 cookie | `401` + `AUTH_INVALID_SESSION` | `503` + `AUTH_SERVICE_UNAVAILABLE` |
 | `GET /api/backoffice/session` | `200` + `{ "authenticated": true }` | `401`，不返回后台数据 | `503`，不返回 provider 细节 |
 
-路由匹配器位于 `src/proxy.ts`。成功回跳由 `src/lib/auth/redirect.ts` 限制为 `/backoffice` 自身或其子路径，外部 URL 和其他站内路径均回退到 `/backoffice`。认证响应设置 private/no-cache/no-store，避免缓存受保护状态。
+路由匹配器位于 `src/proxy.ts`。成功回跳由 `src/lib/auth/redirect.ts` 限制为 `/backoffice` 集成入口以及已冻结的 `/dashboard`、`/meetings`、`/tasks`、`/events`、`/registrations`、`/attendance`、`/dinner-verification` 后台前缀；外部 URL、公开签到路径和相似但不属于后台的路径均回退到 `/backoffice`。认证响应设置 private/no-cache/no-store，避免缓存受保护状态。
 
 ## 4. Yubo 复现 X-01–03
 
@@ -74,14 +74,14 @@ npm run typecheck
 npm run build
 ```
 
-2026-08-09 作者复跑结果：`npm test` 通过 7 个测试文件、44 个测试；`npm run lint`、`npm run typecheck` 和 `npm run build` 均以退出码 0 完成。生产构建识别到 `/login`、`/backoffice`、`/api/backoffice/session` 和 Proxy。`git diff --check` 通过；仓库中不存在个人负向验证使用过的临时失败测试文件。
+2026-08-10 作者复跑结果：`npm test` 通过 8 个测试文件、73 个测试；`npm run lint`、`npm run typecheck` 和 `npm run build` 均以退出码 0 完成。生产构建识别到 `/login`、`/backoffice`、`/api/backoffice/session` 和 Proxy。新增集成测试使用真实 `@supabase/ssr` server client、应用自身的登录／当前用户／登出入口和进程内虚构 Auth HTTP 传输，不连接远程 Supabase，也不保存或输出 cookie、session、token 或密码。
 
 2026-08-09 已使用本地专用虚构 Supabase 账号完成 X-01–02 浏览器验收；测试结果由 Joshua 确认，未保存或传播邮箱、密码、session、token 或 cookie。
 
 测试证据映射：
 
-- X-01：`src/app/(auth)/actions.test.ts` 覆盖有效登录和登出；`src/proxy.test.ts` 覆盖已认证请求的 session 刷新响应；
-- X-02：`src/lib/auth/credentials.test.ts` 与 `src/app/(auth)/actions.test.ts` 覆盖未知账号／错误密码的统一错误和无 session 成功路径；
+- X-01：`tests/integration/auth/session-cookie-flow.test.ts` 通过真实 Supabase SSR cookie adapter 覆盖登录写入、下一次服务端请求保持认证、登出清除和登出后拒绝；`src/app/(auth)/actions.test.ts` 与 `src/proxy.test.ts` 保留动作合同和刷新响应的单元覆盖；
+- X-02：`tests/integration/auth/session-cookie-flow.test.ts` 验证拒绝凭据不会创建 session cookie；`src/lib/auth/credentials.test.ts` 与 `src/app/(auth)/actions.test.ts` 覆盖未知账号／错误密码的统一安全错误；
 - X-03：`src/proxy.test.ts` 与 `src/app/(auth)/api/backoffice/session/route.test.ts` 覆盖匿名页面跳转、直接 API 拒绝和无后台数据；
 - 共享安全边界：`src/lib/auth/authenticated-user.test.ts` 覆盖失效 session 与 provider 故障；`src/lib/auth/redirect.test.ts` 覆盖开放重定向拒绝。
 
@@ -128,7 +128,7 @@ Yubo 可按以下顺序完成一次集中审查：
 
 1. 核对 diff 只涉及 Issue #9 和本交接材料，且无 secret、真实账号或参与者数据；
 2. 运行第 4 节四条命令并记录退出状态；
-3. 按测试文件映射核对 X-01–03，不把 mock 证据表述成真实账号端到端证据；
+3. 按测试文件映射核对 X-01–03；把进程内虚构 Auth 传输的 SSR cookie 集成测试与本地 Supabase／浏览器端到端证据明确区分，不夸大测试边界；
 4. 确认数据库／RLS 不适用于本 diff，并把 X-04–06 留给 Issue #40；
 5. 若公开合同无法被 adapter 消费，只提交变更请求，不直接修改 Joshua 的认证实现。
 
