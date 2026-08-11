@@ -1,12 +1,24 @@
-## Related issue and scope
+## Delivery route and scope
 
-Relates to #<!-- one primary issue number -->
+- PR type: <!-- Work Package / Sprint Integration -->
+- Sprint: <!-- Sprint N -->
+- Integration branch: <!-- sprint/N-short-theme -->
+- Base branch: <!-- sprint/N-short-theme for Work Package; main for Sprint Integration -->
+- Primary issue: Relates to #<!-- exactly one primary issue number -->
 
 <!-- Keep exactly one primary issue reference. Use a closing keyword only when every
-issue acceptance criterion has passed and the issue is already in Testing. -->
+issue acceptance criterion has passed, the issue is already in Testing, and this is the
+Sprint Integration PR. Work-package PRs must not close Issues. -->
 
 - Scope classification: <!-- P0 / P1 / Post-MVP -->
 - Requirement IDs: <!-- e.g. P0-MTG-001, P0-TASK-003 -->
+
+## Included work package issues
+
+<!-- Sprint Integration PR only: list every other Sprint issue as `- #123`.
+For a Work Package PR, write `Not applicable — one primary issue only`. -->
+
+- <!-- #issue or Not applicable -->
 
 ## Summary and rationale
 
@@ -53,6 +65,16 @@ issue acceptance criterion has passed and the issue is already in Testing. -->
 
 <!-- Describe known risks, monitoring, safe rollback steps, and any irreversible operation. -->
 
+## Reviewer scope attribution
+
+<!-- For every blocking finding, identify whether it is:
+1. introduced by this PR and owned by the primary Issue;
+2. an output-contract violation owned by this work package;
+3. owned by another work package or pre-existing; or
+4. a scope/authority conflict requiring a team decision.
+State the responsible Issue/owner, whether it blocks this PR or only the Sprint PR,
+and the verification required. Do not ask an author to modify another owner's files. -->
+
 ## Screenshots or recording
 
 <!-- Add evidence using fictional data when the change affects UI. Otherwise explain why visual evidence is not applicable. -->
@@ -61,9 +83,11 @@ issue acceptance criterion has passed and the issue is already in Testing. -->
 
 - [ ] The linked issue has clear acceptance criteria, dependencies, priority, and scope IDs.
 - [ ] This Pull Request addresses one primary issue and contains no unrelated formatting or debug output.
+- [ ] The PR type, Sprint, base/head route, integration branch, and included Issues are correct.
 - [ ] I reviewed the complete diff and documented every test actually run.
 - [ ] Documentation and `.env.example` were updated when required.
 - [ ] No credentials, real environment values, production data, or real participant information are included.
 - [ ] Database, RLS, rollback, generated-type, and deployment impacts are fully documented or explicitly not applicable.
 - [ ] Loading, empty, success, and error states are implemented or explicitly not applicable.
 - [ ] The Pull Request is ready for non-author review; author self-review is not counted as team approval.
+- [ ] Review findings have been attributed to the correct Issue, file owner, or frozen contract without silently expanding this PR.

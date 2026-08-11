@@ -58,6 +58,31 @@ GitHub Issues 和 GitHub Project 取代来源项目的 Linear 工作流。Issues
 
 仓库内交付流程详见 `.agents/skills/project-delivery-workflow/SKILL.md`；实现与审查流程详见 `.agents/skills/mahjongflow-development/SKILL.md`。skills 细化步骤，但不扩大本文件授予的权限。
 
+## Sprint 分支与两级 Pull Request
+
+1. 每个 Sprint 使用一个从最新 `main` 创建的集成分支，命名为 `sprint/<sprint-number>-<short-kebab-theme>`。统一周计划必须写明 Sprint、集成分支、集成负责人、Sprint 总 PR 的主要 Issue 和纳入的工作包 Issues。
+2. 成员 Issue 分支从本 Sprint 集成分支创建；成员 PR 的 base 必须是该 Sprint 集成分支，不得直接指向 `main`。
+3. 成员 PR 只关联一个主要 Issue。完成个人验证、非作者审查和检查后合并到 Sprint 集成分支；对应 Issue 保持 `Testing`，不得因进入集成分支提前关闭或标记 `Done`。
+4. Sprint 集成负责人在所有纳入工作包进入 `Testing` 后，使用 Sprint 集成分支向 `main` 创建唯一的 Sprint 总 PR。总 PR 仍只有一个主要集成／验收 Issue，并在 `Included work package issues` 中列出其余 Issues；主要 Issue 与纳入 Issues 的完整集合必须与 GitHub Project 中该 `Sprint` 的 Issue 成员完全一致，PR 正文不得成为 Sprint 成员事实源。
+5. Sprint 总 PR 必须执行完整集成、回归、权限、隐私、migration 顺序和回滚检查。只有总 PR 的独立审查、必需 checks、所有 review threads 和全部纳入 Issue 验收均通过后，才可经用户明确授权合并到 `main`。
+6. Sprint 总 PR 合并后，自动化才可将主要集成 Issue 与纳入的工作包 Issues 从 `Testing` 更新为 `Done` 并关闭。批量完成必须可安全重试：已为 `Done` 的项不得阻止恢复，`Done` 但仍 open 的项必须继续关闭。任何未达到 `Testing`／`Done` 或 Acceptance Gate 未通过的 Issue 都会阻止 Sprint 完成。
+7. Sprint 总 PR 的主要 Issue 或 `Included work package issues` 发生编辑时，必须重新核对 Project Sprint 成员并将已进入 `Testing` 的主要 Issue 退回 `Review`；修正正文后仍需新的非作者 review 才可再次进入 `Testing`。
+8. `main` 只接收 Sprint 总 PR。紧急修复或仓库管理例外必须由用户明确批准，并记录为什么不能进入当前 Sprint 集成流程、验证和回退方式。
+9. Codex 在任何分支、PR、review 或 merge 操作前必须核对统一周计划、成员工作文档、Issue 的 `Sprint` 字段、实际 base/head 和集成负责人。若缺少 GitHub Project 读取权限，应报告 Sprint 状态未知，不得凭文档声明代替实时核对。
+
+### PR review 缺陷归属
+
+审查 PR 时，先读取主要 Issue、成员工作文档、文件所有权、冻结输入／输出合同和完整 diff，再对每个发现分类：
+
+1. **当前 PR 范围内缺陷**：本 PR 引入，且违反主要 Issue 验收条件、该成员输出合同、其文件所有权责任或造成直接回归。作为当前 PR 的阻塞问题，由当前作者修复。
+2. **接口／集成缺陷**：若当前 PR 的输出违反冻结合同，由当前作者修复；若缺陷来自另一工作包的输出或已冻结合同本身，不要求当前作者越界修改，退回对应所有者／Issue，并在阻断集成时保持当前 PR 未合并。
+3. **其他工作包或既有缺陷**：不属于当前主要 Issue，也不是本 PR 引入。除安全、数据丢失、权限绕过或全局构建阻断外，不阻塞当前 PR；经授权后记录到正确 Issue／backlog。
+4. **范围或权威文档冲突**：Issue、周计划和权威文档互相冲突时暂停相关修改，请求团队决定并同步事实源，不得把范围变更藏进 review 修复。
+5. **路由实现与路由保护必须分开归属**：拥有页面、layout 或导航的工作包负责实际 UI 路由实现；拥有认证 Issue 的工作包负责已冻结 URL namespace 的认证 guard、matcher、redirect 和匿名拒绝合同。审查认证 PR 时不得要求其作者实现另一工作包的页面，但可以要求保护机制覆盖计划中已冻结、即使尚未创建的路由。
+6. **功能测试与验收基础必须分开归属**：每个功能 Issue 的作者负责证明自身验收条件所需的单元、集成、路由和回归测试；测试／验收工作包负责共享测试配置、跨工作包 acceptance harness、CI、fixture 基础和 Sprint 级证据。不得把功能自身的最低测试全部转给测试工作包，也不得要求功能作者实现属于验收工作包的共享 harness 或 CI。
+
+每条阻塞意见必须说明归属依据、负责 Issue／所有者、是否阻止当前工作包 PR 或 Sprint 总 PR，以及复验方法。
+
 ## 统一周计划与成员周工作文档
 
 未来添加或修改实施计划时，必须参考以下模板：
@@ -87,7 +112,15 @@ GitHub Issues 和 GitHub Project 取代来源项目的 Linear 工作流。Issues
 16. 计划内容必须遵循 `docs/project/MVP_PROJECT_PROPOSAL.md` 的范围、排期、权限和验收基线，不得自行扩大 MVP 范围。
 17. 新增需求默认进入 Post-MVP Backlog，除非已经正式批准替换现有范围。
 18. 创建、删除或移动计划文件后，必须检查所有 Markdown 相对链接是否有效。
-19. 新计划应保持与现有项目文档一致的中文语言、可执行粒度和证据要求，同时采用本节规定的低耦合独立工作结构。
+19. 新计划和成员工作文档必须使用中文，并保持本节规定的可执行粒度、证据要求和低耦合工作包结构。
+
+## 文档与 GitHub 交付语言
+
+1. 新增仓库文档、计划、ADR、handoff、runbook、模板和新增的实质性章节必须使用中文。
+2. 现有英文或中文历史记录可以保留；不得仅因触碰文件而进行无关的大规模翻译。小型事实修正可以保持所在文档的现有语言，避免形成碎片化内容。
+3. 现有文档被实质性重写或替换时，重写内容使用中文。
+4. Commit message、GitHub Issue 正文和 Pull Request 正文必须使用英文；PR／Issue 模板中的交付字段也使用英文。
+5. 代码标识符、命令、路径、Schema 名称和外部原文引用保持原样。
 
 ## Codex Git 操作规范
 
@@ -116,7 +149,7 @@ Codex 在本仓库执行任何 Git 操作时，必须遵守[《Git 与团队协�
 
 ### 3. 分支流程
 
-1. `main` 是可部署基线，日常功能和修复不得直接在 `main` 上提交。
+1. `main` 是可部署基线，只接收经批准的 Sprint 总 PR 或明确授权的例外；日常功能和修复不得直接在 `main` 上提交。
 2. Codex 创建的分支统一使用：
 
    ```text
@@ -125,8 +158,8 @@ Codex 在本仓库执行任何 Git 操作时，必须遵守[《Git 与团队协�
 
 3. 分支名必须包含真实 Issue 编号；描述使用小写英文与连字符。
 4. 一个分支只解决一个主要 Issue，目标生命周期不超过两个工作日。
-5. 创建分支前确认基于预期的最新 `main`；如果更新 `main` 需要拉取远程内容，应先确认不会破坏当前工作树。
-6. 打开 PR 前再次同步 `main` 并处理冲突，不得通过删除他人改动来消除冲突。
+5. Sprint 集成分支基于预期的最新 `main`；成员 Issue 分支基于统一周计划指定的 Sprint 集成分支。Codex 不得默认把成员分支改为基于 `main`。
+6. 打开成员 PR 前同步对应 Sprint 集成分支；打开 Sprint 总 PR 前同步 `main`。处理冲突时不得删除他人改动。
 7. 不得对其他成员使用的共享分支强制推送。
 8. 合并后只有在用户明确要求且确认分支已安全合并时，才可删除远程分支。
 
@@ -151,7 +184,7 @@ Codex 在本仓库执行任何 Git 操作时，必须遵守[《Git 与团队协�
 
 1. 只有用户明确要求时才可 push；push 前确认分支名、远程名和待推送 commits。
 2. 默认禁止 `--force` 与 `--force-with-lease`；如确有必要，必须先说明原因、影响和替代方案并获得明确批准。
-3. PR 必须关联 GitHub Issue，并列出对应 P0/P1/Post-MVP ID。
+3. PR 必须关联 GitHub Issue，并列出对应 P0/P1/Post-MVP ID、Sprint、PR 类型和目标分支。成员 PR 只关联一个主要 Issue；Sprint 总 PR 以一个集成／验收 Issue 为主要 Issue，并单独列出纳入的工作包 Issues。
 4. PR 描述必须包含：
    - 变更摘要与理由；
    - 验收场景及完成状态；
@@ -162,7 +195,8 @@ Codex 在本仓库执行任何 Git 操作时，必须遵守[《Git 与团队协�
    - 风险与回退方式；
    - 使用虚构数据的必要截图或录屏。
 5. PR 不得只有 Issue 链接或“已完成”等无法审查的描述。
-6. 创建 PR 后必须报告 URL、目标分支、是否 Draft、已运行检查和待审查事项。
+6. 创建 PR 后必须报告 URL、PR 类型、Sprint、base/head、主要 Issue、纳入 Issues（如适用）、是否 Draft、已运行检查和待审查事项。
+7. 成员 PR 的 base 必须为 `sprint/<number>-<theme>`；只有 Sprint 总 PR 或明确批准的例外可以使用 `main` 作为 base。
 
 ### 6. 审查、测试与合并
 
@@ -173,6 +207,8 @@ Codex 在本仓库执行任何 Git 操作时，必须遵守[《Git 与团队协�
 5. 涉及权限、敏感数据、数据库约束或核心回归测试的检查不得因排期跳过。
 6. 合并属于独立的外部状态变更，必须有用户明确授权；创建 PR 的授权不自动包含合并授权。
 7. 合并后检查 Issue、项目板、文档、部署和分支状态，再判断任务是否满足 Definition of Done。
+8. Review 必须先按“PR review 缺陷归属”分类。不得要求作者为了通过当前 PR 而修改其他成员所有权范围，或把不属于当前 Issue 的普通缺陷静默并入。
+9. 成员 PR 合并到 Sprint 分支后 Issue 保持 `Testing`；Sprint 总 PR 合并到 `main` 后才判断整组 Issues 是否进入 `Done`。
 
 ### 7. 数据库与权限变更
 
@@ -214,19 +250,20 @@ Codex 不得把以下内容写入文件、commit、Issue、PR、测试日志、�
 在获得相应授权后，Codex 按以下顺序执行：
 
 ```text
-检查 status、branch、remote 和 Issue
-→ 确认范围、验收条件及工作树归属
-→ 从 main 创建 codex/<issue>-<description>
+检查 status、branch、remote、Sprint、统一周计划和 Issue
+→ 确认范围、文件所有权、冻结合同、验收条件及工作树归属
+→ 从指定 Sprint 集成分支创建 codex/<issue>-<description>
 → 实现并执行必要验证
 → 检查 diff 并显式暂存范围内文件
 → 复核 staged diff
 → 创建单一目的 commit
 → 再次检查工作树
 → 经明确授权 push
-→ 经明确授权创建关联 Issue 的 PR
-→ 等待非作者审查和 Testing
-→ 经明确授权合并
-→ 更新 Issue、项目板、文档和部署状态
+→ 经明确授权创建以 Sprint 分支为 base 的成员 PR
+→ 按缺陷归属完成非作者审查并合并到 Sprint 分支，Issue 保持 Testing
+→ 所有工作包进入 Testing 后创建 Sprint 总 PR 到 main
+→ 完成整组验收并经明确授权合并 Sprint 总 PR
+→ 更新整组 Issue、项目板、文档和部署状态
 ```
 
 任一步骤缺少授权、Issue、验收条件、必要验证或安全前提时，Codex 应停在该步骤，说明缺失内容，不得跳过流程。
