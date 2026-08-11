@@ -14,6 +14,11 @@
 - GitHub Assignee：`Caiqwe123`；
 - 独立工作包：WP-E 测试与验收基础；
 - 主要 Issue：#41；父 Epic 为 #1；
+- GitHub Sprint：`Sprint 2`；
+- Sprint 集成分支：`sprint/2-auth-foundation`；
+- Issue 分支：`test/41-m1-acceptance-harness`；
+- 成员 PR base：`sprint/2-auth-foundation`；
+- Sprint 总 PR：以 #41 为唯一主要 Issue，从 `sprint/2-auth-foundation` 进入 `main`，纳入 #9、#10、#11、#39、#40；
 - 允许修改：测试配置、`tests/acceptance/`、CI／质量脚本、Week 2 M1 验收记录；
 - 禁止修改：认证实现、前两个 migration、第三个 RLS migration、授权模块和共享 UI 组件；
 - 固定输入合同：X-01–07 的输入／预期、五个公开测试命令类别和虚构 fixture 标识；
@@ -76,7 +81,9 @@
 1. 在唯一集成检查点接入其余四个工作包的公开输出；
 2. 不修改其实现文件，adapter 不兼容时提交变更请求；
 3. 运行完整 reset、lint、typecheck、tests、diff、类型生成和 build；
-4. 汇总 X-01–07 与集中非作者审查结果，形成 M1 结论。
+4. 汇总 X-01–07 与集中非作者审查结果，形成 M1 结论；
+5. 确认纳入 Issues 全部为 `Testing` 且 Acceptance Gate 为 `Passed` 后创建 Sprint 总 PR；
+6. 对 review 缺陷做归属：当前 adapter／harness 缺陷由 #41 修复，其他工作包输出不符合冻结合同时退回对应 Issue，不越界修改。
 
 产出：完整质量结果和 M1 验收记录。
 
@@ -107,6 +114,9 @@
 - [ ] lint、typecheck、smoke test 和 build 通过；
 - [ ] 证据模板通过敏感信息检查；
 - [ ] 单次集成入口清晰；
+- [ ] #41 成员 PR 已先合并到 Sprint 分支并保持 `Testing`；
+- [ ] Sprint 总 PR 以 #41 为主要 Issue，并列出 #9、#10、#11、#39、#40；
+- [ ] Review 缺陷归属、整组 checks、threads 和验收门禁均有证据；
 - [ ] 未完成项有负责人、期限和下次检查时间。
 
 ## 8. 风险与问题
@@ -129,4 +139,5 @@
 - 未完成：按实际结果记录；
 - 输出合同：统一命令、adapter、验收矩阵和证据格式；
 - 集成注意事项：只消费公开输出，不依赖私有实现细节；
+- Sprint PR 纳入证据：整组 Issues 的 Sprint、Testing、Acceptance Gate、reviews、checks、migration 顺序和回滚摘要；
 - 下周建议：会议模块按相同 adapter 扩展验收，不增加日常同步。

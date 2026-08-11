@@ -14,7 +14,13 @@
 - GitHub Assignee：`Josscui516`；
 - 独立工作包：WP-A 认证与会话；
 - 主要 Issue：#9；
-- 允许修改：`src/app/(auth)/`、认证 session 模块、认证路由守卫文件（不含 Shiying 所有的受保护 layout）、`tests/unit/auth/`、`tests/integration/auth/`；
+- GitHub Sprint：`Sprint 2`；
+- Sprint 集成分支：`sprint/2-auth-foundation`；
+- Issue 分支：`feature/9-auth-session-route-protection`；
+- 成员 PR：远程 PR #45，以 `sprint/2-auth-foundation` 为 base；
+- 顺序协调 Issue：#9 进入 `Testing` 后才开始 #10，使用 `feature/10-auth-authorisation-integration`，不得与 #9 同时 `In Progress`；
+- Sprint 总 PR 主要 Issue：#41；
+- 允许修改：`src/app/(auth)/`、认证 session 模块、认证路由守卫文件（不含 Shiying 所有的受保护 layout）、与单一路由实现紧密关联的 `src/app/(auth)/**/*.test.ts(x)`、`tests/unit/auth/`、`tests/integration/auth/`、`tests/e2e/auth.spec.ts`；
 - 禁止修改：`supabase/migrations/`、`supabase/seed.sql`、RLS tests、共享组件目录、CI／测试配置；
 - 固定输入合同：Supabase public env；`AuthenticatedUser { id: string }`；未认证统一返回拒绝；
 - 输出合同：`getAuthenticatedUser()`、登录／登出服务端动作、受保护路由入口和认证测试命令；
@@ -76,7 +82,9 @@
 1. 整理公开函数、错误码、保护入口和测试命令；
 2. 在单次集成时接入 Xuanwei 的 `requireBackendUser()`，不修改其文件；
 3. 向 Yubo 交付认证包供集中审查；
-4. 记录未完成项和下周会议路由接入方式。
+4. Review 发现先判断是否由 #9 diff 引入并违反 X-01–03／认证输出合同；属于 #40、#11、既有结构或其他所有者的问题不得要求 Joshua 越界修改；
+5. #9 合并 Sprint 分支并进入 `Testing` 后，顺序完成 #10 的协调集成 PR；
+6. 记录未完成项和下周会议路由接入方式。
 
 产出：[认证交接包](JOSHUA_AUTH_HANDOFF.md)。
 
@@ -95,17 +103,19 @@
 - 可信会话和当前用户模块；
 - 登录／登出服务端动作；
 - 受保护路由和服务端入口；
-- `tests/unit/auth/`、`tests/integration/auth/` 与 X-01–03 证据；
+- 路由旁 colocated tests，以及 `tests/unit/auth/`、`tests/integration/auth/`、`tests/e2e/auth.spec.ts` 中的 X-01–03 feature verification；
 - 认证接口和集成说明。
 
 ## 7. 个人验收清单
 
-- [x] X-01、X-02、X-03 通过——73 个自动化测试覆盖三项合同，其中真实 `@supabase/ssr` cookie adapter 集成测试验证登录写入、跨请求保持、登出清除、登出后拒绝以及错误密码／未知账号无 session；X-03 另有匿名生产运行时证据，且 2026-08-09 的虚构账号浏览器验收未记录凭据或 session；
-- [x] 只修改允许文件范围——本变更的 22 个路径均属于 Joshua 的认证／会话／路由守卫范围、`tests/unit/auth/`、`tests/integration/auth/` 或本人的计划与交接材料；
+- [x] X-01、X-02、X-03 通过——2026-08-11 复跑的 73 个自动化测试覆盖三项合同，其中真实 `@supabase/ssr` cookie adapter 集成测试验证登录写入、跨请求保持、登出清除、登出后拒绝以及错误密码／未知账号无 session；X-03 另有匿名生产运行时证据，且 2026-08-09 的虚构账号浏览器验收未记录凭据或 session；
+- [x] 只修改允许文件范围——本变更的认证、会话、路由守卫和 feature-level 测试均属于 Joshua 的文件所有权；
 - [x] `AuthenticatedUser` 输出符合冻结合同——成功结果仅为 `{ id: string }`，失败结果仅为固定认证错误码；
 - [x] 错误不泄露账号、session 或 token——未知账号与错误密码映射为同一错误，客户端边界及构建产物敏感标记扫描通过；
-- [x] lint、typecheck、认证测试和 build 通过——2026-08-10 复跑结果为 8 个测试文件、73 个测试通过，四条质量命令退出码均为 0；
+- [x] lint、typecheck、认证测试和 build 通过——2026-08-11 复跑结果为 8 个测试文件、73 个测试通过，四条质量命令退出码均为 0；
 - [x] 交接包可独立复现——公开合同、测试映射、四条复现命令和手动步骤已记录，相对链接检查通过；
+- [x] PR #45 已以 `sprint/2-auth-foundation` 为 base；剩余复审只处理 #9 或其冻结输出合同；
+- [ ] #9 合并后保持 `Testing`；#10 未与 #9 同时 `In Progress`；
 - [x] 未完成项有负责人、期限和下次检查时间——详见[认证交接包](JOSHUA_AUTH_HANDOFF.md)第 5–6 节。
 
 ## 8. 风险与问题
@@ -114,6 +124,18 @@
 |---|---|---|---|---|---|
 | 当前 Next.js 会话刷新方式不同 | 刷新后退出或匿名绕过 | 本地集成测试失败 | 查当前本地文档并修正本工作包 | Joshua | 个人验收前 |
 | 授权守卫接口不兼容 | 单次集成失败 | `requireBackendUser()` 无法消费用户输出 | 提交接口变更请求，由 Xuanwei 修改 | Joshua／Xuanwei | 集成检查点 |
+
+### PR #45 审查发现的责任归属
+
+路由与测试相关发现必须按交付物所有权划分，不能一概归入同一个 Issue：
+
+1. Issue #11 负责受保护 layout、导航和共享 UI 路由表面；#45 不实现 `/dashboard`、`/meetings`、`/tasks`、`/events` 或 Shiying 的 layout／组件。
+2. Issue #9 仍负责冻结后台 URL namespace 的认证 guard、matcher、安全回跳、匿名页面拒绝和受保护服务端入口合同；若保护机制只覆盖虚构的 `/backoffice/**` 而无法保护约定路由，#45 需以 guard／matcher 覆盖和测试修复，不接管页面实现。
+3. Issue #9 负责证明 X-01–X-03 所需的最小功能测试：登录、刷新、登出、拒绝凭据以及匿名页面／服务端访问。
+4. Issue #41 负责共享测试配置、`tests/acceptance/`、跨工作包 X-01–X-07 harness、CI／质量编排、fixture 和 Sprint 级 M1 证据；#45 不因未实现这些 #41 交付物而阻塞。
+5. 单一路由专属测试可 colocate 在 `src/app/`；`src/app/(auth)/**/*.test.ts(x)` 不因 colocate 而成为缺陷。纯 `src/lib/auth/*.test.ts` 覆盖归入 `tests/unit/auth/`，跨入口 Proxy／session 行为归入 `tests/integration/auth/`，除非团队记录更窄的例外。
+
+#45 不负责 #40 的 RLS／角色授权、#11 的 UI 实现或 #41 的共享验收基础设施。审查意见必须指明仍由 #9 负责的行为或文件合同，不得要求 Joshua 修改其他成员所有文件。
 
 ## 9. 未完成项处理
 
@@ -128,4 +150,5 @@
 - 未完成：按实际结果记录；
 - 输出合同：`getAuthenticatedUser()`、认证动作、错误码和测试入口；
 - 集成注意事项：只在服务端消费当前用户结果；
+- Sprint PR 纳入证据：#9／#10 的 checks、非作者 review、X-01–06 结果和剩余风险；
 - 下周建议：会议路由直接复用保护入口。

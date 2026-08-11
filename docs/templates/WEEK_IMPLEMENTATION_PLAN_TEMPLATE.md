@@ -10,6 +10,16 @@
 
 {本周结束时必须形成且可验收的能力。}
 
+### Sprint 交付路线
+
+- GitHub Sprint：`Sprint {N}`；
+- Sprint 集成分支：`sprint/{N}-{简短英文主题}`；
+- 集成负责人：{成员姓名}；
+- Sprint 总 PR 主要 Issue：#{真实的集成或验收 Issue}；
+- Sprint 总 PR 路线：`sprint/{N}-{简短英文主题}` → `main`；
+- 其余纳入工作包／协调 Issues：{除主要 Issue 外的真实 Sprint Issues，或“无”}；
+- 远程分支、Project 字段和分支保护负责人：{仓库管理员或所有者}。
+
 ### 成员独立工作文档
 
 - [{成员 1 姓名}]({成员1英文大写姓名}_WEEKLY_WORK_PLAN.md)
@@ -53,13 +63,25 @@
 | {成员 4} | {任务} | {文件／目录} | {输入} | {输出} | {检查} |
 | {成员 5} | {任务} | {文件／目录} | {输入} | {输出} | {检查} |
 
+### PR 路线与集成顺序
+
+| 工作包 | Issue 分支 | PR base | 进入 Sprint 分支的条件 | 集成顺序 |
+|---|---|---|---|---|
+| {工作包 1} | `{type}/{issue}-{description}` | `sprint/{N}-{theme}` | {个人验收、review 和 checks} | 1 |
+| {工作包 2} | `{type}/{issue}-{description}` | `sprint/{N}-{theme}` | {条件} | 2 |
+| {工作包 3} | `{type}/{issue}-{description}` | `sprint/{N}-{theme}` | {条件} | 3 |
+| {工作包 4} | `{type}/{issue}-{description}` | `sprint/{N}-{theme}` | {条件} | 4 |
+| {工作包 5} | `{type}/{issue}-{description}` | `sprint/{N}-{theme}` | {条件} | 5 |
+
 独立执行规则：
 
 1. 每名成员只修改其文件所有权范围；
-2. 依赖未实现时使用已冻结的类型、mock 或 fixture 独立推进；
+2. 依赖未实现时使用已冻结的类型、mock、adapter 或 fixture 独立推进；
 3. 不持续结对，不跨工作包顺手修改；
 4. 接口变化通过统一变更记录处理，不在私下同步后直接改动；
-5. 各工作包先自测通过，再进入单次集成。
+5. 各工作包先自测通过，再进入单次集成；
+6. 功能所有者负责满足本 Issue 验收所需的最小单元、集成、路由和回归测试；测试／验收所有者负责共享配置、跨工作包 harness、CI、fixture 和 Sprint 级证据；
+7. 页面／路由所有者实现实际 UI；认证所有者负责冻结 URL namespace 的 guard、matcher、redirect 和匿名拒绝，不接管页面实现。
 
 ## 5. 固定接口与文件边界
 
@@ -75,25 +97,31 @@
 ### 检查点 1：周初合同冻结
 
 - 确认 5 个工作包、文件所有权、输入／输出合同和真实 Issue；
+- 确认 Sprint、集成分支、总 PR 主要 Issue 和 Project Sprint 成员；
 - 确认每名成员可以独立开始；
 - 冻结后不安排日常全员同步。
 
 ### 检查点 2：单次集成
 
 - 每个工作包先完成个人验收；
+- 每个成员 PR 只关联一个主要 Issue，并以 Sprint 集成分支为 base；
 - 按依赖顺序接入，不在集成时重写他人工作；
-- 只处理接口不一致和阻断缺陷。
+- 只处理接口不一致和阻断缺陷；
+- 成员 PR 合并后对应 Issue 保持 `Testing`。
 
 ### 检查点 3：周末验收
 
 - 集中执行非作者审查、回归、质量检查和周完成判断；
+- 所有工作包进入 `Testing` 后，由集成负责人使用指定 Issue 创建 Sprint 总 PR；
+- Sprint 总 PR 的主要 Issue 与纳入 Issues 必须与 Project 中该 Sprint 的 Issue 成员完全一致；
+- Sprint 总 PR 合并到 `main` 后，整组 Issue 才能进入 `Done`；
 - 非阻断建议进入 backlog，不反复打断已完成工作包。
 
 ## 7. 本周交付物
 
 - {5 个独立工作包产出及位置}；
 - {固定接口与变更记录}；
-- {集成、测试和评审证据}；
+- {成员 PR、Sprint 总 PR、集成、测试和评审证据}；
 - {风险、未完成项与下周输入}。
 
 ## 8. 本周验收清单
@@ -102,6 +130,11 @@
 - [ ] 没有成员越过文件所有权覆盖他人改动；
 - [ ] 固定接口在单次集成中兼容；
 - [ ] 每个交付物完成一次集中非作者审查；
+- [ ] Review finding 已归属到当前 Issue、冻结合同、其他工作包或既有行为；
+- [ ] 功能自身测试与共享验收平台责任没有混淆；
+- [ ] 所有成员 PR 已合并到 Sprint 分支，对应 Issues 保持 `Testing`；
+- [ ] Sprint 总 PR 的主要 Issue、纳入 Issues、base/head 和集成证据正确；
+- [ ] Sprint 总 PR 的完整 Issue 集合与 Project Sprint 成员一致；
 - [ ] lint、typecheck、测试和构建通过；
 - [ ] 权限、隐私和敏感数据要求通过；
 - [ ] 阻断级缺陷为零；
@@ -123,7 +156,8 @@
 5. 权限、隐私和数据关系已验证；
 6. 阻断问题为零；
 7. 非阻断遗留项有负责人和期限；
-8. 下周首批任务达到 Ready。
+8. 下周首批任务达到 Ready；
+9. 只有 Sprint 总 PR 合并到 `main` 后，验收通过的整组 Issues 才进入 `Done`。
 
 ## 11. 未完成项处理
 

@@ -59,6 +59,13 @@ For schema, relationship, authentication, RLS, participant, attendance, or check
 4. For a bug fix, add a regression that demonstrates the failure and the corrected behavior.
 5. Run only repository-supported commands. At minimum consider `npm run lint`, `npm exec tsc -- --noEmit`, `npm run build`, and applicable database or test commands; report every check not run and why.
 6. Review the final diff for scope expansion, missing permission layers, sensitive-data exposure, duplicate facts, stale generated types, implicit side effects, unhandled UI states, and unrelated changes.
+7. During PR review, first determine whether a defect was introduced by this PR and belongs to its Issue, file ownership, or frozen output contract. Return other-work-package defects to their owner instead of expanding the current author's scope; block the Sprint integration when a cross-package contract or security boundary is unresolved.
+8. Treat route implementation and route protection as separate responsibilities: UI/layout work owns the actual pages and navigation, while authentication work owns guards, matchers, redirects, and anonymous-deny behavior for every frozen protected namespace.
+9. Treat feature verification and the shared test platform as separate responsibilities. The feature owner writes the minimum tests needed to prove that feature's acceptance criteria and regressions; the test/acceptance owner provides shared configuration, cross-package harnesses, CI, fixtures, and Sprint-level evidence.
+
+## Use the approved delivery languages
+
+Write new repository documentation, plans, ADRs, handoffs, runbooks, templates, and substantive new sections in Chinese. Write commit messages and GitHub Issue and PR bodies in English. Preserve an existing document's current language for small factual corrections, but use Chinese when substantially rewriting it. Preserve code identifiers, paths, schema names, and commands exactly.
 
 ## Completion check
 
