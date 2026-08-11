@@ -39,9 +39,13 @@ to project 与 Auto-archive items。它们无法同时验证验收条件、独�
 | `Testing → Done` | Sprint 总 PR 合并到 `main` | 主要 Issue 与全部纳入 Issues 的 Gate 为 `Passed`；独立批准、checks 与 threads 仍满足 |
 | `Review/Testing → In Progress` | changes requested、转回 Draft 或未合并关闭 PR | 需要继续实现 |
 | `Testing → Review` | 新 commit 推送到 PR 或批准被撤销 | 原审批／测试证据需要重新确认 |
+| `Testing → Review` | Sprint 总 PR 的主要 Issue 或纳入 Issue 列表被编辑 | 重新核对 Project Sprint 成员，并等待新的非作者 review |
 | `任意已关闭项 → Backlog` | Issue reopened | 重新评审范围和完成条件 |
 
 自动化采用比较后更新：当前状态不符合预期前置状态时会失败，不会跨阶段跳转。
+Sprint 批量完成采用幂等 reconcile：`Testing` 项迁移到 `Done`，已经为 `Done`
+的项跳过状态迁移，`Done` 但仍 open 的项继续关闭。中途失败后重新运行同一 job
+即可从已完成位置继续，不会因部分成功而永久阻断。
 
 ## 4. Acceptance Gate
 
@@ -95,9 +99,20 @@ Issue 为唯一主要 Issue，并使用以下机器可读章节列出其余项�
 - #10
 ```
 
+GitHub Project 的 `Sprint` 字段是 Sprint 成员的权威来源。自动化将 Project 中
+属于该 Sprint 的全部仓库 Issues，与“主要 Issue + `Included work package issues`”
+进行精确集合比较；缺少或额外声明任何 Issue 都会使门禁失败。PR 正文只声明交付
+集合，不得自行改变 Sprint 成员。
+
+修改 Sprint 总 PR 的主要 Issue 或纳入列表会触发 `pull_request_target: edited`。
+若主要 Issue 已在 `Testing`，自动化先将其退回 `Review`，再重新验证完整集合；修正
+正文后必须收到新的非作者 review 事件才能再次进入 `Testing`。只修改风险说明等
+不改变 Issue 引用的文字不会使状态回退。
+
 自动化拒绝个人分支直接进入 `main`、Sprint 不匹配、成员 PR 声明纳入列表、Sprint
-总 PR 没有纳入列表、纳入项未处于 `Testing`，以及任何 Gate、checks、审查或 thread
-不满足的完成请求。总 PR 合并后才批量关闭主要 Issue 和纳入 Issues。
+总 PR 没有纳入列表、声明集合与 Project Sprint 成员不一致、纳入项未处于
+`Testing`／`Done`，以及任何 Gate、checks、审查或 thread 不满足的完成请求。
+总 PR 合并后才批量关闭主要 Issue 和纳入 Issues。
 
 ## 6. GitHub Actions 配置
 
@@ -129,12 +144,20 @@ PR、review 和 check；自动关闭已完成 Issue 时还需要 Issues 写权�
 6. 勾选各 Issue 的全部 Acceptance criteria，确认 Gate 为 `Passed`；
 7. 合并成员 PR 到 Sprint 分支，确认对应 Issue 保持 `Testing` 且没有被关闭；
 8. 以集成／验收 Issue 为 primary Issue 创建 `sprint/* → main` 的 Sprint 总 PR，并在 `Included work package issues` 中列出其他工作包 Issue；
-9. 确认任一纳入 Issue 未处于 `Testing` 时总 PR 被拒绝；全部满足后完成总 PR 的检查、非作者审批与线程解决；
-10. 合并 Sprint 总 PR 到 `main`，确认 primary 与全部纳入 Issue 进入 `Done` 并关闭；
-11. 删除虚构测试项和远程测试分支，避免污染正式 Product Backlog。
+9. 分别遗漏一个 Sprint Issue 和额外加入一个非 Sprint Issue，确认两种情况均因与 Project Sprint 成员不一致而失败；
+10. 在批准后修改主要 Issue 或纳入列表，确认主要 Issue退回 `Review`，修正正文并取得新 review 后才重新进入 `Testing`；
+11. 确认任一纳入 Issue 未处于 `Testing` 时总 PR 被拒绝；全部满足后完成总 PR 的检查、非作者审批与线程解决；
+12. 使用虚构项注入一次批量完成中途失败，重新运行同一 job，确认已完成项不重复迁移、`Done` 但 open 的项被关闭、其余项继续完成；
+13. 合并 Sprint 总 PR 到 `main`，确认 primary 与全部纳入 Issue 进入 `Done` 并关闭；
+14. 删除虚构测试项和远程测试分支，避免污染正式 Product Backlog。
 
 若 Actions 失败，应先查看失败日志中的状态前置条件，不应通过手动跳到 `Done`
 规避门禁。token 失效时应轮换 secret，不在日志中打印其值。
+
+重新运行失败的幂等 job 是首选恢复方式。Git revert 只能回退仓库文件，不会撤销
+已经写入 GitHub Project 或 Issue 的远程状态；若必须回退已经完成的 Sprint，管理员
+需要依据 Actions 日志逐项重新打开 Issue并恢复 Project 状态，然后记录回退原因和
+验证结果。
 
 ## 8. 仓库管理员在线配置清单
 

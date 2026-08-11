@@ -100,8 +100,9 @@ Foundation 与共享支撑 Epic #1 以及 Enabler #9–#11、#39–#41 映射 `U
    [GitHub Project 自动化](../operations/GITHUB_PROJECT_AUTOMATION.md) 按分支、PR、
    独立审查、CI、验收条件和 WIP 门禁推进，不得手动跳过中间状态。
 9. 每个 Sprint 只有一个 `sprint/<number>-<theme>` 集成分支。成员 PR 进入该分支并让 Issue 保持 `Testing`；统一周计划指定一个现有集成／验收 Issue作为 Sprint 总 PR 的唯一主要 Issue。
-10. Sprint 总 PR 从集成分支进入 `main`，并列出其余工作包 Issues。只有总 PR 合并后，自动化才将同一 Sprint 中已通过验收的纳入项更新为 `Done`。
-11. Review 发现必须先判断是否由当前 PR 引入并属于主要 Issue、文件所有权或冻结输出合同；其他工作包缺陷回到对应 Issue，不通过当前作者越界修复。
+10. Sprint 总 PR 从集成分支进入 `main`，并列出其余工作包 Issues。主要 Issue 与纳入 Issues 的集合必须与 Project `Sprint` 字段中的完整成员一致；PR 正文不得成为 Sprint 成员事实源。只有总 PR 合并后，自动化才将同一 Sprint 中已通过验收的纳入项更新为 `Done`。
+11. Sprint 总 PR 的 Issue 引用发生编辑时必须重新校验成员集合并返回 `Review`；批量完成必须可重试，允许已为 `Done` 的成员继续参与恢复。
+12. Review 发现必须先判断是否由当前 PR 引入并属于主要 Issue、文件所有权或冻结输出合同；其他工作包缺陷回到对应 Issue，不通过当前作者越界修复。
 
 ### Sprint 2 集成路线
 

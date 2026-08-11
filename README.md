@@ -154,7 +154,7 @@ Sprint branch from main
 
 Do not commit directly to `main`, and do not target a work-package PR at `main`. Every branch and Pull Request must reference a real Issue; the weekly plan identifies the Sprint branch and integration/acceptance Issue. Database or permission changes require migrations and role-specific tests. See the [Git collaboration agreement](docs/plans/week-1/artifacts/day-1/DAY_1_GIT_COLLABORATION_AGREEMENT.md).
 
-Write all new repository documentation, plans, handoffs, ADRs, Issue bodies, Pull Request bodies, and substantive new sections in English. Existing Chinese historical records may remain unchanged unless a task explicitly requests translation or substantially rewrites them.
+New repository documentation, plans, handoffs, ADRs, runbooks, templates, and substantive new sections must be written in Chinese. Commit messages and GitHub Issue and Pull Request bodies must be written in English. Existing historical documents may retain their current language when they are not being substantially rewritten.
 
 ## Team
 

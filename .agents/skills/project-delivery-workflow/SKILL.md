@@ -55,9 +55,10 @@ Link records instead of copying the same narrative everywhere. A GitHub decision
 1. Read the weekly plan before branch work. Resolve the real Sprint integration branch, integration/acceptance Issue, member Issue, and expected base; never invent missing identifiers.
 2. Create `sprint/<number>-<theme>` from current `main` only with authority. Create `codex/<issue>-<scope>` or a team branch from that Sprint branch.
 3. Target work-package PRs at the Sprint branch and reference exactly one primary Issue. After approved integration, keep that Issue in `Testing`.
-4. Open the Sprint integration PR from the Sprint branch to `main` only after every included Issue is in `Testing`. Use the weekly plan's integration/acceptance Issue as the single primary Issue and list all other items under `Included work package issues`.
+4. Open the Sprint integration PR from the Sprint branch to `main` only after every included Issue is in `Testing`. Use the weekly plan's integration/acceptance Issue as the single primary Issue and list all other items under `Included work package issues`. Compare the complete declared set with the repository Issues whose GitHub Project `Sprint` field matches; the PR body is a declaration, not the membership source of truth.
 5. Treat the Sprint PR as the deployment boundary. Re-run the complete integrated checks, validate migration order and rollback, and require explicit merge authority.
-6. Allow `Done` and Issue closure only after the Sprint PR reaches `main`. Report any included Issue whose Sprint, status, acceptance gate, review, or checks do not match.
+6. Allow `Done` and Issue closure only after the Sprint PR reaches `main`. Sprint completion must be safely retryable: accept already-`Done` members, close `Done` but open members, and continue remaining `Testing` members. Report any included Issue whose Sprint, status, acceptance gate, review, or checks do not match.
+7. When the Sprint PR primary or included Issue references change, revalidate exact Project membership and return a primary Issue already in `Testing` to `Review`. Require a new non-author review event before it returns to `Testing`.
 
 ## Attribute review findings before requesting fixes
 
@@ -85,7 +86,7 @@ For every finding, compare the PR diff with the primary Issue, member plan, owne
 
 Include the Issue, branch, latest relevant commit, PR, completed scope, exact remaining work, checks and results, blockers, assumptions, risks, uncommitted files, next owner, and next safe action. State which next action needs user authority. Never include credentials, tokens, production configuration, or real participant data.
 
-Write new documentation, plans, handoffs, ADRs, runbooks, Issue bodies, PR bodies, and substantive new sections in English. Preserve historical Chinese records unless the task explicitly requests translation or substantially rewrites them.
+Write new repository documentation, plans, handoffs, ADRs, runbooks, templates, and substantive new sections in Chinese. Write commit messages and GitHub Issue and PR bodies in English. Preserve an existing document's current language for small factual corrections, but use Chinese when substantially rewriting it. Preserve identifiers, commands, paths, schema names, and quoted external text exactly.
 
 ## Completion check
 

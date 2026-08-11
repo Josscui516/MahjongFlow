@@ -63,9 +63,9 @@ For schema, relationship, authentication, RLS, participant, attendance, or check
 8. Treat route implementation and route protection as separate responsibilities: UI/layout work owns the actual pages and navigation, while authentication work owns guards, matchers, redirects, and anonymous-deny behavior for every frozen protected namespace.
 9. Treat feature verification and the shared test platform as separate responsibilities. The feature owner writes the minimum tests needed to prove that feature's acceptance criteria and regressions; the test/acceptance owner provides shared configuration, cross-package harnesses, CI, fixtures, and Sprint-level evidence.
 
-## Write documentation in English
+## Use the approved delivery languages
 
-Write all new documentation, plans, ADRs, handoffs, runbooks, templates, and substantive new sections in English. Existing Chinese historical records may remain unchanged unless the user requests translation or the task substantially rewrites the document. Preserve code identifiers, paths, schema names, and commands exactly.
+Write new repository documentation, plans, ADRs, handoffs, runbooks, templates, and substantive new sections in Chinese. Write commit messages and GitHub Issue and PR bodies in English. Preserve an existing document's current language for small factual corrections, but use Chinese when substantially rewriting it. Preserve code identifiers, paths, schema names, and commands exactly.
 
 ## Completion check
 

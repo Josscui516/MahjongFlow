@@ -78,6 +78,29 @@ export function includedIssueNumbersFromPullRequest(body = "") {
   return [...numbers];
 }
 
+function sortedUniqueIssueNumbers(numbers) {
+  return [...new Set(numbers.map(Number))].sort((left, right) => left - right);
+}
+
+export function deliveryReferencesChanged(previousBody = "", currentBody = "", branch = "") {
+  const previousPrimary = sortedUniqueIssueNumbers(
+    issueNumbersFromPullRequest(previousBody, branch),
+  );
+  const currentPrimary = sortedUniqueIssueNumbers(
+    issueNumbersFromPullRequest(currentBody, branch),
+  );
+  const previousIncluded = sortedUniqueIssueNumbers(
+    includedIssueNumbersFromPullRequest(previousBody),
+  );
+  const currentIncluded = sortedUniqueIssueNumbers(
+    includedIssueNumbersFromPullRequest(currentBody),
+  );
+  return (
+    previousPrimary.join(",") !== currentPrimary.join(",") ||
+    previousIncluded.join(",") !== currentIncluded.join(",")
+  );
+}
+
 export function pullRequestRoute(pull) {
   const baseSprint = sprintNumberFromBranch(pull.base?.ref ?? "");
   const headSprint = sprintNumberFromBranch(pull.head?.ref ?? "");
@@ -250,6 +273,37 @@ export class ProjectAutomation {
     }
   }
 
+  sprintIssueNumbers(project, sprint) {
+    const expectedSprint = `Sprint ${sprint}`;
+    return sortedUniqueIssueNumbers(
+      project.items.nodes
+        .filter(
+          (item) =>
+            item.content?.repository?.nameWithOwner === this.repository &&
+            this.singleSelectValue(item, "Sprint") === expectedSprint,
+        )
+        .map((item) => item.content.number),
+    );
+  }
+
+  assertExactSprintIssueSet(project, sprint, declaredNumbers) {
+    const expected = this.sprintIssueNumbers(project, sprint);
+    const declared = sortedUniqueIssueNumbers(declaredNumbers);
+    const expectedSet = new Set(expected);
+    const declaredSet = new Set(declared);
+    const missing = expected.filter((number) => !declaredSet.has(number));
+    const extra = declared.filter((number) => !expectedSet.has(number));
+    if (missing.length > 0 || extra.length > 0) {
+      const details = [
+        missing.length > 0 ? `missing ${missing.map((number) => `#${number}`).join(", ")}` : null,
+        extra.length > 0 ? `extra ${extra.map((number) => `#${number}`).join(", ")}` : null,
+      ].filter(Boolean);
+      throw new Error(
+        `Sprint ${sprint} Issue set does not match Project membership: ${details.join("; ")}.`,
+      );
+    }
+  }
+
   async ensureItem(project, issue) {
     const existing = this.findItem(project, issue.number);
     if (existing) return { project, item: existing };
@@ -309,6 +363,26 @@ export class ProjectAutomation {
     }
     if (!STATUS_FLOW.includes(to)) throw new Error(`Unknown status '${to}'.`);
     await this.setSingleSelect(context.project, context.item, "Status", to);
+    context.status = to;
+  }
+
+  async completeSprintIssue(context) {
+    if (context.status === "Testing") {
+      await this.transition(context, ["Testing"], "Done");
+    } else if (context.status !== "Done") {
+      throw new Error(
+        `Issue #${context.issue.number} must be in Testing or Done before Sprint completion.`,
+      );
+    }
+
+    if (context.issue.state !== "closed") {
+      await this.client.request(`/repos/${this.repository}/issues/${context.issue.number}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ state: "closed", state_reason: "completed" }),
+      });
+      context.issue.state = "closed";
+    }
   }
 
   assertActorAssigned(issue) {
@@ -417,6 +491,31 @@ export class ProjectAutomation {
       }
     }
 
+    if (action === "edited") {
+      const previousBody = payload.changes?.body?.from;
+      if (
+        typeof previousBody === "string" &&
+        deliveryReferencesChanged(previousBody, pull.body ?? "", pull.head.ref) &&
+        context.status === "Testing"
+      ) {
+        await this.transition(context, ["Testing"], "Review");
+      }
+      if (route.kind === "sprint-integration") {
+        this.assertExactSprintIssueSet(context.project, route.sprint, [
+          context.issue.number,
+          ...includedNumbers,
+        ]);
+      }
+      return;
+    }
+
+    if (route.kind === "sprint-integration") {
+      this.assertExactSprintIssueSet(context.project, route.sprint, [
+        context.issue.number,
+        ...includedNumbers,
+      ]);
+    }
+
     if (
       (action === "opened" || action === "reopened" || action === "ready_for_review") &&
       !pull.draft
@@ -476,25 +575,20 @@ export class ProjectAutomation {
       const included = await Promise.all(
         includedNumbers.map((number) => this.prepareIssue(number)),
       );
-      for (const item of included) {
+      for (const item of [...included, context]) {
         this.assertSprint(item, route.sprint);
         if (item.gate.name !== "Passed") {
-          throw new Error(`Included issue #${item.issue.number} acceptance criteria are not all checked.`);
+          throw new Error(`Issue #${item.issue.number} acceptance criteria are not all checked.`);
         }
-        if (item.status !== "Testing") {
-          throw new Error(`Included issue #${item.issue.number} must be in Testing before Sprint completion.`);
+        if (!["Testing", "Done"].includes(item.status)) {
+          throw new Error(
+            `Issue #${item.issue.number} must be in Testing or Done before Sprint completion.`,
+          );
         }
       }
 
       for (const item of [...included, context]) {
-        await this.transition(item, ["Testing"], "Done");
-        if (item.issue.state !== "closed") {
-          await this.client.request(`/repos/${this.repository}/issues/${item.issue.number}`, {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ state: "closed", state_reason: "completed" }),
-          });
-        }
+        await this.completeSprintIssue(item);
       }
     }
   }
@@ -509,6 +603,13 @@ export class ProjectAutomation {
     }
     const context = await this.prepareIssue(numbers[0]);
     this.assertSprint(context, route.sprint);
+    if (route.kind === "sprint-integration") {
+      const includedNumbers = includedIssueNumbersFromPullRequest(pull.body ?? "");
+      this.assertExactSprintIssueSet(context.project, route.sprint, [
+        context.issue.number,
+        ...includedNumbers,
+      ]);
+    }
     const state = payload.review?.state;
     if (state === "changes_requested" && ["Review", "Testing"].includes(context.status)) {
       await this.transition(context, ["Review", "Testing"], "In Progress");

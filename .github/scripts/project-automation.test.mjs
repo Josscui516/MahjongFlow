@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   acceptanceGate,
   checksPassed,
+  deliveryReferencesChanged,
   hasIndependentApproval,
   includedIssueNumbersFromPullRequest,
   issueNumberFromBranch,
@@ -75,6 +76,26 @@ Relates to #41
   assert.deepEqual(includedIssueNumbersFromPullRequest("Relates to #41"), []);
 });
 
+test("deliveryReferencesChanged detects only primary or included Issue changes", () => {
+  const previous = "Relates to #41\n\n## Included work package issues\n\n- #9\n- #39";
+  assert.equal(
+    deliveryReferencesChanged(
+      previous,
+      `${previous}\n\n## Risks\n\nUpdated explanation only.`,
+      "sprint/2-auth-foundation",
+    ),
+    false,
+  );
+  assert.equal(
+    deliveryReferencesChanged(
+      previous,
+      "Relates to #41\n\n## Included work package issues\n\n- #9",
+      "sprint/2-auth-foundation",
+    ),
+    true,
+  );
+});
+
 test("pullRequestRoute distinguishes work-package and Sprint integration PRs", () => {
   assert.deepEqual(
     pullRequestRoute({
@@ -137,8 +158,9 @@ test("hasIndependentApproval ignores the author and uses each reviewer's latest 
 function projectContext(number, { status = "Testing", gate = "Passed", sprint = 2 } = {}) {
   return {
     issue: { number, state: "open" },
-    project: {},
+    project: null,
     item: {
+      content: { number, repository: { nameWithOwner: "owner/repo" } },
       fieldValues: {
         nodes: [
           { name: status, field: { name: "Status" } },
@@ -152,12 +174,19 @@ function projectContext(number, { status = "Testing", gate = "Passed", sprint = 
 }
 
 class TestAutomation extends ProjectAutomation {
-  constructor(contexts) {
+  constructor(contexts, { failRequestAt = null } = {}) {
     const requests = [];
+    let requestNumber = 0;
+    let pendingFailure = failRequestAt;
     super({
       client: {
         request: async (path, options) => {
           requests.push({ path, options });
+          requestNumber += 1;
+          if (requestNumber === pendingFailure) {
+            pendingFailure = null;
+            throw new Error("Injected request failure");
+          }
           return {};
         },
       },
@@ -166,6 +195,10 @@ class TestAutomation extends ProjectAutomation {
       actor: "reviewer",
       repository: "owner/repo",
     });
+    const project = {
+      items: { nodes: [...contexts.values()].map((context) => context.item) },
+    };
+    for (const context of contexts.values()) context.project = project;
     this.contexts = contexts;
     this.requests = requests;
     this.transitions = [];
@@ -242,6 +275,105 @@ test("opening a Sprint PR requires included issues in Testing", async () => {
   );
 });
 
+test("a Sprint PR must declare every Issue in the authoritative Project Sprint", async () => {
+  const automation = new TestAutomation(
+    new Map([
+      [41, projectContext(41)],
+      [9, projectContext(9)],
+      [39, projectContext(39)],
+    ]),
+  );
+  await assert.rejects(
+    automation.handlePullRequest("opened", {
+      pull_request: {
+        number: 106,
+        merged: false,
+        draft: false,
+        body: "Relates to #41\n\n## Included work package issues\n\n- #9",
+        head: { ref: "sprint/2-auth-foundation" },
+        base: { ref: "main" },
+      },
+    }),
+    /does not match Project membership: missing #39/,
+  );
+});
+
+test("a Sprint PR rejects Issues outside the authoritative Project Sprint", async () => {
+  const automation = new TestAutomation(
+    new Map([
+      [41, projectContext(41)],
+      [9, projectContext(9)],
+      [39, projectContext(39)],
+    ]),
+  );
+  await assert.rejects(
+    automation.handlePullRequest("opened", {
+      pull_request: {
+        number: 107,
+        merged: false,
+        draft: false,
+        body:
+          "Relates to #41\n\n## Included work package issues\n\n- #9\n- #39\n- #99",
+        head: { ref: "sprint/2-auth-foundation" },
+        base: { ref: "main" },
+      },
+    }),
+    /does not match Project membership: extra #99/,
+  );
+});
+
+test("a post-approval Sprint Issue omission returns the PR to Review and fails validation", async () => {
+  const automation = new TestAutomation(
+    new Map([
+      [41, projectContext(41)],
+      [9, projectContext(9)],
+      [39, projectContext(39)],
+    ]),
+  );
+  const previousBody =
+    "Relates to #41\n\n## Included work package issues\n\n- #9\n- #39";
+  const currentBody = "Relates to #41\n\n## Included work package issues\n\n- #9";
+  await assert.rejects(
+    automation.handlePullRequest("edited", {
+      changes: { body: { from: previousBody } },
+      pull_request: {
+        number: 108,
+        merged: false,
+        draft: false,
+        body: currentBody,
+        head: { ref: "sprint/2-auth-foundation" },
+        base: { ref: "main" },
+      },
+    }),
+    /does not match Project membership: missing #39/,
+  );
+  assert.deepEqual(automation.transitions, [[41, "Testing", "Review"]]);
+});
+
+test("an unrelated Sprint PR body edit keeps the current review state", async () => {
+  const automation = new TestAutomation(
+    new Map([
+      [41, projectContext(41)],
+      [9, projectContext(9)],
+      [39, projectContext(39)],
+    ]),
+  );
+  const references =
+    "Relates to #41\n\n## Included work package issues\n\n- #9\n- #39";
+  await automation.handlePullRequest("edited", {
+    changes: { body: { from: `${references}\n\n## Risks\n\nOld wording.` } },
+    pull_request: {
+      number: 109,
+      merged: false,
+      draft: false,
+      body: `${references}\n\n## Risks\n\nNew wording.`,
+      head: { ref: "sprint/2-auth-foundation" },
+      base: { ref: "main" },
+    },
+  });
+  assert.deepEqual(automation.transitions, []);
+});
+
 test("opening a Sprint PR requires its primary issue in Testing", async () => {
   const automation = new TestAutomation(
     new Map([
@@ -295,4 +427,48 @@ test("a merged Sprint PR completes and closes the full included set", async () =
       "/repos/owner/repo/issues/41",
     ],
   );
+});
+
+test("Sprint completion retries safely after a mid-batch request failure", async () => {
+  const contexts = new Map([
+    [41, projectContext(41)],
+    [9, projectContext(9)],
+    [39, projectContext(39)],
+  ]);
+  const automation = new TestAutomation(contexts, { failRequestAt: 2 });
+  const payload = {
+    pull_request: {
+      number: 110,
+      merged: true,
+      draft: false,
+      body: "Relates to #41\n\n## Included work package issues\n\n- #9\n- #39",
+      head: { ref: "sprint/2-auth-foundation" },
+      base: { ref: "main" },
+    },
+  };
+
+  await assert.rejects(
+    automation.handlePullRequest("closed", payload),
+    /Injected request failure/,
+  );
+  assert.equal(contexts.get(9).status, "Done");
+  assert.equal(contexts.get(9).issue.state, "closed");
+  assert.equal(contexts.get(39).status, "Done");
+  assert.equal(contexts.get(39).issue.state, "open");
+  assert.equal(contexts.get(41).status, "Testing");
+
+  await automation.handlePullRequest("closed", payload);
+  assert.deepEqual(
+    [...contexts.values()].map((context) => [context.issue.number, context.status, context.issue.state]),
+    [
+      [41, "Done", "closed"],
+      [9, "Done", "closed"],
+      [39, "Done", "closed"],
+    ],
+  );
+  assert.deepEqual(automation.transitions, [
+    [9, "Testing", "Done"],
+    [39, "Testing", "Done"],
+    [41, "Testing", "Done"],
+  ]);
 });

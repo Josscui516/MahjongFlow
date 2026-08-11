@@ -1,154 +1,148 @@
-# MahjongFlow Member Weekly Work Plan Template
+# MahjongFlow 成员独立周工作文档模板
 
-> Usage: copy this file to `docs/plans/week-N/{UPPERCASE_MEMBER_NAME}_WEEKLY_WORK_PLAN.md`, replace every `{placeholder}`, and remove this note. Each member independently owns one work package and does not routinely pair or modify another work package.
+> 使用说明：复制到 `docs/plans/week-N/{成员英文大写姓名}_WEEKLY_WORK_PLAN.md`，替换全部 `{占位内容}` 并删除本说明。每名成员独立拥有一个工作包，默认不持续结对或跨工作包修改。
 
-## {Member name}: Course Week {X} (Development Week {Y}) Independent Work Plan
+## {成员姓名}：课程第 {X} 周（开发第 {Y} 周）独立工作计划
 
-Unified weekly plan: [{weekly theme}](WEEK_{Y}_IMPLEMENTATION_PLAN.md)
+所属统一周计划：[{本周主题}](WEEK_{Y}_IMPLEMENTATION_PLAN.md)
 
-Direct dependency documents: {write `None` when there is no direct dependency; otherwise link only the directly dependent member plans}
+直接依赖文档：{没有直接依赖时写“无”；存在依赖时只链接相应成员文档，不列出全体成员}
 
-## 1. Independent objective
+### Sprint 交付路线
 
-{Describe the result this member can deliver and verify independently during the week.}
+- GitHub Sprint：`Sprint {N}`；
+- Sprint 集成分支：`sprint/{N}-{简短英文主题}`；
+- 本工作包 Issue 分支：`{type}/{issue}-{description}`；
+- 成员 PR base：`sprint/{N}-{简短英文主题}`；
+- Sprint 总 PR 主要 Issue：#{统一周计划指定的集成或验收 Issue}；
+- 唯一交接对象：{集成负责人或直接消费者}。
 
-## 2. Work package and file ownership
+## 1. 独立目标
 
-- Member: {name}
-- GitHub assignee: `{login}`
-- Work package: {work package}
-- Primary Issue: #{one real primary Issue}
-- GitHub Sprint: `Sprint {N}`
-- Sprint integration branch: `sprint/{N}-{short-kebab-theme}`
-- Issue branch: `{type}/{issue-number}-{short-description}`
-- Work-package PR base: `sprint/{N}-{short-kebab-theme}`; never target `main` directly
-- Sprint PR primary Issue: #{integration or acceptance Issue from the unified plan}
-- Allowed changes: {owned files and directories}
-- Prohibited changes: {other members' ownership ranges}
-- Frozen input contracts: {interfaces, types, adapters, mocks, or fixtures that do not require continuous coordination}
-- Output contract: {files, functions, types, adapters, or commands delivered to integration}
-- Non-author reviewer: {member}
+{说明该成员本周可以独立交付的成果。}
 
-### Verification ownership
+## 2. 工作包与文件所有权
 
-- This work package owns the minimum unit, integration, route, component, database, and regression tests required by its primary Issue.
-- The Sprint test/acceptance work package owns shared test configuration, cross-package acceptance harnesses, CI/quality orchestration, shared fixtures, and Sprint-level evidence.
-- List exact test paths owned here: {test files or directories}
-- List test-platform inputs consumed but not modified here: {configuration, harness, fixtures, or commands}
+- 成员姓名：{姓名}；
+- 独立工作包：{工作包}；
+- 主要 Issue：{唯一主要 Issue 或待团队确认的正式 Issue}；
+- 允许修改：{专属文件／目录}；
+- 禁止修改：{其他成员所有权范围}；
+- 固定输入合同：{可以依赖但不需要持续同步的接口／类型／fixture}；
+- 输出合同：{交付给集成阶段的文件、函数、类型或命令}；
+- 功能自身测试：{满足本 Issue 验收所需的单元、集成、路由或回归测试}；
+- 共享验收平台边界：{由测试／验收工作包拥有的配置、CI、fixture 或跨工作包 harness}。
 
-### Route ownership, when applicable
+## 3. 开始条件
 
-- Actual page/layout/navigation owner: {Issue and member, or `Not applicable`}
-- Authentication guard/matcher/redirect owner: {Issue and member, or `Not applicable`}
-- Frozen protected URL namespaces: {paths, or `Not applicable`}
+- {范围与验收条件}；
+- {固定输入、mock 或 fixture}；
+- {工具、环境与权限}；
+- {Sprint、Issue、分支和 PR base 已确认}；
+- {开始前必须解除的阻断}。
 
-## 3. Start conditions
+## 4. 独立执行步骤
 
-- {scope and acceptance conditions}
-- {frozen input, mock, adapter, or fixture}
-- {tools, environment, and permissions}
-- {blocker that must be removed before starting}
+### 步骤 1：建立本工作包基线
 
-## 4. Independent execution steps
+执行：
 
-### Step 1: establish the work-package baseline
+1. {动作}；
+2. {动作}；
+3. {记录基线}。
 
-Actions:
+产出：{产出}。
 
-1. {action}
-2. {action}
-3. {record the baseline}
+检查：{检查方法}。
 
-Output: {output}.
+### 步骤 2：完成核心实现
 
-Verification: {verification method}.
+执行：
 
-### Step 2: complete the core implementation
+1. {动作}；
+2. {动作}；
+3. {保持在文件所有权范围内}。
 
-Actions:
+产出：{产出}。
 
-1. {action}
-2. {action}
-3. {remain inside the owned file range}
+检查：{检查方法}。
 
-Output: {output}.
+### 步骤 3：个人测试与边界验证
 
-Verification: {verification method}.
+执行：
 
-### Step 3: individual tests and boundary verification
+1. {成功路径}；
+2. {失败／边界／权限路径}；
+3. {功能自身测试}；
+4. {适用质量命令}。
 
-Actions:
+产出：{个人验证证据}。
 
-1. {success path}
-2. {failure, edge, or permission path}
-3. {applicable quality commands}
-4. Confirm that feature tests remain distinct from the shared Sprint acceptance harness.
+检查：{个人完成标准}。
 
-Output: {individual verification evidence}.
+### 步骤 4：成员 PR 与一次性交接
 
-Verification: {individual completion criteria}.
+执行：
 
-### Step 4: single handoff
+1. 整理固定输出、个人测试和风险；
+2. 创建或更新只关联本主要 Issue、以 Sprint 集成分支为 base 的成员 PR；
+3. 完成自查、非作者 review 和必要 checks；
+4. 合并到 Sprint 分支后确认主要 Issue 保持 `Testing`；
+5. 只向唯一交接对象提供一次完整交接包。
 
-Actions:
+产出：{成员 PR 和交接包}。
 
-1. {prepare frozen outputs}
-2. {record completed work, unfinished work, and risks}
-3. Create or update a work-package PR that references only the primary Issue and targets the Sprint integration branch.
-4. {deliver only at the shared integration checkpoint}
+检查：接收者不需要阅读未说明的实现细节即可集成，且不会要求本成员接管共享验收平台或其他成员文件。
 
-Output: {handoff package}.
+## 5. 低频沟通规则
 
-Verification: non-author review has attributed findings to the current Issue, frozen contract, other work package, or pre-existing behavior; the recipient can integrate without reading undocumented implementation details.
+- 周初只确认一次范围、文件所有权、固定接口和 Sprint 路线；
+- 独立执行期间不安排日常同步；
+- 只有接口无法满足、阻断超过约定时间或出现安全问题时才发起临时沟通；
+- 不直接修改其他成员文件；变更请求由文件所有者处理；
+- 工作包完成后一次性交接，周末集中进行一次非作者审查。
 
-## 5. Low-frequency communication rules
+## 6. 个人交付物
 
-- Confirm scope, file ownership, and frozen interfaces once at the start of the week.
-- Do not schedule routine syncs during independent implementation.
-- Start temporary coordination only when an interface cannot be satisfied, a blocker exceeds the agreed time, or a security issue appears.
-- Do not directly modify another member's files; submit the change request to the file owner.
-- Complete one handoff after the work package is ready and one concentrated non-author review at the end of the week.
+- {核心交付物}；
+- {功能自身测试}；
+- {接口或使用说明}；
+- {风险和交接记录}；
+- {成员 PR 与 Sprint 集成证据}。
 
-## 6. Individual deliverables
+## 7. 个人验收清单
 
-- {core deliverable}
-- {feature-owned tests}
-- {interface or usage documentation}
-- {risk and handoff record}
+- [ ] 独立目标完成；
+- [ ] 只修改了允许文件范围；
+- [ ] 输出符合冻结合同；
+- [ ] 成功、失败、边界或权限场景已验证；
+- [ ] 功能自身验证完整，没有接管共享验收平台责任；
+- [ ] 适用的 lint、typecheck、测试和构建通过；
+- [ ] 权限、隐私、密钥和虚构数据要求通过；
+- [ ] 一次性交接包完整；
+- [ ] 成员 PR 的 Sprint、base/head、主要 Issue 和文件范围正确；
+- [ ] 合并到 Sprint 分支后，主要 Issue 保持 `Testing` 且未提前关闭；
+- [ ] 未完成项有负责人、期限和下次检查时间。
 
-## 7. Individual acceptance checklist
+## 8. 风险与问题
 
-- [ ] The independent objective is complete.
-- [ ] Only allowed files were modified.
-- [ ] Outputs satisfy the frozen contract.
-- [ ] Success, failure, edge, and applicable permission scenarios were verified.
-- [ ] Feature-owned verification is complete without taking over shared acceptance-platform work.
-- [ ] Applicable lint, typecheck, tests, and build pass.
-- [ ] Permission, privacy, credential, and fictional-data requirements pass.
-- [ ] The single handoff package is complete.
-- [ ] The work-package PR has the correct Sprint, base/head, primary Issue, and file scope.
-- [ ] After merge into the Sprint branch, the primary Issue remains in `Testing` and is not closed early.
-- [ ] Every unfinished item has an owner, due date, and next check time.
-
-## 8. Risks and issues
-
-| Risk or issue | Impact | Temporary-coordination trigger | Response | Owner | Due date |
+| 风险／问题 | 影响 | 触发沟通条件 | 处理方式 | 负责人 | 期限 |
 |---|---|---|---|---|---|
-| {risk} | {impact} | {when coordination is required} | {action} | {name} | {due date} |
+| {风险} | {影响} | {仅在何时沟通} | {动作} | {姓名} | {期限} |
 
-## 9. Unfinished-item handling
+## 9. 未完成项处理
 
-- Escalate only when the item blocks the individual deliverable or violates a frozen interface.
-- Send non-blocking items to the backlog instead of repeatedly coordinating during the week.
-- Do not bypass a blocker by editing another member's files.
-- New requests do not expand the current work package without an approved scope decision.
-- Escalate security, permission, data-loss, or credential risks immediately.
+- 阻断个人交付或违反冻结接口时才升级；
+- 非阻断项进入 backlog，不在本周反复协调；
+- 不通过修改他人文件绕过阻断；
+- 新需求不扩大当前工作包；
+- 安全、权限、数据丢失或密钥风险必须立即升级。
 
-## 10. End-of-week handoff
+## 10. 周末交接
 
-- Completed: {results}
-- Unfinished: {remaining item, reason, owner, and due date}
-- Output contract: {directly usable interfaces, files, or commands}
-- Integration notes: {minimum necessary explanation}
-- Sprint PR evidence: {Issue, checks, review, and acceptance summary for the integration owner}
-- Next-week recommendation: {follow-up action}
+- 已完成：{成果}；
+- 未完成：{遗留项、原因、负责人和期限}；
+- 输出合同：{可直接使用的接口、文件或命令}；
+- 集成注意事项：{最少必要说明}；
+- Sprint 总 PR 证据：{提供给集成负责人的 Issue、checks、review 和验收摘要}；
+- 下周建议：{后续动作}。

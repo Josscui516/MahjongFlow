@@ -100,6 +100,9 @@ docs: record repository structure baseline
 - 修复审查意见时优先产生清晰的小 commit，合并策略由仓库设置决定；
 - commit 信息不得包含密钥、真实参与者资料或其他敏感内容。
 
+仓库文档、计划、ADR、handoff、runbook 和模板使用中文；Commit message、GitHub
+Issue 正文和 Pull Request 正文使用英文。代码标识符、命令、路径和 Schema 名称保持原样。
+
 ## 5. 两级 Pull Request
 
 ### 5.1 成员工作包 PR
@@ -114,9 +117,11 @@ docs: record repository structure baseline
 - head 为 Sprint 集成分支，base 为 `main`；
 - 使用统一周计划指定的集成／验收 Issue 作为唯一主要 Issue；
 - 在 `Included work package issues` 中列出其余 Sprint Issues；
+- 主要 Issue 与纳入 Issues 的完整集合必须与 GitHub Project 中该 Sprint 的 Issue 成员完全一致；
 - 汇总完整集成、回归、权限、隐私、migration 顺序、部署和回滚证据；
 - 所有纳入 Issue 均为 `Testing` 且 Acceptance Gate 为 `Passed` 后才能合并；
 - 合并后才关闭整组 Issues 并更新为 `Done`。
+- 批量完成必须支持失败后安全重试；已经为 `Done` 的 Issue 不重复迁移，`Done` 但仍 open 的 Issue 继续关闭。
 
 ### 5.3 PR 必填内容
 
@@ -155,6 +160,7 @@ PR 描述不得只写 Issue 链接或“完成了”。审查人必须能仅根�
 13. 缺陷属于另一工作包、已有代码或冻结合同本身时，不要求当前作者跨所有权修改；将问题退回正确 Issue／所有者。只有安全、数据丢失、权限绕过、全局构建阻断或直接阻止集成时才阻塞当前 PR 或 Sprint 总 PR。
 14. 范围和权威文档冲突时暂停修改并取得团队决定。每条阻塞意见写明分类、负责 Issue／所有者、阻塞层级和复验方法。
 15. 成员 PR 只能合并到 Sprint 分支；只有 Sprint 总 PR 可按正常流程合并到 `main`。
+16. Sprint 总 PR 的主要 Issue 或纳入 Issue 列表发生编辑时，必须重新核对 Project Sprint 成员；已进入 `Testing` 的主要 Issue 退回 `Review`，取得新的非作者 review 后才能再次进入 `Testing`。
 
 审查请求应在一个工作日内得到首次回应；无法及时审查时，审查人应主动转交给其他成员，避免 PR 静默等待。
 

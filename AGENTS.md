@@ -63,11 +63,12 @@ GitHub Issues 和 GitHub Project 取代来源项目的 Linear 工作流。Issues
 1. 每个 Sprint 使用一个从最新 `main` 创建的集成分支，命名为 `sprint/<sprint-number>-<short-kebab-theme>`。统一周计划必须写明 Sprint、集成分支、集成负责人、Sprint 总 PR 的主要 Issue 和纳入的工作包 Issues。
 2. 成员 Issue 分支从本 Sprint 集成分支创建；成员 PR 的 base 必须是该 Sprint 集成分支，不得直接指向 `main`。
 3. 成员 PR 只关联一个主要 Issue。完成个人验证、非作者审查和检查后合并到 Sprint 集成分支；对应 Issue 保持 `Testing`，不得因进入集成分支提前关闭或标记 `Done`。
-4. Sprint 集成负责人在所有纳入工作包进入 `Testing` 后，使用 Sprint 集成分支向 `main` 创建唯一的 Sprint 总 PR。总 PR 仍只有一个主要集成／验收 Issue，并在 `Included work package issues` 中列出其余 Issues。
+4. Sprint 集成负责人在所有纳入工作包进入 `Testing` 后，使用 Sprint 集成分支向 `main` 创建唯一的 Sprint 总 PR。总 PR 仍只有一个主要集成／验收 Issue，并在 `Included work package issues` 中列出其余 Issues；主要 Issue 与纳入 Issues 的完整集合必须与 GitHub Project 中该 `Sprint` 的 Issue 成员完全一致，PR 正文不得成为 Sprint 成员事实源。
 5. Sprint 总 PR 必须执行完整集成、回归、权限、隐私、migration 顺序和回滚检查。只有总 PR 的独立审查、必需 checks、所有 review threads 和全部纳入 Issue 验收均通过后，才可经用户明确授权合并到 `main`。
-6. Sprint 总 PR 合并后，自动化才可将主要集成 Issue 与纳入的工作包 Issues 从 `Testing` 更新为 `Done` 并关闭。任何未达到 `Testing` 或 Acceptance Gate 未通过的 Issue 都会阻止 Sprint 完成。
-7. `main` 只接收 Sprint 总 PR。紧急修复或仓库管理例外必须由用户明确批准，并记录为什么不能进入当前 Sprint 集成流程、验证和回退方式。
-8. Codex 在任何分支、PR、review 或 merge 操作前必须核对统一周计划、成员工作文档、Issue 的 `Sprint` 字段、实际 base/head 和集成负责人。若缺少 GitHub Project 读取权限，应报告 Sprint 状态未知，不得凭文档声明代替实时核对。
+6. Sprint 总 PR 合并后，自动化才可将主要集成 Issue 与纳入的工作包 Issues 从 `Testing` 更新为 `Done` 并关闭。批量完成必须可安全重试：已为 `Done` 的项不得阻止恢复，`Done` 但仍 open 的项必须继续关闭。任何未达到 `Testing`／`Done` 或 Acceptance Gate 未通过的 Issue 都会阻止 Sprint 完成。
+7. Sprint 总 PR 的主要 Issue 或 `Included work package issues` 发生编辑时，必须重新核对 Project Sprint 成员并将已进入 `Testing` 的主要 Issue 退回 `Review`；修正正文后仍需新的非作者 review 才可再次进入 `Testing`。
+8. `main` 只接收 Sprint 总 PR。紧急修复或仓库管理例外必须由用户明确批准，并记录为什么不能进入当前 Sprint 集成流程、验证和回退方式。
+9. Codex 在任何分支、PR、review 或 merge 操作前必须核对统一周计划、成员工作文档、Issue 的 `Sprint` 字段、实际 base/head 和集成负责人。若缺少 GitHub Project 读取权限，应报告 Sprint 状态未知，不得凭文档声明代替实时核对。
 
 ### PR review 缺陷归属
 
@@ -111,14 +112,15 @@ GitHub Issues 和 GitHub Project 取代来源项目的 Linear 工作流。Issues
 16. 计划内容必须遵循 `docs/project/MVP_PROJECT_PROPOSAL.md` 的范围、排期、权限和验收基线，不得自行扩大 MVP 范围。
 17. 新增需求默认进入 Post-MVP Backlog，除非已经正式批准替换现有范围。
 18. 创建、删除或移动计划文件后，必须检查所有 Markdown 相对链接是否有效。
-19. New plans must be written in English while preserving the executable detail, evidence requirements, and low-coupling work-package structure defined here.
+19. 新计划和成员工作文档必须使用中文，并保持本节规定的可执行粒度、证据要求和低耦合工作包结构。
 
-## Documentation language
+## 文档与 GitHub 交付语言
 
-1. All new repository documentation, plans, ADRs, handoffs, runbooks, templates, and newly added substantive sections must be written in English.
-2. Existing Chinese historical records may remain in Chinese. Do not perform unrelated mass translation merely because a file is touched.
-3. When an existing document is substantially rewritten or replaced, write the rewritten content in English. Small factual corrections may preserve the surrounding language to avoid a fragmented document.
-4. Issue and Pull Request bodies created from repository templates must use English. Preserve exact code identifiers, commands, paths, schema names, and quoted external text in their original form.
+1. 新增仓库文档、计划、ADR、handoff、runbook、模板和新增的实质性章节必须使用中文。
+2. 现有英文或中文历史记录可以保留；不得仅因触碰文件而进行无关的大规模翻译。小型事实修正可以保持所在文档的现有语言，避免形成碎片化内容。
+3. 现有文档被实质性重写或替换时，重写内容使用中文。
+4. Commit message、GitHub Issue 正文和 Pull Request 正文必须使用英文；PR／Issue 模板中的交付字段也使用英文。
+5. 代码标识符、命令、路径、Schema 名称和外部原文引用保持原样。
 
 ## Codex Git 操作规范
 
