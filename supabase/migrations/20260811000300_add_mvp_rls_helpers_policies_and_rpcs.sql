@@ -76,12 +76,40 @@ revoke all on table public.profiles, public.meetings, public.meeting_attendees,
   public.attendance_records from anon, authenticated;
 
 grant select on table public.profiles to authenticated;
-grant select, insert, update on table public.meetings to authenticated;
-grant select, insert, delete on table public.meeting_attendees to authenticated;
-grant select, insert, update, delete on table public.discussion_points to authenticated;
-grant select, insert, update, delete on table public.meeting_decisions to authenticated;
-grant select, insert, update on table public.tasks to authenticated;
-grant select, insert, update on table public.events to authenticated;
+grant select on table public.meetings, public.meeting_attendees,
+  public.discussion_points, public.meeting_decisions, public.tasks, public.events
+  to authenticated;
+grant insert (title, starts_at, summary, created_by)
+  on table public.meetings to authenticated;
+grant update (title, starts_at, summary)
+  on table public.meetings to authenticated;
+grant insert (meeting_id, profile_id)
+  on table public.meeting_attendees to authenticated;
+grant delete on table public.meeting_attendees to authenticated;
+grant insert (meeting_id, content, position)
+  on table public.discussion_points to authenticated;
+grant update (meeting_id, content, position)
+  on table public.discussion_points to authenticated;
+grant delete on table public.discussion_points to authenticated;
+grant insert (meeting_id, content, position)
+  on table public.meeting_decisions to authenticated;
+grant update (meeting_id, content, position)
+  on table public.meeting_decisions to authenticated;
+grant delete on table public.meeting_decisions to authenticated;
+grant insert (
+  title, description, assignee_id, due_date, status, source_meeting_id,
+  source_decision_id, source_discussion_point_id, event_id, created_by
+) on table public.tasks to authenticated;
+grant update (title, description, assignee_id, due_date, status, event_id)
+  on table public.tasks to authenticated;
+grant insert (
+  event_type, name, starts_at, location, description, status,
+  check_in_opens_at, check_in_closes_at, requires_student_id, created_by
+) on table public.events to authenticated;
+grant update (
+  event_type, name, starts_at, location, description, status,
+  check_in_opens_at, check_in_closes_at, requires_student_id
+) on table public.events to authenticated;
 grant select on table public.participants, public.registrations,
   public.attendance_records to authenticated;
 grant insert (full_name, email, student_id)
@@ -461,6 +489,7 @@ security definer
 set search_path = ''
 as $$
 declare
+  candidate_event_id uuid;
   matched_event_id uuid;
   matched_requires_student_id boolean;
   matched_participant_id uuid;
@@ -471,20 +500,39 @@ begin
     return 'unavailable';
   end if;
 
+  select t.event_id
+  into candidate_event_id
+  from public.event_check_in_tokens t
+  where t.token_digest = encode(extensions.digest(check_in_token, 'sha256'), 'hex')
+  limit 1;
+
+  if candidate_event_id is null then
+    return 'unavailable';
+  end if;
+
   select e.id, e.requires_student_id
   into matched_event_id, matched_requires_student_id
-  from public.event_check_in_tokens t
-  join public.events e on e.id = t.event_id
-  where t.token_digest = encode(extensions.digest(check_in_token, 'sha256'), 'hex')
-    and t.revoked_at is null
+  from public.events e
+  where e.id = candidate_event_id
     and e.status = 'scheduled'::public.event_status
     and e.check_in_opens_at is not null
     and e.check_in_closes_at is not null
     and statement_timestamp() >= e.check_in_opens_at
     and statement_timestamp() < e.check_in_closes_at
-  for update of t;
+  for share of e;
 
   if matched_event_id is null then
+    return 'unavailable';
+  end if;
+
+  perform 1
+  from public.event_check_in_tokens t
+  where t.event_id = matched_event_id
+    and t.token_digest = encode(extensions.digest(check_in_token, 'sha256'), 'hex')
+    and t.revoked_at is null
+  for share of t;
+
+  if not found then
     return 'unavailable';
   end if;
 
@@ -499,12 +547,11 @@ begin
 
   select p.id
   into matched_participant_id
-  from public.participants p
-  join public.registrations r
-    on r.participant_id = p.id
-    and r.event_id = matched_event_id
+  from public.registrations r
+  join public.participants p on p.id = r.participant_id
+  where r.event_id = matched_event_id
     and r.registration_status = 'registered'::public.registration_status
-  where p.email = lower(btrim(participant_email))
+    and p.email = lower(btrim(participant_email))
     and (
       not matched_requires_student_id
       or (
@@ -512,7 +559,8 @@ begin
         and p.student_id = btrim(participant_student_id)
       )
     )
-  limit 1;
+  limit 1
+  for share of r, p;
 
   if matched_participant_id is null then
     return 'unable_to_process';

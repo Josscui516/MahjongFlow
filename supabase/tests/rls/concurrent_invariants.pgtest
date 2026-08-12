@@ -1,10 +1,25 @@
 set search_path = public, extensions;
 
-delete from public.attendance_records where event_id = '95100000-0000-4000-8000-000000000001';
-delete from public.registrations where event_id = '95100000-0000-4000-8000-000000000001';
-delete from public.event_check_in_tokens where event_id = '95100000-0000-4000-8000-000000000001';
-delete from public.participants where id = '95200000-0000-4000-8000-000000000001';
-delete from public.events where id = '95100000-0000-4000-8000-000000000001';
+delete from public.attendance_records where event_id in (
+  '95100000-0000-4000-8000-000000000001',
+  '95100000-0000-4000-8000-000000000002'
+);
+delete from public.registrations where event_id in (
+  '95100000-0000-4000-8000-000000000001',
+  '95100000-0000-4000-8000-000000000002'
+);
+delete from public.event_check_in_tokens where event_id in (
+  '95100000-0000-4000-8000-000000000001',
+  '95100000-0000-4000-8000-000000000002'
+);
+delete from public.participants where id in (
+  '95200000-0000-4000-8000-000000000001',
+  '95200000-0000-4000-8000-000000000002'
+);
+delete from public.events where id in (
+  '95100000-0000-4000-8000-000000000001',
+  '95100000-0000-4000-8000-000000000002'
+);
 alter table public.meeting_attendees disable trigger meeting_attendees_prevent_last_delete;
 delete from public.meetings where id = '95000000-0000-4000-8000-000000000001';
 alter table public.meeting_attendees enable trigger meeting_attendees_prevent_last_delete;
@@ -42,19 +57,44 @@ insert into public.events (
   'Concurrent Fixture Event', now(), 'Test Room', 'Fictional concurrency fixture.',
   now() - interval '1 minute', now() + interval '1 hour',
   '95555555-5555-4555-8555-555555555555'
+) , (
+  '95100000-0000-4000-8000-000000000002', 'weekly_session',
+  'State Swap Fixture Event', now(), 'Test Room', 'Fictional state swap fixture.',
+  now() - interval '1 minute', now() + interval '1 hour',
+  '95555555-5555-4555-8555-555555555555'
 );
 insert into public.participants (id, full_name, email) values
-  ('95200000-0000-4000-8000-000000000001', 'Concurrent Participant', 'concurrent@example.test');
-insert into public.registrations (id, event_id, participant_id, recorded_by) values
-  ('95300000-0000-4000-8000-000000000001', '95100000-0000-4000-8000-000000000001', '95200000-0000-4000-8000-000000000001', '95555555-5555-4555-8555-555555555555');
-insert into public.event_check_in_tokens (event_id, token_digest, created_by) values
-  (
-    '95100000-0000-4000-8000-000000000001',
-    encode(extensions.digest(repeat('e', 64), 'sha256'), 'hex'),
-    '95555555-5555-4555-8555-555555555555'
-  );
+  ('95200000-0000-4000-8000-000000000001', 'Concurrent Participant', 'concurrent@example.test'),
+  ('95200000-0000-4000-8000-000000000002', 'State Swap Participant', 'state-swap@example.test');
+insert into public.registrations (
+  id, event_id, participant_id, registration_status, recorded_by
+) values
+  ('95300000-0000-4000-8000-000000000001', '95100000-0000-4000-8000-000000000001', '95200000-0000-4000-8000-000000000001', 'registered', '95555555-5555-4555-8555-555555555555'),
+  ('95300000-0000-4000-8000-000000000002', '95100000-0000-4000-8000-000000000002', '95200000-0000-4000-8000-000000000002', 'cancelled', '95555555-5555-4555-8555-555555555555');
 
-select plan(6);
+create temporary table check_in_test_secrets (
+  label text primary key,
+  token text not null
+);
+insert into check_in_test_secrets values
+  ('concurrent', encode(extensions.gen_random_bytes(32), 'hex')),
+  ('state-swap', encode(extensions.gen_random_bytes(32), 'hex'));
+insert into public.event_check_in_tokens (event_id, token_digest, created_by)
+select event_id, encode(extensions.digest(secret.token, 'sha256'), 'hex'),
+  '95555555-5555-4555-8555-555555555555'::uuid
+from (
+  values
+    ('concurrent', '95100000-0000-4000-8000-000000000001'::uuid),
+    ('state-swap', '95100000-0000-4000-8000-000000000002'::uuid)
+) as fixture(label, event_id)
+join check_in_test_secrets secret using (label);
+
+create temporary table concurrency_observations (
+  scenario text primary key,
+  second_writer_waited boolean not null
+);
+
+select plan(9);
 
 do $$
 begin
@@ -96,17 +136,28 @@ select is(
 );
 
 do $$
+declare
+  runtime_token text;
 begin
+  select token into runtime_token
+  from check_in_test_secrets
+  where label = 'concurrent';
   perform extensions.dblink_connect_u('checkin_first', 'dbname=postgres user=postgres');
   perform extensions.dblink_connect_u('checkin_second', 'dbname=postgres user=postgres');
   perform extensions.dblink_send_query(
     'checkin_first',
-    $query$select public.submit_event_check_in(repeat('e', 64), 'concurrent@example.test', null) as result, pg_sleep(1)::text as waited$query$
+    format(
+      $query$select public.submit_event_check_in(%L, 'concurrent@example.test', null) as result, pg_sleep(1)::text as waited$query$,
+      runtime_token
+    )
   );
   perform pg_sleep(0.2);
   perform extensions.dblink_send_query(
     'checkin_second',
-    $query$select public.submit_event_check_in(repeat('e', 64), 'concurrent@example.test', null) as result$query$
+    format(
+      $query$select public.submit_event_check_in(%L, 'concurrent@example.test', null) as result$query$,
+      runtime_token
+    )
   );
 end;
 $$;
@@ -130,16 +181,110 @@ select is(
   'concurrent check-ins persist exactly one attendance row'
 );
 
+do $$
+declare
+  runtime_token text;
+  check_in_pid integer;
+  check_in_waited boolean;
+begin
+  select token into runtime_token
+  from check_in_test_secrets
+  where label = 'state-swap';
+  perform extensions.dblink_connect_u('state_swap_first', 'dbname=postgres user=postgres');
+  perform extensions.dblink_connect_u('state_swap_checkin', 'dbname=postgres user=postgres');
+  select pid into check_in_pid
+  from extensions.dblink('state_swap_checkin', 'select pg_catalog.pg_backend_pid()')
+    as connection(pid integer);
+  perform extensions.dblink_exec('state_swap_first', 'begin');
+  perform extensions.dblink_exec(
+    'state_swap_first',
+    $query$update public.participants set full_name = full_name
+      where id = '95200000-0000-4000-8000-000000000002'$query$
+  );
+  perform extensions.dblink_exec(
+    'state_swap_first',
+    $query$update public.events set status = 'cancelled'
+      where id = '95100000-0000-4000-8000-000000000002'$query$
+  );
+  perform extensions.dblink_exec(
+    'state_swap_first',
+    $query$update public.registrations set registration_status = 'registered'
+      where id = '95300000-0000-4000-8000-000000000002'$query$
+  );
+  perform extensions.dblink_send_query(
+    'state_swap_checkin',
+    format(
+      $query$select public.submit_event_check_in(%L, 'state-swap@example.test', null) as result$query$,
+      runtime_token
+    )
+  );
+
+  check_in_waited := false;
+  for attempt in 1..200 loop
+    if exists (
+      select 1 from pg_catalog.pg_stat_activity
+      where pid = check_in_pid and wait_event_type = 'Lock'
+    ) then
+      check_in_waited := true;
+      exit;
+    end if;
+    perform pg_catalog.pg_sleep(0.01);
+  end loop;
+
+  if not check_in_waited then
+    raise exception 'state-swap check-in did not wait for the locked event state';
+  end if;
+
+  insert into concurrency_observations values ('state-swap', check_in_waited);
+end;
+$$;
+
+select ok(
+  (select second_writer_waited from concurrency_observations where scenario = 'state-swap'),
+  'check-in waits while the event and registration state swap is uncommitted'
+);
+select extensions.dblink_exec('state_swap_first', 'commit');
+select is(
+  (select result from extensions.dblink_get_result('state_swap_checkin') as response(result text)),
+  'unavailable',
+  'check-in revalidates the committed cancelled event and fails uniformly'
+);
+select is(
+  (select count(*)::integer from public.attendance_records
+   where event_id = '95100000-0000-4000-8000-000000000002'
+     and participant_id = '95200000-0000-4000-8000-000000000002'),
+  0,
+  'state-swap race leaves no invalid attendance row'
+);
+
 select extensions.dblink_disconnect('delete_first');
 select extensions.dblink_disconnect('delete_second');
 select extensions.dblink_disconnect('checkin_first');
 select extensions.dblink_disconnect('checkin_second');
+select extensions.dblink_disconnect('state_swap_first');
+select extensions.dblink_disconnect('state_swap_checkin');
 
-delete from public.attendance_records where event_id = '95100000-0000-4000-8000-000000000001';
-delete from public.registrations where event_id = '95100000-0000-4000-8000-000000000001';
-delete from public.event_check_in_tokens where event_id = '95100000-0000-4000-8000-000000000001';
-delete from public.participants where id = '95200000-0000-4000-8000-000000000001';
-delete from public.events where id = '95100000-0000-4000-8000-000000000001';
+delete from public.attendance_records where event_id in (
+  '95100000-0000-4000-8000-000000000001',
+  '95100000-0000-4000-8000-000000000002'
+);
+delete from public.registrations where event_id in (
+  '95100000-0000-4000-8000-000000000001',
+  '95100000-0000-4000-8000-000000000002'
+);
+delete from public.event_check_in_tokens where event_id in (
+  '95100000-0000-4000-8000-000000000001',
+  '95100000-0000-4000-8000-000000000002'
+);
+drop table check_in_test_secrets;
+delete from public.participants where id in (
+  '95200000-0000-4000-8000-000000000001',
+  '95200000-0000-4000-8000-000000000002'
+);
+delete from public.events where id in (
+  '95100000-0000-4000-8000-000000000001',
+  '95100000-0000-4000-8000-000000000002'
+);
 alter table public.meeting_attendees disable trigger meeting_attendees_prevent_last_delete;
 delete from public.meetings where id = '95000000-0000-4000-8000-000000000001';
 alter table public.meeting_attendees enable trigger meeting_attendees_prevent_last_delete;

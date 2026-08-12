@@ -1,6 +1,6 @@
 begin;
 
-select plan(92);
+select plan(118);
 
 insert into auth.users (
   instance_id, id, aud, role, email, confirmation_token, recovery_token,
@@ -67,12 +67,27 @@ select table_privs_are('public', 'event_check_in_tokens', 'anon', array[]::text[
 select table_privs_are('public', 'event_check_in_tokens', 'authenticated', array[]::text[], 'authenticated has no token grants');
 
 select table_privs_are('public', 'profiles', 'authenticated', array['SELECT'], 'profiles cannot be changed by app users');
-select table_privs_are('public', 'meetings', 'authenticated', array['INSERT', 'SELECT', 'UPDATE'], 'meetings exclude delete');
-select table_privs_are('public', 'tasks', 'authenticated', array['INSERT', 'SELECT', 'UPDATE'], 'tasks exclude delete');
-select table_privs_are('public', 'events', 'authenticated', array['INSERT', 'SELECT', 'UPDATE'], 'events exclude delete');
+select table_privs_are('public', 'meetings', 'authenticated', array['SELECT'], 'meetings use column-level writes');
+select table_privs_are('public', 'meeting_attendees', 'authenticated', array['DELETE', 'SELECT'], 'attendees use column-level inserts');
+select table_privs_are('public', 'discussion_points', 'authenticated', array['DELETE', 'SELECT'], 'discussion points use column-level writes');
+select table_privs_are('public', 'meeting_decisions', 'authenticated', array['DELETE', 'SELECT'], 'decisions use column-level writes');
+select table_privs_are('public', 'tasks', 'authenticated', array['SELECT'], 'tasks use column-level writes');
+select table_privs_are('public', 'events', 'authenticated', array['SELECT'], 'events use column-level writes');
 select table_privs_are('public', 'participants', 'authenticated', array['SELECT'], 'participants have no whole-table write grant');
 select table_privs_are('public', 'registrations', 'authenticated', array['SELECT'], 'registrations have no whole-table write grant');
 select table_privs_are('public', 'attendance_records', 'authenticated', array['SELECT'], 'attendance has no whole-table write grant');
+select column_privs_are('public', 'meetings', 'title', 'authenticated', array['INSERT', 'SELECT', 'UPDATE'], 'meeting business fields are writable');
+select column_privs_are('public', 'meetings', 'id', 'authenticated', array['SELECT'], 'meeting identity is database-owned');
+select column_privs_are('public', 'meeting_attendees', 'meeting_id', 'authenticated', array['INSERT', 'SELECT'], 'attendee relationship is insertable');
+select column_privs_are('public', 'meeting_attendees', 'created_at', 'authenticated', array['SELECT'], 'attendee creation time is database-owned');
+select column_privs_are('public', 'discussion_points', 'content', 'authenticated', array['INSERT', 'SELECT', 'UPDATE'], 'discussion content is writable');
+select column_privs_are('public', 'discussion_points', 'id', 'authenticated', array['SELECT'], 'discussion identity is database-owned');
+select column_privs_are('public', 'meeting_decisions', 'content', 'authenticated', array['INSERT', 'SELECT', 'UPDATE'], 'decision content is writable');
+select column_privs_are('public', 'meeting_decisions', 'id', 'authenticated', array['SELECT'], 'decision identity is database-owned');
+select column_privs_are('public', 'tasks', 'title', 'authenticated', array['INSERT', 'SELECT', 'UPDATE'], 'task business fields are writable');
+select column_privs_are('public', 'tasks', 'id', 'authenticated', array['SELECT'], 'task identity is database-owned');
+select column_privs_are('public', 'events', 'name', 'authenticated', array['INSERT', 'SELECT', 'UPDATE'], 'event business fields are writable');
+select column_privs_are('public', 'events', 'id', 'authenticated', array['SELECT'], 'event identity is database-owned');
 select column_privs_are('public', 'participants', 'full_name', 'authenticated', array['INSERT', 'SELECT', 'UPDATE'], 'participant name is writable by authorised policy');
 select column_privs_are('public', 'participants', 'id', 'authenticated', array['SELECT'], 'participant identity is database-owned');
 select column_privs_are('public', 'registrations', 'registration_status', 'authenticated', array['SELECT', 'UPDATE'], 'registration status is correctable');
@@ -165,6 +180,52 @@ select is(
 select lives_ok(
   $$insert into public.meetings (title, starts_at, summary, created_by) values ('Committee Meeting', now(), 'Fictional committee write.', '91111111-1111-4111-8111-111111111111')$$,
   'committee can create a meeting with its own audit identity'
+);
+select throws_ok(
+  $$insert into public.meetings (id, title, starts_at, summary, created_by) values ('93000000-0000-4000-8000-000000000099', 'Forged Meeting ID', now(), 'Rejected system field.', '91111111-1111-4111-8111-111111111111')$$,
+  '42501', null, 'committee cannot choose a meeting identity'
+);
+select throws_ok(
+  $$insert into public.meetings (title, starts_at, summary, created_by, created_at) values ('Forged Meeting Time', now(), 'Rejected system field.', '91111111-1111-4111-8111-111111111111', '2000-01-01')$$,
+  '42501', null, 'committee cannot choose a meeting creation time'
+);
+select throws_ok(
+  $$update public.meetings set id = '93000000-0000-4000-8000-000000000099' where title = 'Committee Meeting'$$,
+  '42501', null, 'committee cannot rewrite a meeting identity'
+);
+select throws_ok(
+  $$insert into public.meeting_attendees (meeting_id, profile_id, created_at) values ('93000000-0000-4000-8000-000000000001', '91111111-1111-4111-8111-111111111111', '2000-01-01')$$,
+  '42501', null, 'committee cannot choose an attendee creation time'
+);
+select throws_ok(
+  $$insert into public.discussion_points (id, meeting_id, content, position) values ('93000000-0000-4000-8000-000000000098', '93000000-0000-4000-8000-000000000001', 'Rejected identity.', 50)$$,
+  '42501', null, 'committee cannot choose a discussion identity'
+);
+select throws_ok(
+  $$insert into public.meeting_decisions (id, meeting_id, content, position) values ('93000000-0000-4000-8000-000000000097', '93000000-0000-4000-8000-000000000001', 'Rejected identity.', 50)$$,
+  '42501', null, 'committee cannot choose a decision identity'
+);
+select throws_ok(
+  $$insert into public.tasks (id, title, description, assignee_id, due_date, created_by) values ('93000000-0000-4000-8000-000000000096', 'Rejected Task ID', 'Rejected system field.', '91111111-1111-4111-8111-111111111111', current_date, '91111111-1111-4111-8111-111111111111')$$,
+  '42501', null, 'committee cannot choose a task identity'
+);
+select throws_ok(
+  $$insert into public.events (id, event_type, name, starts_at, location, description, created_by) values ('93000000-0000-4000-8000-000000000095', 'weekly_session', 'Rejected Event ID', now(), 'Test Room', 'Rejected system field.', '91111111-1111-4111-8111-111111111111')$$,
+  '42501', null, 'committee cannot choose an event identity'
+);
+select throws_ok(
+  $$update public.events set id = '93000000-0000-4000-8000-000000000095' where id = '94000000-0000-4000-8000-000000000001'$$,
+  '42501', null, 'committee cannot rewrite an event identity'
+);
+select lives_ok(
+  $$update public.meetings set title = 'Committee Meeting Updated' where title = 'Committee Meeting'$$,
+  'committee can still update an approved meeting business field'
+);
+select ok(
+  (select id <> '93000000-0000-4000-8000-000000000099'::uuid
+      and created_at > statement_timestamp() - interval '1 minute'
+   from public.meetings where title = 'Committee Meeting Updated'),
+  'approved meeting write retains database-generated identity and time'
 );
 select is((select count(*)::integer from public.participants), 0, 'committee cannot read participant details');
 select throws_ok(
