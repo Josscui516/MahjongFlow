@@ -140,7 +140,11 @@ select trigger_is(
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"91111111-1111-4111-8111-111111111111","role":"authenticated"}';
 
-select is((select count(*)::integer from public.meetings), 1, 'committee can read non-sensitive meetings');
+select is(
+  (select count(*)::integer from public.meetings where id = '93000000-0000-4000-8000-000000000001'),
+  1,
+  'committee can read the non-sensitive meeting fixture'
+);
 select lives_ok(
   $$insert into public.meetings (title, starts_at, summary, created_by) values ('Committee Meeting', now(), 'Fictional committee write.', '91111111-1111-4111-8111-111111111111')$$,
   'committee can create a meeting with its own audit identity'
@@ -170,7 +174,11 @@ select throws_ok(
 
 set local request.jwt.claims = '{"sub":"92222222-2222-4222-8222-222222222222","role":"authenticated"}';
 
-select is((select count(*)::integer from public.participants), 1, 'authorised can read participant details');
+select is(
+  (select count(*)::integer from public.participants where id = '96000000-0000-4000-8000-000000000001'),
+  1,
+  'authorised can read the participant fixture'
+);
 select lives_ok(
   $$insert into public.participants (id, full_name, email) values ('96000000-0000-4000-8000-000000000002', 'Authorised Participant', 'authorised-participant@example.test')$$,
   'authorised can create participant details'
