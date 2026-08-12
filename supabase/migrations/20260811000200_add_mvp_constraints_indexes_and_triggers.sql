@@ -194,25 +194,40 @@ for each row execute function private.maintain_audit_timestamps();
 create or replace function private.validate_task_source()
 returns trigger
 language plpgsql
-security invoker
+security definer
 set search_path = ''
 as $$
 declare
+  current_source_meeting_id uuid;
+  current_source_decision_id uuid;
+  current_source_discussion_point_id uuid;
   source_parent_meeting_id uuid;
 begin
-  if new.source_decision_id is not null then
+  perform pg_catalog.pg_advisory_xact_lock(39, 6);
+
+  select source_meeting_id, source_decision_id, source_discussion_point_id
+  into current_source_meeting_id, current_source_decision_id,
+    current_source_discussion_point_id
+  from public.tasks
+  where id = new.id;
+
+  if not found then
+    return new;
+  end if;
+
+  if current_source_decision_id is not null then
     select meeting_id into source_parent_meeting_id
     from public.meeting_decisions
-    where id = new.source_decision_id;
-  elsif new.source_discussion_point_id is not null then
+    where id = current_source_decision_id;
+  elsif current_source_discussion_point_id is not null then
     select meeting_id into source_parent_meeting_id
     from public.discussion_points
-    where id = new.source_discussion_point_id;
+    where id = current_source_discussion_point_id;
   else
     return new;
   end if;
 
-  if source_parent_meeting_id is distinct from new.source_meeting_id then
+  if source_parent_meeting_id is distinct from current_source_meeting_id then
     raise exception 'task source must belong to source_meeting_id' using errcode = '23514';
   end if;
   return new;
@@ -227,26 +242,42 @@ for each row execute function private.validate_task_source();
 create or replace function private.validate_task_source_parent()
 returns trigger
 language plpgsql
-security invoker
+security definer
 set search_path = ''
 as $$
+declare
+  current_meeting_id uuid;
 begin
-  if tg_table_name = 'meeting_decisions' and exists (
-    select 1
-    from public.tasks
-    where source_decision_id = new.id
-      and source_meeting_id is distinct from new.meeting_id
-  ) then
-    raise exception 'referenced decision must remain in the task source meeting'
-      using errcode = '23514';
-  elsif tg_table_name = 'discussion_points' and exists (
-    select 1
-    from public.tasks
-    where source_discussion_point_id = new.id
-      and source_meeting_id is distinct from new.meeting_id
-  ) then
-    raise exception 'referenced discussion point must remain in the task source meeting'
-      using errcode = '23514';
+  perform pg_catalog.pg_advisory_xact_lock(39, 6);
+
+  if tg_table_name = 'meeting_decisions' then
+    select meeting_id into current_meeting_id
+    from public.meeting_decisions
+    where id = new.id;
+
+    if found and exists (
+      select 1
+      from public.tasks
+      where source_decision_id = new.id
+        and source_meeting_id is distinct from current_meeting_id
+    ) then
+      raise exception 'referenced decision must remain in the task source meeting'
+        using errcode = '23514';
+    end if;
+  elsif tg_table_name = 'discussion_points' then
+    select meeting_id into current_meeting_id
+    from public.discussion_points
+    where id = new.id;
+
+    if found and exists (
+      select 1
+      from public.tasks
+      where source_discussion_point_id = new.id
+        and source_meeting_id is distinct from current_meeting_id
+    ) then
+      raise exception 'referenced discussion point must remain in the task source meeting'
+        using errcode = '23514';
+    end if;
   end if;
   return new;
 end;
@@ -265,15 +296,29 @@ for each row execute function private.validate_task_source_parent();
 create or replace function private.validate_registration_student_id()
 returns trigger
 language plpgsql
-security invoker
+security definer
 set search_path = ''
 as $$
+declare
+  current_event_id uuid;
+  current_participant_id uuid;
 begin
+  perform pg_catalog.pg_advisory_xact_lock(39, 5);
+
+  select event_id, participant_id
+  into current_event_id, current_participant_id
+  from public.registrations
+  where id = new.id;
+
+  if not found then
+    return new;
+  end if;
+
   if exists (
     select 1
     from public.events e
-    join public.participants p on p.id = new.participant_id
-    where e.id = new.event_id
+    join public.participants p on p.id = current_participant_id
+    where e.id = current_event_id
       and e.requires_student_id
       and p.student_id is null
   ) then
@@ -291,12 +336,21 @@ for each row execute function private.validate_registration_student_id();
 create or replace function private.validate_registration_student_id_parent()
 returns trigger
 language plpgsql
-security invoker
+security definer
 set search_path = ''
 as $$
+declare
+  current_requires_student_id boolean;
+  current_student_id text;
 begin
+  perform pg_catalog.pg_advisory_xact_lock(39, 5);
+
   if tg_table_name = 'events' then
-    if new.requires_student_id and exists (
+    select requires_student_id into current_requires_student_id
+    from public.events
+    where id = new.id;
+
+    if found and current_requires_student_id and exists (
       select 1
       from public.registrations r
       join public.participants p on p.id = r.participant_id
@@ -307,7 +361,11 @@ begin
         using errcode = '23514';
     end if;
   elsif tg_table_name = 'participants' then
-    if new.student_id is null and exists (
+    select student_id into current_student_id
+    from public.participants
+    where id = new.id;
+
+    if found and current_student_id is null and exists (
       select 1
       from public.registrations r
       join public.events e on e.id = r.event_id
@@ -331,6 +389,15 @@ create constraint trigger participants_validate_registration_student_ids
 after update of student_id on public.participants
 deferrable initially immediate
 for each row execute function private.validate_registration_student_id_parent();
+
+revoke execute on function private.validate_task_source()
+  from public, anon, authenticated;
+revoke execute on function private.validate_task_source_parent()
+  from public, anon, authenticated;
+revoke execute on function private.validate_registration_student_id()
+  from public, anon, authenticated;
+revoke execute on function private.validate_registration_student_id_parent()
+  from public, anon, authenticated;
 
 create or replace function private.validate_qr_attendance_registration()
 returns trigger

@@ -1,5 +1,5 @@
 begin;
-select plan(30);
+select plan(41);
 
 -- Make the test independent of whether db reset loaded seed.sql. TRUNCATE is
 -- transactional in PostgreSQL, and the final rollback restores any seed data.
@@ -7,7 +7,8 @@ truncate table public.participants, auth.users cascade;
 
 insert into auth.users (instance_id, id, aud, role, email, confirmation_token, recovery_token, email_change, raw_app_meta_data, raw_user_meta_data, created_at, updated_at) values
   ('00000000-0000-0000-0000-000000000000', '11111111-1111-4111-8111-111111111111', 'authenticated', 'authenticated', 'committee01@example.test', '', '', '', '{}', '{}', now(), now()),
-  ('00000000-0000-0000-0000-000000000000', '22222222-2222-4222-8222-222222222222', 'authenticated', 'authenticated', 'authorised01@example.test', '', '', '', '{}', '{}', now(), now());
+  ('00000000-0000-0000-0000-000000000000', '22222222-2222-4222-8222-222222222222', 'authenticated', 'authenticated', 'authorised01@example.test', '', '', '', '{}', '{}', now(), now()),
+  ('00000000-0000-0000-0000-000000000000', '33333333-3333-4333-8333-333333333333', 'authenticated', 'authenticated', 'no-profile01@example.test', '', '', '', '{}', '{}', now(), now());
 insert into public.profiles (id, display_name, committee_role) values
   ('11111111-1111-4111-8111-111111111111', 'Committee Tester', 'committee'),
   ('22222222-2222-4222-8222-222222222222', 'Authorised Tester', 'authorised');
@@ -164,6 +165,97 @@ select throws_ok(
 select throws_ok(
   $$delete from public.events where id = '40000000-0000-4000-8000-000000000001'$$,
   '23503', null, 'events with business history cannot be deleted'
+);
+
+select lives_ok(
+  $$set constraints meeting_decisions_validate_task_sources deferred;
+    update public.meeting_decisions set meeting_id = '30000000-0000-4000-8000-000000000002' where id = '32000000-0000-4000-8000-000000000001';
+    update public.meeting_decisions set meeting_id = '30000000-0000-4000-8000-000000000001' where id = '32000000-0000-4000-8000-000000000001';
+    set constraints meeting_decisions_validate_task_sources immediate$$,
+  'a deferred task-source check accepts a temporary invalid state repaired before validation'
+);
+select throws_ok(
+  $$set constraints meeting_decisions_validate_task_sources deferred;
+    update public.meeting_decisions set meeting_id = '30000000-0000-4000-8000-000000000002' where id = '32000000-0000-4000-8000-000000000001';
+    set constraints meeting_decisions_validate_task_sources immediate$$,
+  '23514', null, 'a deferred task-source check rejects the final invalid state'
+);
+select lives_ok(
+  $$set constraints events_validate_registration_student_ids deferred;
+    update public.events set requires_student_id = true where id = '40000000-0000-4000-8000-000000000001';
+    update public.events set requires_student_id = false where id = '40000000-0000-4000-8000-000000000001';
+    set constraints events_validate_registration_student_ids immediate$$,
+  'a deferred event check validates the repaired final requirement state'
+);
+select throws_ok(
+  $$set constraints events_validate_registration_student_ids deferred;
+    update public.events set requires_student_id = true where id = '40000000-0000-4000-8000-000000000001';
+    set constraints events_validate_registration_student_ids immediate$$,
+  '23514', null, 'a deferred event check rejects the final invalid requirement state'
+);
+select lives_ok(
+  $$set constraints participants_validate_registration_student_ids deferred;
+    update public.participants set student_id = null where id = '60000000-0000-4000-8000-000000000002';
+    update public.participants set student_id = 'TEST-0002' where id = '60000000-0000-4000-8000-000000000002';
+    set constraints participants_validate_registration_student_ids immediate$$,
+  'a deferred participant check validates the restored final student ID'
+);
+select throws_ok(
+  $$set constraints participants_validate_registration_student_ids deferred;
+    update public.participants set student_id = null where id = '60000000-0000-4000-8000-000000000002';
+    set constraints participants_validate_registration_student_ids immediate$$,
+  '23514', null, 'a deferred participant check rejects the final missing student ID'
+);
+
+grant select, update on public.events to authenticated;
+create policy test_backend_event_select on public.events
+  for select to authenticated
+  using (auth.uid() in (
+    '11111111-1111-4111-8111-111111111111'::uuid,
+    '22222222-2222-4222-8222-222222222222'::uuid
+  ));
+create policy test_backend_event_update on public.events
+  for update to authenticated
+  using (auth.uid() in (
+    '11111111-1111-4111-8111-111111111111'::uuid,
+    '22222222-2222-4222-8222-222222222222'::uuid
+  ))
+  with check (auth.uid() in (
+    '11111111-1111-4111-8111-111111111111'::uuid,
+    '22222222-2222-4222-8222-222222222222'::uuid
+  ));
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"11111111-1111-4111-8111-111111111111","role":"authenticated"}';
+select throws_ok(
+  $$update public.events set requires_student_id = true where id = '40000000-0000-4000-8000-000000000001'$$,
+  '23514', null, 'committee RLS cannot hide violating registrations from the integrity trigger'
+);
+reset role;
+select is(
+  (select requires_student_id from public.events where id = '40000000-0000-4000-8000-000000000001'),
+  false,
+  'the rejected committee update leaves the stored event requirement unchanged'
+);
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"22222222-2222-4222-8222-222222222222","role":"authenticated"}';
+select lives_ok(
+  $$update public.events set requires_student_id = false
+    where id = '40000000-0000-4000-8000-000000000003'$$,
+  'authorised RLS retains an allowed event update'
+);
+set local request.jwt.claims = '{"sub":"33333333-3333-4333-8333-333333333333","role":"authenticated"}';
+select lives_ok(
+  $$update public.events set requires_student_id = true
+    where id = '40000000-0000-4000-8000-000000000003'$$,
+  'a no-profile JWT update is safely filtered by RLS'
+);
+reset role;
+select is(
+  (select requires_student_id from public.events
+   where id = '40000000-0000-4000-8000-000000000003'),
+  false,
+  'a no-profile JWT leaves the stored event unchanged'
 );
 
 select * from finish();
