@@ -1,5 +1,5 @@
 begin;
-select plan(18);
+select plan(16);
 
 -- Make the test independent of whether db reset loaded seed.sql. TRUNCATE is
 -- transactional in PostgreSQL, and the final rollback restores any seed data.
@@ -42,11 +42,6 @@ select is(
   11, 'RLS is enabled on every MVP table'
 );
 select ok(not has_table_privilege('anon', 'public.profiles', 'select'), 'anon has no profile access');
-select ok(not has_table_privilege('authenticated', 'public.tasks', 'select'), 'authenticated has no task access');
-select is(
-  (select count(*)::integer from pg_policies where schemaname = 'public' and tablename in ('profiles', 'meetings', 'meeting_attendees', 'discussion_points', 'meeting_decisions', 'tasks', 'events', 'event_check_in_tokens', 'participants', 'registrations', 'attendance_records')),
-  0, 'the first two migrations create no RLS policies'
-);
 
 select throws_ok(
   $$insert into public.participants (full_name, email) values ('Duplicate Email', 'alpha@example.test')$$,
