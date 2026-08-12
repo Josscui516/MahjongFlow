@@ -1,6 +1,6 @@
 begin;
 
-select plan(49);
+select plan(54);
 
 insert into auth.users (
   instance_id, id, aud, role, email, confirmation_token, recovery_token,
@@ -16,6 +16,9 @@ insert into public.profiles (id, display_name, committee_role) values
 
 insert into public.meetings (id, title, starts_at, summary, created_by) values
   ('93000000-0000-4000-8000-000000000001', 'RLS Fixture Meeting', now(), 'Fictional RLS fixture.', '92222222-2222-4222-8222-222222222222');
+insert into public.meeting_attendees (meeting_id, profile_id) values
+  ('93000000-0000-4000-8000-000000000001', '91111111-1111-4111-8111-111111111111'),
+  ('93000000-0000-4000-8000-000000000001', '92222222-2222-4222-8222-222222222222');
 insert into public.events (id, event_type, name, starts_at, location, description, created_by) values
   ('94000000-0000-4000-8000-000000000001', 'weekly_session', 'RLS Fixture Event', now(), 'Test Room', 'Fictional RLS fixture.', '92222222-2222-4222-8222-222222222222');
 insert into public.participants (id, full_name, email) values
@@ -27,6 +30,12 @@ insert into public.attendance_records (id, event_id, participant_id, check_in_me
 
 select has_function('private', 'is_backend_user', array[]::text[], 'backend role helper exists');
 select has_function('private', 'is_authorised', array[]::text[], 'authorised role helper exists');
+select has_function(
+  'private',
+  'has_other_meeting_attendee',
+  array['uuid', 'uuid'],
+  'meeting attendee guard helper exists'
+);
 select has_function(
   'public',
   'get_event_participation_totals',
@@ -108,15 +117,25 @@ select policies_are(
 
 select function_privs_are('private', 'is_backend_user', array[]::text[], 'anon', array[]::text[], 'anon cannot execute backend helper');
 select function_privs_are('private', 'is_authorised', array[]::text[], 'anon', array[]::text[], 'anon cannot execute authorised helper');
+select function_privs_are('private', 'has_other_meeting_attendee', array['uuid', 'uuid'], 'anon', array[]::text[], 'anon cannot execute attendee guard helper');
 select function_privs_are('public', 'get_event_participation_totals', array['uuid[]'], 'anon', array[]::text[], 'anon cannot execute aggregate');
 select function_privs_are('private', 'is_backend_user', array[]::text[], 'authenticated', array['EXECUTE'], 'authenticated can execute backend helper');
 select function_privs_are('private', 'is_authorised', array[]::text[], 'authenticated', array['EXECUTE'], 'authenticated can execute authorised helper');
+select function_privs_are('private', 'has_other_meeting_attendee', array['uuid', 'uuid'], 'authenticated', array['EXECUTE'], 'authenticated can execute attendee guard helper');
 select function_privs_are('public', 'get_event_participation_totals', array['uuid[]'], 'authenticated', array['EXECUTE'], 'authenticated can execute safe aggregate');
 
 select trigger_is('public', 'meetings', 'meetings_reject_created_by_change', 'private', 'reject_created_by_change', 'meeting creator is immutable');
 select trigger_is('public', 'tasks', 'tasks_reject_created_by_change', 'private', 'reject_created_by_change', 'task creator is immutable');
 select trigger_is('public', 'events', 'events_reject_created_by_change', 'private', 'reject_created_by_change', 'event creator is immutable');
 select trigger_is('public', 'tasks', 'tasks_reject_source_change', 'private', 'reject_task_source_change', 'task sources are immutable');
+select trigger_is(
+  'public',
+  'meeting_attendees',
+  'meeting_attendees_prevent_last_delete',
+  'private',
+  'prevent_last_meeting_attendee_delete',
+  'meeting attendee deletion keeps at least one attendee'
+);
 
 set local role authenticated;
 set local request.jwt.claims = '{"sub":"91111111-1111-4111-8111-111111111111","role":"authenticated"}';
@@ -143,6 +162,10 @@ select throws_ok(
 select throws_ok(
   $$insert into public.events (event_type, name, starts_at, location, description, created_by) values ('weekly_session', 'Forged Event', now(), 'Test Room', 'Rejected audit forgery.', '92222222-2222-4222-8222-222222222222')$$,
   '42501', null, 'committee cannot forge an event creator'
+);
+select throws_ok(
+  $$delete from public.meeting_attendees where meeting_id = '93000000-0000-4000-8000-000000000001'$$,
+  '23514', null, 'a bulk delete cannot remove the final meeting attendee'
 );
 
 set local request.jwt.claims = '{"sub":"92222222-2222-4222-8222-222222222222","role":"authenticated"}';

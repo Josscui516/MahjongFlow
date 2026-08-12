@@ -33,10 +33,30 @@ as $$
   );
 $$;
 
+create or replace function private.has_other_meeting_attendee(
+  target_meeting_id uuid,
+  excluded_profile_id uuid
+)
+returns boolean
+language sql
+stable
+security definer
+set search_path = ''
+as $$
+  select exists (
+    select 1
+    from public.meeting_attendees
+    where meeting_id = target_meeting_id
+      and profile_id <> excluded_profile_id
+  );
+$$;
+
 revoke execute on function private.is_backend_user() from public, anon;
 revoke execute on function private.is_authorised() from public, anon;
+revoke execute on function private.has_other_meeting_attendee(uuid, uuid) from public, anon;
 grant execute on function private.is_backend_user() to authenticated;
 grant execute on function private.is_authorised() to authenticated;
+grant execute on function private.has_other_meeting_attendee(uuid, uuid) to authenticated;
 
 alter table public.profiles enable row level security;
 alter table public.meetings enable row level security;
@@ -94,12 +114,7 @@ create policy meeting_attendees_backend_delete on public.meeting_attendees
   for delete to authenticated
   using (
     (select private.is_backend_user())
-    and exists (
-      select 1
-      from public.meeting_attendees as remaining
-      where remaining.meeting_id = meeting_attendees.meeting_id
-        and remaining.profile_id <> meeting_attendees.profile_id
-    )
+    and private.has_other_meeting_attendee(meeting_id, profile_id)
   );
 
 create policy discussion_points_backend_select on public.discussion_points
@@ -246,6 +261,24 @@ $$;
 create trigger tasks_reject_source_change
 before update on public.tasks
 for each row execute function private.reject_task_source_change();
+
+create or replace function private.prevent_last_meeting_attendee_delete()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+begin
+  if not private.has_other_meeting_attendee(old.meeting_id, old.profile_id) then
+    raise exception 'a meeting must keep at least one attendee' using errcode = '23514';
+  end if;
+  return old;
+end;
+$$;
+
+create trigger meeting_attendees_prevent_last_delete
+before delete on public.meeting_attendees
+for each row execute function private.prevent_last_meeting_attendee_delete();
 
 create or replace function public.get_event_participation_totals(event_ids uuid[])
 returns table (
