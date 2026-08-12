@@ -16,6 +16,7 @@
     "test:automation": "node --test .github/scripts/project-automation.test.mjs .github/scripts/run-database-tests.test.mjs",
     "test:acceptance": "vitest run tests/acceptance",
     "db:start": "supabase start",
+    "db:start:ci": "supabase start -x gotrue,realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor",
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset --local",
     "db:reset:no-seed": "supabase db reset --local --no-seed",

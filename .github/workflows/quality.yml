@@ -96,7 +96,7 @@ jobs:
         run: npm ci
 
       - name: Start local Supabase
-        run: npm run db:start
+        run: npm run db:start:ci
 
       - name: Replay migrations without seed data
         run: npm run db:reset:no-seed
