@@ -37,10 +37,14 @@ alter table public.tasks
     description = btrim(description) and char_length(description) between 1 and 10000
   ),
   add constraint tasks_source_shape_check check (
-    num_nonnulls(source_decision_id, source_discussion_point_id) <= 1
-    and (
-      num_nonnulls(source_decision_id, source_discussion_point_id) = 0
-      or source_meeting_id is not null
+    (
+      source_meeting_id is null
+      and source_decision_id is null
+      and source_discussion_point_id is null
+    )
+    or (
+      source_meeting_id is not null
+      and num_nonnulls(source_decision_id, source_discussion_point_id) = 1
     )
   );
 
@@ -220,6 +224,44 @@ after insert or update of source_meeting_id, source_decision_id, source_discussi
 on public.tasks deferrable initially immediate
 for each row execute function private.validate_task_source();
 
+create or replace function private.validate_task_source_parent()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+begin
+  if tg_table_name = 'meeting_decisions' and exists (
+    select 1
+    from public.tasks
+    where source_decision_id = new.id
+      and source_meeting_id is distinct from new.meeting_id
+  ) then
+    raise exception 'referenced decision must remain in the task source meeting'
+      using errcode = '23514';
+  elsif tg_table_name = 'discussion_points' and exists (
+    select 1
+    from public.tasks
+    where source_discussion_point_id = new.id
+      and source_meeting_id is distinct from new.meeting_id
+  ) then
+    raise exception 'referenced discussion point must remain in the task source meeting'
+      using errcode = '23514';
+  end if;
+  return new;
+end;
+$$;
+
+create constraint trigger meeting_decisions_validate_task_sources
+after update of meeting_id on public.meeting_decisions
+deferrable initially immediate
+for each row execute function private.validate_task_source_parent();
+
+create constraint trigger discussion_points_validate_task_sources
+after update of meeting_id on public.discussion_points
+deferrable initially immediate
+for each row execute function private.validate_task_source_parent();
+
 create or replace function private.validate_registration_student_id()
 returns trigger
 language plpgsql
@@ -245,6 +287,50 @@ create constraint trigger registrations_validate_student_id
 after insert or update of event_id, participant_id
 on public.registrations deferrable initially immediate
 for each row execute function private.validate_registration_student_id();
+
+create or replace function private.validate_registration_student_id_parent()
+returns trigger
+language plpgsql
+security invoker
+set search_path = ''
+as $$
+begin
+  if tg_table_name = 'events' then
+    if new.requires_student_id and exists (
+      select 1
+      from public.registrations r
+      join public.participants p on p.id = r.participant_id
+      where r.event_id = new.id
+        and p.student_id is null
+    ) then
+      raise exception 'registered participants require a student_id for this event'
+        using errcode = '23514';
+    end if;
+  elsif tg_table_name = 'participants' then
+    if new.student_id is null and exists (
+      select 1
+      from public.registrations r
+      join public.events e on e.id = r.event_id
+      where r.participant_id = new.id
+        and e.requires_student_id
+    ) then
+      raise exception 'student_id is required by an existing registration'
+        using errcode = '23514';
+    end if;
+  end if;
+  return new;
+end;
+$$;
+
+create constraint trigger events_validate_registration_student_ids
+after update of requires_student_id on public.events
+deferrable initially immediate
+for each row execute function private.validate_registration_student_id_parent();
+
+create constraint trigger participants_validate_registration_student_ids
+after update of student_id on public.participants
+deferrable initially immediate
+for each row execute function private.validate_registration_student_id_parent();
 
 create or replace function private.validate_qr_attendance_registration()
 returns trigger

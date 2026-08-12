@@ -1,5 +1,5 @@
 begin;
-select plan(16);
+select plan(30);
 
 -- Make the test independent of whether db reset loaded seed.sql. TRUNCATE is
 -- transactional in PostgreSQL, and the final rollback restores any seed data.
@@ -12,18 +12,24 @@ insert into public.profiles (id, display_name, committee_role) values
   ('11111111-1111-4111-8111-111111111111', 'Committee Tester', 'committee'),
   ('22222222-2222-4222-8222-222222222222', 'Authorised Tester', 'authorised');
 insert into public.meetings (id, title, starts_at, summary, created_by) values
-  ('30000000-0000-4000-8000-000000000001', 'Fixture Meeting', now(), 'Fictional test meeting.', '22222222-2222-4222-8222-222222222222');
+  ('30000000-0000-4000-8000-000000000001', 'Fixture Meeting', now(), 'Fictional test meeting.', '22222222-2222-4222-8222-222222222222'),
+  ('30000000-0000-4000-8000-000000000002', 'Second Fixture Meeting', now(), 'Second fictional test meeting.', '22222222-2222-4222-8222-222222222222');
 insert into public.discussion_points (id, meeting_id, content, position) values
-  ('31000000-0000-4000-8000-000000000001', '30000000-0000-4000-8000-000000000001', 'Fixture discussion.', 0);
+  ('31000000-0000-4000-8000-000000000001', '30000000-0000-4000-8000-000000000001', 'Fixture discussion.', 0),
+  ('31000000-0000-4000-8000-000000000002', '30000000-0000-4000-8000-000000000001', 'Referenced fixture discussion.', 1),
+  ('31000000-0000-4000-8000-000000000003', '30000000-0000-4000-8000-000000000001', 'Unreferenced fixture discussion.', 2);
 insert into public.meeting_decisions (id, meeting_id, content, position) values
-  ('32000000-0000-4000-8000-000000000001', '30000000-0000-4000-8000-000000000001', 'Fixture decision.', 0);
+  ('32000000-0000-4000-8000-000000000001', '30000000-0000-4000-8000-000000000001', 'Fixture decision.', 0),
+  ('32000000-0000-4000-8000-000000000002', '30000000-0000-4000-8000-000000000001', 'Second fixture decision.', 1),
+  ('32000000-0000-4000-8000-000000000003', '30000000-0000-4000-8000-000000000001', 'Unreferenced fixture decision.', 2);
 insert into public.events (id, event_type, name, starts_at, location, description, requires_student_id, created_by) values
   ('40000000-0000-4000-8000-000000000001', 'weekly_session', 'Standard Fixture Event', now(), 'Test Room', 'Fictional standard event.', false, '22222222-2222-4222-8222-222222222222'),
   ('40000000-0000-4000-8000-000000000002', 'tournament', 'ID Fixture Event', now(), 'Test Room', 'Fictional ID event.', true, '22222222-2222-4222-8222-222222222222'),
   ('40000000-0000-4000-8000-000000000003', 'weekly_session', 'Attendance Fixture Event', now(), 'Test Room', 'Fictional attendance event.', false, '22222222-2222-4222-8222-222222222222');
 insert into public.participants (id, full_name, email) values
   ('60000000-0000-4000-8000-000000000001', 'Participant Alpha', 'alpha@example.test'),
-  ('60000000-0000-4000-8000-000000000002', 'Participant Beta', 'beta@example.test');
+  ('60000000-0000-4000-8000-000000000002', 'Participant Beta', 'beta@example.test'),
+  ('60000000-0000-4000-8000-000000000003', 'Participant Gamma', 'gamma@example.test');
 insert into public.registrations (event_id, participant_id, recorded_by) values
   ('40000000-0000-4000-8000-000000000001', '60000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222');
 insert into public.tasks (title, description, assignee_id, due_date, source_meeting_id, source_decision_id, event_id, created_by) values
@@ -42,6 +48,26 @@ select is(
   11, 'RLS is enabled on every MVP table'
 );
 select ok(not has_table_privilege('anon', 'public.profiles', 'select'), 'anon has no profile access');
+select ok(
+  exists (
+    select 1 from supabase_migrations.schema_migrations
+    where version > '20260811000200'
+  )
+  or not has_table_privilege('authenticated', 'public.tasks', 'select'),
+  'authenticated has no task access before the policy migration'
+);
+select ok(
+  exists (
+    select 1 from supabase_migrations.schema_migrations
+    where version > '20260811000200'
+  )
+  or not exists (
+    select 1 from pg_policies
+    where schemaname = 'public'
+      and tablename in ('profiles', 'meetings', 'meeting_attendees', 'discussion_points', 'meeting_decisions', 'tasks', 'events', 'event_check_in_tokens', 'participants', 'registrations', 'attendance_records')
+  ),
+  'the first two migrations create no RLS policies'
+);
 
 select throws_ok(
   $$insert into public.participants (full_name, email) values ('Duplicate Email', 'alpha@example.test')$$,
@@ -60,12 +86,60 @@ select throws_ok(
   '23514', null, 'a task cannot reference two concrete sources'
 );
 select throws_ok(
+  $$insert into public.tasks (title, description, assignee_id, due_date, source_meeting_id, created_by) values ('Meeting only', 'Invalid meeting-only source.', '11111111-1111-4111-8111-111111111111', current_date, '30000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222')$$,
+  '23514', null, 'a task cannot reference only a source meeting'
+);
+select lives_ok(
+  $$insert into public.tasks (title, description, assignee_id, due_date, created_by) values ('Independent task', 'Valid independent task.', '11111111-1111-4111-8111-111111111111', current_date, '22222222-2222-4222-8222-222222222222')$$,
+  'an independent task has no source fields'
+);
+select lives_ok(
+  $$insert into public.tasks (title, description, assignee_id, due_date, source_meeting_id, source_decision_id, created_by) values ('Decision conversion', 'Valid decision conversion.', '11111111-1111-4111-8111-111111111111', current_date, '30000000-0000-4000-8000-000000000001', '32000000-0000-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222')$$,
+  'a decision source includes its meeting'
+);
+select lives_ok(
+  $$insert into public.tasks (title, description, assignee_id, due_date, source_meeting_id, source_discussion_point_id, created_by) values ('Discussion conversion', 'Valid discussion conversion.', '11111111-1111-4111-8111-111111111111', current_date, '30000000-0000-4000-8000-000000000001', '31000000-0000-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222')$$,
+  'a discussion source includes its meeting'
+);
+select throws_ok(
+  $$update public.meeting_decisions set meeting_id = '30000000-0000-4000-8000-000000000002' where id = '32000000-0000-4000-8000-000000000001'$$,
+  '23514', null, 'a referenced decision cannot move outside its task source meeting'
+);
+select throws_ok(
+  $$update public.discussion_points set meeting_id = '30000000-0000-4000-8000-000000000002' where id = '31000000-0000-4000-8000-000000000002'$$,
+  '23514', null, 'a referenced discussion point cannot move outside its task source meeting'
+);
+select lives_ok(
+  $$update public.meeting_decisions set meeting_id = '30000000-0000-4000-8000-000000000002' where id = '32000000-0000-4000-8000-000000000003'; update public.discussion_points set meeting_id = '30000000-0000-4000-8000-000000000002' where id = '31000000-0000-4000-8000-000000000003'$$,
+  'unreferenced source rows remain reparentable'
+);
+select throws_ok(
   $$insert into public.tasks (title, description, assignee_id, due_date, source_meeting_id, source_decision_id, created_by) values ('Duplicate conversion', 'Duplicate source conversion.', '11111111-1111-4111-8111-111111111111', current_date, '30000000-0000-4000-8000-000000000001', '32000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222')$$,
   '23505', null, 'a decision can create only one task'
 );
 select throws_ok(
   $$insert into public.registrations (event_id, participant_id, recorded_by) values ('40000000-0000-4000-8000-000000000002', '60000000-0000-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222')$$,
   '23514', null, 'student ID is required by configured events'
+);
+select throws_ok(
+  $$update public.events set requires_student_id = true where id = '40000000-0000-4000-8000-000000000001'$$,
+  '23514', null, 'an event cannot add a student ID requirement that existing registrations violate'
+);
+select lives_ok(
+  $$update public.events set requires_student_id = true where id = '40000000-0000-4000-8000-000000000003'$$,
+  'an event without registrations may add a student ID requirement'
+);
+select lives_ok(
+  $$update public.participants set student_id = 'TEST-0003' where id = '60000000-0000-4000-8000-000000000003'; update public.participants set student_id = null where id = '60000000-0000-4000-8000-000000000003'$$,
+  'an unregistered participant may clear their student ID'
+);
+select lives_ok(
+  $$update public.participants set student_id = 'TEST-0002' where id = '60000000-0000-4000-8000-000000000002'; insert into public.registrations (event_id, participant_id, recorded_by) values ('40000000-0000-4000-8000-000000000002', '60000000-0000-4000-8000-000000000002', '22222222-2222-4222-8222-222222222222')$$,
+  'a participant with a student ID may register for a configured event'
+);
+select throws_ok(
+  $$update public.participants set student_id = null where id = '60000000-0000-4000-8000-000000000002'$$,
+  '23514', null, 'a participant cannot clear a student ID required by an existing registration'
 );
 select throws_ok(
   $$insert into public.registrations (event_id, participant_id, recorded_by) values ('40000000-0000-4000-8000-000000000001', '60000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222')$$,
