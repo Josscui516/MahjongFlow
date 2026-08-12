@@ -53,6 +53,7 @@ describe("BackofficeShell", () => {
     expect(html).toContain("<header");
     expect(html).toContain('<main class="');
     expect(html).toContain('id="main-content"');
+    expect(html).toContain('tabindex="-1"');
     expect(html).toContain("Role: Committee");
     expect(html).toContain("Fictional committee member");
     expect(html).toContain("Sign out");
