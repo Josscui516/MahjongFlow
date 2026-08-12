@@ -435,7 +435,7 @@ begin
     and e.check_in_opens_at is not null
     and e.check_in_closes_at is not null
     and statement_timestamp() >= e.check_in_opens_at
-    and statement_timestamp() <= e.check_in_closes_at
+    and statement_timestamp() < e.check_in_closes_at
   limit 1;
 
   if matched_event_id is null then
@@ -481,7 +481,7 @@ begin
     and e.check_in_opens_at is not null
     and e.check_in_closes_at is not null
     and statement_timestamp() >= e.check_in_opens_at
-    and statement_timestamp() <= e.check_in_closes_at
+    and statement_timestamp() < e.check_in_closes_at
   for update of t;
 
   if matched_event_id is null then
