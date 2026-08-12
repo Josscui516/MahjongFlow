@@ -28,11 +28,16 @@
 | Lint | `npm run lint` |
 | TypeScript | `npm run typecheck` |
 | 应用与验收测试 | `npm test`、`npm run test:acceptance` |
-| 数据库重放与测试 | `npm run db:reset`、`npx supabase test db --local` |
+| 数据库重放与测试 | `npm run db:reset:no-seed`、`npm run db:reset`、`npm run db:test` |
 | 数据库 lint／漂移 | `npm run db:lint`、`npm run db:diff` |
 | 生产构建 | `npm run build` |
 
 完整集成验收还必须运行 #39 与 #40 提供的真实双连接并发入口，并记录精确断言数。
+`Quality` 工作流中的独立 `Database` 检查会依次执行无 seed／有 seed migration 重放、
+数据库测试、数据库 lint 和空漂移验证；`Build` 只有在应用测试与数据库检查均成功后才运行。
+双连接脚本在对应工作包进入 Sprint 后接入该检查，缺少集成时不得把普通数据库检查解释为
+X-01 至 X-07 已通过。数据库测试入口会把 `Files=0`、`Tests=0` 或 `NOTESTS` 视为失败，
+避免 Supabase CLI 的零测试成功退出码造成假绿色门禁。
 
 ## 3. 脱敏证据格式
 
