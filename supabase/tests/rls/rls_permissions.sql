@@ -1,6 +1,6 @@
 begin;
 
-select plan(54);
+select plan(92);
 
 insert into auth.users (
   instance_id, id, aud, role, email, confirmation_token, recovery_token,
@@ -42,6 +42,9 @@ select has_function(
   array['uuid[]'],
   'safe participation aggregate exists'
 );
+select has_function('public', 'get_check_in_context', array['text'], 'minimum check-in context RPC exists');
+select has_function('public', 'submit_event_check_in', array['text', 'text', 'text'], 'atomic check-in RPC exists');
+select has_function('public', 'rotate_event_check_in_token', array['uuid', 'uuid'], 'token rotation RPC exists');
 
 select policies_are(
   'public',
@@ -67,9 +70,15 @@ select table_privs_are('public', 'profiles', 'authenticated', array['SELECT'], '
 select table_privs_are('public', 'meetings', 'authenticated', array['INSERT', 'SELECT', 'UPDATE'], 'meetings exclude delete');
 select table_privs_are('public', 'tasks', 'authenticated', array['INSERT', 'SELECT', 'UPDATE'], 'tasks exclude delete');
 select table_privs_are('public', 'events', 'authenticated', array['INSERT', 'SELECT', 'UPDATE'], 'events exclude delete');
-select table_privs_are('public', 'participants', 'authenticated', array['INSERT', 'SELECT', 'UPDATE'], 'participant grants are policy-limited');
-select table_privs_are('public', 'registrations', 'authenticated', array['INSERT', 'SELECT', 'UPDATE'], 'registration grants exclude delete');
-select table_privs_are('public', 'attendance_records', 'authenticated', array['INSERT', 'SELECT', 'UPDATE'], 'attendance grants exclude delete');
+select table_privs_are('public', 'participants', 'authenticated', array['SELECT'], 'participants have no whole-table write grant');
+select table_privs_are('public', 'registrations', 'authenticated', array['SELECT'], 'registrations have no whole-table write grant');
+select table_privs_are('public', 'attendance_records', 'authenticated', array['SELECT'], 'attendance has no whole-table write grant');
+select column_privs_are('public', 'participants', 'full_name', 'authenticated', array['INSERT', 'SELECT', 'UPDATE'], 'participant name is writable by authorised policy');
+select column_privs_are('public', 'participants', 'id', 'authenticated', array['SELECT'], 'participant identity is database-owned');
+select column_privs_are('public', 'registrations', 'registration_status', 'authenticated', array['SELECT', 'UPDATE'], 'registration status is correctable');
+select column_privs_are('public', 'registrations', 'registered_at', 'authenticated', array['SELECT'], 'registration time is database-owned');
+select column_privs_are('public', 'attendance_records', 'attendance_status', 'authenticated', array['SELECT', 'UPDATE'], 'attendance status is correctable');
+select column_privs_are('public', 'attendance_records', 'check_in_method', 'authenticated', array['SELECT'], 'attendance method is trusted-boundary-owned');
 
 select policies_are(
   'public',
@@ -123,11 +132,19 @@ select function_privs_are('private', 'is_backend_user', array[]::text[], 'authen
 select function_privs_are('private', 'is_authorised', array[]::text[], 'authenticated', array['EXECUTE'], 'authenticated can execute authorised helper');
 select function_privs_are('private', 'has_other_meeting_attendee', array['uuid', 'uuid'], 'authenticated', array['EXECUTE'], 'authenticated can execute attendee guard helper');
 select function_privs_are('public', 'get_event_participation_totals', array['uuid[]'], 'authenticated', array['EXECUTE'], 'authenticated can execute safe aggregate');
+select function_privs_are('public', 'get_check_in_context', array['text'], 'authenticated', array[]::text[], 'authenticated browser cannot execute context RPC');
+select function_privs_are('public', 'submit_event_check_in', array['text', 'text', 'text'], 'authenticated', array[]::text[], 'authenticated browser cannot execute check-in RPC');
+select function_privs_are('public', 'rotate_event_check_in_token', array['uuid', 'uuid'], 'authenticated', array[]::text[], 'authenticated browser cannot execute rotation RPC');
+select function_privs_are('public', 'get_check_in_context', array['text'], 'service_role', array['EXECUTE'], 'trusted server can execute context RPC');
+select function_privs_are('public', 'submit_event_check_in', array['text', 'text', 'text'], 'service_role', array['EXECUTE'], 'trusted server can execute check-in RPC');
+select function_privs_are('public', 'rotate_event_check_in_token', array['uuid', 'uuid'], 'service_role', array['EXECUTE'], 'trusted server can execute rotation RPC');
 
 select trigger_is('public', 'meetings', 'meetings_reject_created_by_change', 'private', 'reject_created_by_change', 'meeting creator is immutable');
 select trigger_is('public', 'tasks', 'tasks_reject_created_by_change', 'private', 'reject_created_by_change', 'task creator is immutable');
 select trigger_is('public', 'events', 'events_reject_created_by_change', 'private', 'reject_created_by_change', 'event creator is immutable');
 select trigger_is('public', 'tasks', 'tasks_reject_source_change', 'private', 'reject_task_source_change', 'task sources are immutable');
+select trigger_is('public', 'registrations', 'registrations_apply_trusted_fields', 'private', 'apply_trusted_registration_fields', 'registration provenance is database-controlled');
+select trigger_is('public', 'attendance_records', 'attendance_records_apply_trusted_fields', 'private', 'apply_trusted_attendance_fields', 'attendance provenance is database-controlled');
 select trigger_is(
   'public',
   'meeting_attendees',
@@ -179,17 +196,106 @@ select is(
   1,
   'authorised can read the participant fixture'
 );
-select lives_ok(
-  $$insert into public.participants (id, full_name, email) values ('96000000-0000-4000-8000-000000000002', 'Authorised Participant', 'authorised-participant@example.test')$$,
-  'authorised can create participant details'
+select throws_ok(
+  $$insert into public.participants (id, full_name, email) values ('96000000-0000-4000-8000-000000000002', 'Forged Identity', 'forged-identity@example.test')$$,
+  '42501', null, 'authorised browser cannot choose a participant identity'
+);
+select throws_ok(
+  $$insert into public.participants (full_name, email, created_at) values ('Forged Time', 'forged-time@example.test', '2000-01-01')$$,
+  '42501', null, 'authorised browser cannot choose participant creation time'
 );
 select lives_ok(
-  $$insert into public.registrations (event_id, participant_id, recorded_by) values ('94000000-0000-4000-8000-000000000001', '96000000-0000-4000-8000-000000000002', '92222222-2222-4222-8222-222222222222')$$,
+  $$insert into public.participants (full_name, email) values ('Authorised Participant', 'authorised-participant@example.test')$$,
+  'authorised can create participant details'
+);
+select throws_ok(
+  $$update public.participants set created_at = '2000-01-01' where email = 'authorised-participant@example.test'$$,
+  '42501', null, 'authorised browser cannot rewrite participant creation time'
+);
+select ok(
+  (select created_at > statement_timestamp() - interval '1 minute' from public.participants where email = 'authorised-participant@example.test'),
+  'participant keeps a database-generated creation time after rejection'
+);
+select lives_ok(
+  $$insert into public.registrations (event_id, participant_id) select '94000000-0000-4000-8000-000000000001', id from public.participants where email = 'authorised-participant@example.test'$$,
   'authorised can create a registration with its own audit identity'
+);
+select is(
+  (select recorded_by from public.registrations r join public.participants p on p.id = r.participant_id where p.email = 'authorised-participant@example.test'),
+  '92222222-2222-4222-8222-222222222222'::uuid,
+  'registration records the current authorised user'
+);
+select ok(
+  (select registered_at > statement_timestamp() - interval '1 minute' from public.registrations r join public.participants p on p.id = r.participant_id where p.email = 'authorised-participant@example.test'),
+  'registration time is database-generated'
+);
+select throws_ok(
+  $$insert into public.registrations (id, event_id, participant_id) select '97000000-0000-4000-8000-000000000002', '94000000-0000-4000-8000-000000000001', id from public.participants where email = 'authorised-participant@example.test'$$,
+  '42501', null, 'authorised browser cannot choose registration identity'
+);
+select throws_ok(
+  $$insert into public.registrations (event_id, participant_id, registered_at) select '94000000-0000-4000-8000-000000000001', id, '2000-01-01' from public.participants where email = 'authorised-participant@example.test'$$,
+  '42501', null, 'authorised browser cannot choose registration time'
+);
+select throws_ok(
+  $$update public.registrations set event_id = '40000000-0000-4000-8000-000000000001' where id = '97000000-0000-4000-8000-000000000001'$$,
+  '42501', null, 'authorised browser cannot rewrite registration identity'
+);
+select throws_ok(
+  $$update public.registrations set registered_at = '2000-01-01' where id = '97000000-0000-4000-8000-000000000001'$$,
+  '42501', null, 'authorised browser cannot rewrite registration time'
 );
 select throws_ok(
   $$update public.registrations set recorded_by = '91111111-1111-4111-8111-111111111111' where id = '97000000-0000-4000-8000-000000000001'$$,
   '42501', null, 'authorised cannot forge a registration audit identity'
+);
+select lives_ok(
+  $$update public.registrations set registration_status = 'cancelled' where id = '97000000-0000-4000-8000-000000000001'$$,
+  'authorised can cancel the existing registration row'
+);
+select is(
+  (select row(event_id, participant_id, registration_status::text, recorded_by)::text from public.registrations where id = '97000000-0000-4000-8000-000000000001'),
+  '(94000000-0000-4000-8000-000000000001,96000000-0000-4000-8000-000000000001,cancelled,92222222-2222-4222-8222-222222222222)',
+  'registration correction preserves identity and records the actor'
+);
+
+select lives_ok(
+  $$insert into public.attendance_records (event_id, participant_id) select '94000000-0000-4000-8000-000000000001', id from public.participants where email = 'authorised-participant@example.test'$$,
+  'authorised can create a trusted manual attendance record'
+);
+select is(
+  (select row(check_in_method::text, attendance_status::text, recorded_by)::text from public.attendance_records a join public.participants p on p.id = a.participant_id where p.email = 'authorised-participant@example.test'),
+  '(manual,confirmed,92222222-2222-4222-8222-222222222222)',
+  'manual attendance provenance is database-controlled'
+);
+select ok(
+  (select checked_in_at > statement_timestamp() - interval '1 minute' from public.attendance_records a join public.participants p on p.id = a.participant_id where p.email = 'authorised-participant@example.test'),
+  'manual attendance time is database-generated'
+);
+select throws_ok(
+  $$insert into public.attendance_records (event_id, participant_id, check_in_method) select '94000000-0000-4000-8000-000000000001', id, 'qr' from public.participants where email = 'authorised-participant@example.test'$$,
+  '42501', null, 'authorised browser cannot claim QR provenance'
+);
+select throws_ok(
+  $$insert into public.attendance_records (event_id, participant_id, checked_in_at) select '94000000-0000-4000-8000-000000000001', id, '2000-01-01' from public.participants where email = 'authorised-participant@example.test'$$,
+  '42501', null, 'authorised browser cannot choose attendance time'
+);
+select throws_ok(
+  $$update public.attendance_records set check_in_method = 'qr' where participant_id = (select id from public.participants where email = 'authorised-participant@example.test')$$,
+  '42501', null, 'authorised browser cannot rewrite attendance provenance'
+);
+select throws_ok(
+  $$update public.attendance_records set checked_in_at = '2000-01-01' where participant_id = (select id from public.participants where email = 'authorised-participant@example.test')$$,
+  '42501', null, 'authorised browser cannot rewrite attendance time'
+);
+select lives_ok(
+  $$update public.attendance_records set attendance_status = 'voided' where participant_id = (select id from public.participants where email = 'authorised-participant@example.test')$$,
+  'authorised can void the existing attendance row'
+);
+select is(
+  (select row(event_id, participant_id = p.id, check_in_method::text, attendance_status::text, recorded_by)::text from public.attendance_records a join public.participants p on p.id = a.participant_id where p.email = 'authorised-participant@example.test'),
+  '(94000000-0000-4000-8000-000000000001,t,manual,voided,92222222-2222-4222-8222-222222222222)',
+  'attendance correction preserves identity and provenance while recording the actor'
 );
 
 set local request.jwt.claims = '{"sub":"93333333-3333-4333-8333-333333333333","role":"authenticated"}';

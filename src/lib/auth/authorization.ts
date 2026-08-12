@@ -66,18 +66,15 @@ async function createDefaultDependencies(): Promise<AuthorizationDependencies> {
   };
 }
 
-async function resolveAccessContext(
-  dependencies?: AuthorizationDependencies,
-): Promise<AccessContext> {
-  const resolvedDependencies =
-    dependencies ?? (await createDefaultDependencies());
-  const user = await resolvedDependencies.getAuthenticatedUser();
+async function resolveAccessContext(): Promise<AccessContext> {
+  const dependencies = await createDefaultDependencies();
+  const user = await dependencies.getAuthenticatedUser();
 
   if (!user) {
     throw new AuthorizationError("UNAUTHENTICATED");
   }
 
-  const role = await resolvedDependencies.getRoleForUser(user.id);
+  const role = await dependencies.getRoleForUser(user.id);
 
   if (!isBackendRole(role)) {
     throw new AuthorizationError("FORBIDDEN");
@@ -86,16 +83,14 @@ async function resolveAccessContext(
   return { userId: user.id, role };
 }
 
-export async function requireBackendUser(
-  dependencies?: AuthorizationDependencies,
-): Promise<AccessContext> {
-  return resolveAccessContext(dependencies);
+export async function requireBackendUser(): Promise<AccessContext> {
+  return resolveAccessContext();
 }
 
-export async function requireAuthorised(
-  dependencies?: AuthorizationDependencies,
-): Promise<AccessContext & Readonly<{ role: "authorised" }>> {
-  const context = await resolveAccessContext(dependencies);
+export async function requireAuthorised(): Promise<
+  AccessContext & Readonly<{ role: "authorised" }>
+> {
+  const context = await resolveAccessContext();
 
   if (context.role !== "authorised") {
     throw new AuthorizationError("FORBIDDEN");

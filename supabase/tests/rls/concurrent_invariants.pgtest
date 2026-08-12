@@ -1,0 +1,155 @@
+set search_path = public, extensions;
+
+delete from public.attendance_records where event_id = '95100000-0000-4000-8000-000000000001';
+delete from public.registrations where event_id = '95100000-0000-4000-8000-000000000001';
+delete from public.event_check_in_tokens where event_id = '95100000-0000-4000-8000-000000000001';
+delete from public.participants where id = '95200000-0000-4000-8000-000000000001';
+delete from public.events where id = '95100000-0000-4000-8000-000000000001';
+alter table public.meeting_attendees disable trigger meeting_attendees_prevent_last_delete;
+delete from public.meetings where id = '95000000-0000-4000-8000-000000000001';
+alter table public.meeting_attendees enable trigger meeting_attendees_prevent_last_delete;
+delete from public.profiles where id in (
+  '94444444-4444-4444-8444-444444444444',
+  '95555555-5555-4555-8555-555555555555'
+);
+delete from auth.users where id in (
+  '94444444-4444-4444-8444-444444444444',
+  '95555555-5555-4555-8555-555555555555'
+);
+
+insert into auth.users (
+  instance_id, id, aud, role, email, confirmation_token, recovery_token,
+  email_change, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+) values
+  ('00000000-0000-0000-0000-000000000000', '94444444-4444-4444-8444-444444444444', 'authenticated', 'authenticated', 'concurrent-committee@example.test', '', '', '', '{}', '{}', now(), now()),
+  ('00000000-0000-0000-0000-000000000000', '95555555-5555-4555-8555-555555555555', 'authenticated', 'authenticated', 'concurrent-authorised@example.test', '', '', '', '{}', '{}', now(), now());
+
+insert into public.profiles (id, display_name, committee_role) values
+  ('94444444-4444-4444-8444-444444444444', 'Concurrent Committee', 'committee'),
+  ('95555555-5555-4555-8555-555555555555', 'Concurrent Authorised', 'authorised');
+
+insert into public.meetings (id, title, starts_at, summary, created_by) values
+  ('95000000-0000-4000-8000-000000000001', 'Concurrent Fixture Meeting', now(), 'Fictional concurrency fixture.', '95555555-5555-4555-8555-555555555555');
+insert into public.meeting_attendees (meeting_id, profile_id) values
+  ('95000000-0000-4000-8000-000000000001', '94444444-4444-4444-8444-444444444444'),
+  ('95000000-0000-4000-8000-000000000001', '95555555-5555-4555-8555-555555555555');
+
+insert into public.events (
+  id, event_type, name, starts_at, location, description,
+  check_in_opens_at, check_in_closes_at, created_by
+) values (
+  '95100000-0000-4000-8000-000000000001', 'weekly_session',
+  'Concurrent Fixture Event', now(), 'Test Room', 'Fictional concurrency fixture.',
+  now() - interval '1 minute', now() + interval '1 hour',
+  '95555555-5555-4555-8555-555555555555'
+);
+insert into public.participants (id, full_name, email) values
+  ('95200000-0000-4000-8000-000000000001', 'Concurrent Participant', 'concurrent@example.test');
+insert into public.registrations (id, event_id, participant_id, recorded_by) values
+  ('95300000-0000-4000-8000-000000000001', '95100000-0000-4000-8000-000000000001', '95200000-0000-4000-8000-000000000001', '95555555-5555-4555-8555-555555555555');
+insert into public.event_check_in_tokens (event_id, token_digest, created_by) values
+  (
+    '95100000-0000-4000-8000-000000000001',
+    encode(extensions.digest(repeat('e', 64), 'sha256'), 'hex'),
+    '95555555-5555-4555-8555-555555555555'
+  );
+
+select plan(6);
+
+do $$
+begin
+  perform extensions.dblink_connect_u('delete_first', 'dbname=postgres user=postgres');
+  perform extensions.dblink_connect_u('delete_second', 'dbname=postgres user=postgres');
+  perform extensions.dblink_send_query(
+    'delete_first',
+    $query$with deleted as (
+      delete from public.meeting_attendees
+      where meeting_id = '95000000-0000-4000-8000-000000000001'
+        and profile_id = '94444444-4444-4444-8444-444444444444'
+      returning 1
+    )
+    select pg_sleep(1)::text as waited, count(*)::integer as deleted from deleted$query$
+  );
+  perform pg_sleep(0.2);
+  perform extensions.dblink_send_query(
+    'delete_second',
+    $query$delete from public.meeting_attendees
+      where meeting_id = '95000000-0000-4000-8000-000000000001'
+        and profile_id = '95555555-5555-4555-8555-555555555555'
+      returning profile_id::text$query$
+  );
+end;
+$$;
+
+select lives_ok(
+  $$select * from extensions.dblink_get_result('delete_first') as result(waited text, deleted integer)$$,
+  'the first concurrent attendee delete commits'
+);
+select throws_ok(
+  $$select * from extensions.dblink_get_result('delete_second') as result(profile_id text)$$,
+  '23514', null, 'the second concurrent attendee delete cannot remove the final row'
+);
+select is(
+  (select count(*)::integer from public.meeting_attendees where meeting_id = '95000000-0000-4000-8000-000000000001'),
+  1,
+  'concurrent attendee deletes retain one committed attendee'
+);
+
+do $$
+begin
+  perform extensions.dblink_connect_u('checkin_first', 'dbname=postgres user=postgres');
+  perform extensions.dblink_connect_u('checkin_second', 'dbname=postgres user=postgres');
+  perform extensions.dblink_send_query(
+    'checkin_first',
+    $query$select public.submit_event_check_in(repeat('e', 64), 'concurrent@example.test', null) as result, pg_sleep(1)::text as waited$query$
+  );
+  perform pg_sleep(0.2);
+  perform extensions.dblink_send_query(
+    'checkin_second',
+    $query$select public.submit_event_check_in(repeat('e', 64), 'concurrent@example.test', null) as result$query$
+  );
+end;
+$$;
+
+select is(
+  (select result from extensions.dblink_get_result('checkin_first') as response(result text, waited text)),
+  'success',
+  'first concurrent check-in succeeds'
+);
+select is(
+  (select result from extensions.dblink_get_result('checkin_second') as response(result text)),
+  'already_processed',
+  'second concurrent check-in returns the idempotent result'
+);
+select is(
+  (select count(*)::integer
+   from public.attendance_records
+   where event_id = '95100000-0000-4000-8000-000000000001'
+     and participant_id = '95200000-0000-4000-8000-000000000001'),
+  1,
+  'concurrent check-ins persist exactly one attendance row'
+);
+
+select extensions.dblink_disconnect('delete_first');
+select extensions.dblink_disconnect('delete_second');
+select extensions.dblink_disconnect('checkin_first');
+select extensions.dblink_disconnect('checkin_second');
+
+delete from public.attendance_records where event_id = '95100000-0000-4000-8000-000000000001';
+delete from public.registrations where event_id = '95100000-0000-4000-8000-000000000001';
+delete from public.event_check_in_tokens where event_id = '95100000-0000-4000-8000-000000000001';
+delete from public.participants where id = '95200000-0000-4000-8000-000000000001';
+delete from public.events where id = '95100000-0000-4000-8000-000000000001';
+alter table public.meeting_attendees disable trigger meeting_attendees_prevent_last_delete;
+delete from public.meetings where id = '95000000-0000-4000-8000-000000000001';
+alter table public.meeting_attendees enable trigger meeting_attendees_prevent_last_delete;
+delete from public.profiles where id in (
+  '94444444-4444-4444-8444-444444444444',
+  '95555555-5555-4555-8555-555555555555'
+);
+delete from auth.users where id in (
+  '94444444-4444-4444-8444-444444444444',
+  '95555555-5555-4555-8555-555555555555'
+);
+
+select * from finish();
