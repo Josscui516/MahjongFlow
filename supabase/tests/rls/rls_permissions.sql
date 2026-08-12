@@ -1,6 +1,29 @@
 begin;
 
-select plan(33);
+select plan(49);
+
+insert into auth.users (
+  instance_id, id, aud, role, email, confirmation_token, recovery_token,
+  email_change, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+) values
+  ('00000000-0000-0000-0000-000000000000', '91111111-1111-4111-8111-111111111111', 'authenticated', 'authenticated', 'rls-committee@example.test', '', '', '', '{}', '{}', now(), now()),
+  ('00000000-0000-0000-0000-000000000000', '92222222-2222-4222-8222-222222222222', 'authenticated', 'authenticated', 'rls-authorised@example.test', '', '', '', '{}', '{}', now(), now()),
+  ('00000000-0000-0000-0000-000000000000', '93333333-3333-4333-8333-333333333333', 'authenticated', 'authenticated', 'rls-no-profile@example.test', '', '', '', '{}', '{}', now(), now());
+
+insert into public.profiles (id, display_name, committee_role) values
+  ('91111111-1111-4111-8111-111111111111', 'RLS Committee Tester', 'committee'),
+  ('92222222-2222-4222-8222-222222222222', 'RLS Authorised Tester', 'authorised');
+
+insert into public.meetings (id, title, starts_at, summary, created_by) values
+  ('93000000-0000-4000-8000-000000000001', 'RLS Fixture Meeting', now(), 'Fictional RLS fixture.', '92222222-2222-4222-8222-222222222222');
+insert into public.events (id, event_type, name, starts_at, location, description, created_by) values
+  ('94000000-0000-4000-8000-000000000001', 'weekly_session', 'RLS Fixture Event', now(), 'Test Room', 'Fictional RLS fixture.', '92222222-2222-4222-8222-222222222222');
+insert into public.participants (id, full_name, email) values
+  ('96000000-0000-4000-8000-000000000001', 'RLS Participant', 'rls-participant@example.test');
+insert into public.registrations (id, event_id, participant_id, recorded_by) values
+  ('97000000-0000-4000-8000-000000000001', '94000000-0000-4000-8000-000000000001', '96000000-0000-4000-8000-000000000001', '92222222-2222-4222-8222-222222222222');
+insert into public.attendance_records (id, event_id, participant_id, check_in_method, recorded_by) values
+  ('98000000-0000-4000-8000-000000000001', '94000000-0000-4000-8000-000000000001', '96000000-0000-4000-8000-000000000001', 'manual', '92222222-2222-4222-8222-222222222222');
 
 select has_function('private', 'is_backend_user', array[]::text[], 'backend role helper exists');
 select has_function('private', 'is_authorised', array[]::text[], 'authorised role helper exists');
@@ -94,6 +117,76 @@ select trigger_is('public', 'meetings', 'meetings_reject_created_by_change', 'pr
 select trigger_is('public', 'tasks', 'tasks_reject_created_by_change', 'private', 'reject_created_by_change', 'task creator is immutable');
 select trigger_is('public', 'events', 'events_reject_created_by_change', 'private', 'reject_created_by_change', 'event creator is immutable');
 select trigger_is('public', 'tasks', 'tasks_reject_source_change', 'private', 'reject_task_source_change', 'task sources are immutable');
+
+set local role authenticated;
+set local request.jwt.claims = '{"sub":"91111111-1111-4111-8111-111111111111","role":"authenticated"}';
+
+select is((select count(*)::integer from public.meetings), 1, 'committee can read non-sensitive meetings');
+select lives_ok(
+  $$insert into public.meetings (title, starts_at, summary, created_by) values ('Committee Meeting', now(), 'Fictional committee write.', '91111111-1111-4111-8111-111111111111')$$,
+  'committee can create a meeting with its own audit identity'
+);
+select is((select count(*)::integer from public.participants), 0, 'committee cannot read participant details');
+select throws_ok(
+  $$insert into public.participants (full_name, email) values ('Denied Participant', 'denied-participant@example.test')$$,
+  '42501', null, 'committee cannot insert participant details'
+);
+select is(
+  (select registration_count::integer from public.get_event_participation_totals(array['94000000-0000-4000-8000-000000000001'::uuid])),
+  1,
+  'committee can read only the safe registration aggregate'
+);
+select throws_ok(
+  $$update public.profiles set committee_role = 'authorised' where id = '91111111-1111-4111-8111-111111111111'$$,
+  '42501', null, 'committee cannot self-promote'
+);
+select throws_ok(
+  $$insert into public.events (event_type, name, starts_at, location, description, created_by) values ('weekly_session', 'Forged Event', now(), 'Test Room', 'Rejected audit forgery.', '92222222-2222-4222-8222-222222222222')$$,
+  '42501', null, 'committee cannot forge an event creator'
+);
+
+set local request.jwt.claims = '{"sub":"92222222-2222-4222-8222-222222222222","role":"authenticated"}';
+
+select is((select count(*)::integer from public.participants), 1, 'authorised can read participant details');
+select lives_ok(
+  $$insert into public.participants (id, full_name, email) values ('96000000-0000-4000-8000-000000000002', 'Authorised Participant', 'authorised-participant@example.test')$$,
+  'authorised can create participant details'
+);
+select lives_ok(
+  $$insert into public.registrations (event_id, participant_id, recorded_by) values ('94000000-0000-4000-8000-000000000001', '96000000-0000-4000-8000-000000000002', '92222222-2222-4222-8222-222222222222')$$,
+  'authorised can create a registration with its own audit identity'
+);
+select throws_ok(
+  $$update public.registrations set recorded_by = '91111111-1111-4111-8111-111111111111' where id = '97000000-0000-4000-8000-000000000001'$$,
+  '42501', null, 'authorised cannot forge a registration audit identity'
+);
+
+set local request.jwt.claims = '{"sub":"93333333-3333-4333-8333-333333333333","role":"authenticated"}';
+
+select is((select count(*)::integer from public.meetings), 0, 'authenticated user without a profile cannot read backend rows');
+select throws_ok(
+  $$insert into public.meetings (title, starts_at, summary, created_by) values ('No Profile Meeting', now(), 'Rejected write.', '93333333-3333-4333-8333-333333333333')$$,
+  '42501', null, 'authenticated user without a profile cannot create backend rows'
+);
+select throws_ok(
+  $$select * from public.event_check_in_tokens$$,
+  '42501', null, 'authenticated browser cannot read check-in tokens'
+);
+
+reset role;
+set local role anon;
+set local request.jwt.claims = '{"role":"anon"}';
+
+select throws_ok(
+  $$select * from public.meetings$$,
+  '42501', null, 'anonymous user cannot read business tables'
+);
+select throws_ok(
+  $$select * from public.get_event_participation_totals(array['94000000-0000-4000-8000-000000000001'::uuid])$$,
+  '42501', null, 'anonymous user cannot execute the aggregate RPC'
+);
+
+reset role;
 
 select * from finish();
 rollback;
