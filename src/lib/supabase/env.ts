@@ -32,7 +32,11 @@ export function getSupabasePublicEnvironment(): SupabasePublicEnvironment {
     throw new Error("NEXT_PUBLIC_SUPABASE_URL must be an absolute URL.");
   }
 
-  if (parsedUrl.protocol !== "https:" && parsedUrl.hostname !== "localhost") {
+  const isLoopbackHost = ["localhost", "127.0.0.1", "::1"].includes(
+    parsedUrl.hostname,
+  );
+
+  if (parsedUrl.protocol !== "https:" && !isLoopbackHost) {
     throw new Error(
       "NEXT_PUBLIC_SUPABASE_URL must use HTTPS outside local development.",
     );
