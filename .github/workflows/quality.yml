@@ -77,9 +77,51 @@ jobs:
       - name: Run tests
         run: npm test
 
+  database:
+    name: Database
+    needs: typecheck
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install locked dependencies
+        run: npm ci
+
+      - name: Start local Supabase
+        run: npm run db:start:ci
+
+      - name: Replay migrations without seed data
+        run: npm run db:reset:no-seed
+
+      - name: Replay migrations with fictional seed data
+        run: npm run db:reset
+
+      - name: Run database tests
+        run: npm run db:test
+
+      - name: Lint database schema
+        run: npm run db:lint
+
+      - name: Verify migration drift is empty
+        run: npm run db:diff
+
+      - name: Stop local Supabase
+        if: always()
+        run: npm run db:stop
+
   build:
     name: Build
-    needs: test
+    needs:
+      - test
+      - database
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
