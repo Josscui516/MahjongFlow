@@ -4,7 +4,7 @@
 >
 > Sprint：Sprint 2
 >
-> 当前结论：技术验收通过；交付流程仍等待 #41 最新集成 PR 的非作者审批、六个 Issue 的 `Testing`／Acceptance Gate 同步、Vercel Preview 处理和 Sprint 总 PR 独立审查，因此 Sprint 尚未完成。
+> 当前结论：技术验收通过，六个 Sprint Issue 均为 `Testing`／Acceptance Gate `Passed`；#54 已按仓库所有者明确批准的审查例外合并。剩余交付门禁为 Sprint 总 PR #52 的最新集成检查、独立审查与另行授权合并。
 
 ## 1. 验收矩阵
 
@@ -16,7 +16,7 @@
 | X-04 | 两种后台角色可协调，敏感访问仅限 authorised | `requireBackendUser()`、`requireAuthorised()` 与集成页面测试覆盖两种角色及 authorised-only 路由 | 通过 |
 | X-05 | committee 无法绕过服务端或数据库权限 | 页面在敏感内容渲染前拒绝 committee；RLS pgTAP 覆盖明细拒绝、自提权和受保护字段伪造 | 通过 |
 | X-06 | 匿名 token 操作仅暴露最小且不可枚举的合同 | 默认拒绝策略、token RPC 权限测试与固定统一错误覆盖最小匿名边界 | 通过 |
-| X-07 | 反馈状态可区分、可访问并会终止 | 组件测试覆盖六类状态、语义与终止；真实 `/login` 在 1280×900 和 320×800 下保留标签、输入和提交，Tab 首次聚焦 Email | 通过 |
+| X-07 | 反馈状态可区分、可访问并会终止 | `/login` 已实际接入 `LoginShell`、`FormField`、`SubmitButton` 和 `AuthErrorFeedback`；组件回归覆盖六类状态与语义，真实浏览器在 1280×900 和 320×800 下无横向溢出，Tab 顺序为 Email → Password → Sign in，错误凭据显示统一安全反馈 | 通过 |
 
 本表不得在缺少 adapter、独立审查或真实检查结果时标记为通过。自动化入口为
 `npm run test:acceptance`；最终整组入口为 `npm run test:m1`。缺少 adapter 时必须返回明确的阻塞结果，不得使用默认成功值。
@@ -42,7 +42,9 @@ CI 只启动这些检查所需的本地 PostgreSQL 容器，不连接远程项�
 X-01 至 X-07 已通过。数据库测试入口会把 `Files=0`、`Tests=0` 或 `NOTESTS` 视为失败，
 避免 Supabase CLI 的零测试成功退出码造成假绿色门禁。
 
-2026-08-13（Australia/Sydney）最终集成复跑结果：无 seed／有 seed migration 重放通过；3 个 pgTAP 文件共 187 项通过；约束双连接 18 项和 RLS／签到双连接 9 项通过；数据库 lint 无错误且 schema diff 为空；最终验收入口共 117 项 Vitest 通过。浏览器验收未使用、保存或输出任何账号凭据、cookie 或 token。
+2026-08-13（Australia/Sydney）最终数据库集成复跑结果：无 seed／有 seed migration 重放通过；3 个 pgTAP 文件共 187 项通过；约束双连接 18 项和 RLS／签到双连接 9 项通过；数据库 lint 无错误且 schema diff 为空。
+
+同日登录 UI 最终接线后，`npm test` 通过 122 项应用测试和 25 项自动化测试，`npm run test:acceptance` 通过 120 项 Vitest，production build 通过。真实浏览器验证桌面 1280×900、窄屏 320×800、键盘焦点、安全错误反馈和控制台状态；只提交虚构 `.example.test` 数据，未使用、保存或输出任何真实账号凭据、cookie 或 token。
 
 ## 3. 脱敏证据格式
 
@@ -61,10 +63,8 @@ X-01 至 X-07 已通过。数据库测试入口会把 `Files=0`、`Tests=0` 或 
 
 | 阻塞 | 影响 | 负责人／所需动作 | 下次检查 |
 |---|---|---|---|
-| #41 最终 adapter／CI 增量尚无非作者审批 | 技术证据不能成为团队批准 | Shiying 审查最新 #41 集成 PR | PR Ready 后立即 |
-| 六个 Sprint Issue 的 Project 状态仍为 `Review`，#10／#11／#41 Acceptance Gate 尚未同步 | Sprint 总 PR 自动化会拒绝整组完成 | 集成负责人依据最新 review 和证据恢复为 `Testing`／`Passed` | #41 合并后立即 |
-| 非项目成员的 Vercel Preview 被阻止 | 远程共享 Preview 门禁不完整 | Vercel 项目所有者授予权限、安全重跑或记录批准的等价共享环境证据 | Sprint 总 PR 审查前 |
-| Sprint 总 PR #52 正文仍是模板且尚未包含最新集成结果 | 无法独立审查或合并到 `main` | Yubo 在全部 Issue 进入 `Testing` 后更新正文并请求非作者审查 | Project 状态同步后 |
+| 登录页最终共享 UI 接线尚待合入 Sprint 分支 | Sprint 总 PR 尚未包含实际 `LoginShell`／表单／反馈集成 | 集成负责人合入本次 #41 修复并等待最新 CI | 修复 PR 创建后立即 |
+| Sprint 总 PR #52 尚未完成最新正文、检查和独立审查 | 无法请求最终 `main` 合并授权 | Yubo 更新 #52，复核六个 Sprint Issue 与完整证据并请求审查 | UI 接线合入 Sprint 分支后立即 |
 
 ## 5. 最终结论规则
 

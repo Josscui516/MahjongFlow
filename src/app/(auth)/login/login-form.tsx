@@ -1,25 +1,71 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, type ComponentProps } from "react";
 
 import { loginAction } from "@/app/(auth)/actions";
-import {
-  AUTH_ERROR_CODES,
-  type LoginActionState,
-} from "@/lib/auth/contracts";
+import { AuthErrorFeedback } from "@/components/feedback";
+import { FormField, SubmitButton } from "@/components/forms";
+import { type LoginActionState } from "@/lib/auth/contracts";
 
 const INITIAL_LOGIN_STATE: LoginActionState = { error: null };
 
-function getLoginErrorMessage(error: LoginActionState["error"]) {
-  if (error === AUTH_ERROR_CODES.INVALID_CREDENTIALS) {
-    return "The email or password is incorrect.";
-  }
+type LoginFormViewProps = Readonly<{
+  error: LoginActionState["error"];
+  formAction: ComponentProps<"form">["action"];
+  nextPath: string;
+  pending: boolean;
+}>;
 
-  if (error === AUTH_ERROR_CODES.SERVICE_UNAVAILABLE) {
-    return "Sign-in is temporarily unavailable. Please try again.";
-  }
+export function LoginFormView({
+  error,
+  formAction,
+  nextPath,
+  pending,
+}: LoginFormViewProps) {
+  return (
+    <form action={formAction} className="space-y-5">
+      <input name="next" type="hidden" value={nextPath} />
 
-  return null;
+      <FormField
+        control={
+          <input
+            autoComplete="email"
+            maxLength={254}
+            name="email"
+            type="email"
+          />
+        }
+        description="Use the email address assigned to your committee account."
+        id="email"
+        label="Email"
+        required
+      />
+
+      <FormField
+        control={
+          <input
+            autoComplete="current-password"
+            maxLength={1024}
+            name="password"
+            type="password"
+          />
+        }
+        id="password"
+        label="Password"
+        required
+      />
+
+      {error ? <AuthErrorFeedback code={error} /> : null}
+
+      <SubmitButton
+        className="flex min-h-11 w-full items-center justify-center rounded-xl bg-emerald-950 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:cursor-not-allowed disabled:bg-slate-400"
+        pending={pending}
+        pendingLabel="Signing in…"
+      >
+        Sign in
+      </SubmitButton>
+    </form>
+  );
 }
 
 export function LoginForm({ nextPath }: Readonly<{ nextPath: string }>) {
@@ -27,49 +73,13 @@ export function LoginForm({ nextPath }: Readonly<{ nextPath: string }>) {
     loginAction,
     INITIAL_LOGIN_STATE,
   );
-  const errorMessage = getLoginErrorMessage(state.error);
 
   return (
-    <form action={formAction} className="grid gap-4">
-      <input name="next" type="hidden" value={nextPath} />
-
-      <label className="grid gap-1" htmlFor="email">
-        <span>Email</span>
-        <input
-          autoComplete="email"
-          className="rounded border border-current px-3 py-2"
-          id="email"
-          maxLength={254}
-          name="email"
-          required
-          type="email"
-        />
-      </label>
-
-      <label className="grid gap-1" htmlFor="password">
-        <span>Password</span>
-        <input
-          autoComplete="current-password"
-          className="rounded border border-current px-3 py-2"
-          id="password"
-          maxLength={1024}
-          name="password"
-          required
-          type="password"
-        />
-      </label>
-
-      <p aria-live="polite" className="min-h-6 text-sm text-red-700">
-        {errorMessage}
-      </p>
-
-      <button
-        className="rounded bg-foreground px-4 py-2 text-background disabled:opacity-60"
-        disabled={pending}
-        type="submit"
-      >
-        {pending ? "Signing in…" : "Sign in"}
-      </button>
-    </form>
+    <LoginFormView
+      error={state.error}
+      formAction={formAction}
+      nextPath={nextPath}
+      pending={pending}
+    />
   );
 }
