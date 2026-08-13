@@ -12,7 +12,7 @@ export default defineConfig({
     clearMocks: true,
     environment: "node",
     include: [
-      "tests/{unit,integration}/**/*.test.{ts,tsx}",
+      "tests/{unit,integration,acceptance}/**/*.test.{ts,tsx}",
       "src/**/*.test.{ts,tsx}",
     ],
     restoreMocks: true,

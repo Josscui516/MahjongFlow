@@ -134,6 +134,39 @@ test("checksPassed requires at least one successful completed check", () => {
   assert.equal(checksPassed([], [{ state: "failure" }]), false);
 });
 
+test("checksPassed ignores the project automation check that is evaluating itself", () => {
+  assert.equal(
+    checksPassed(
+      [
+        { name: "update-project", status: "in_progress", conclusion: null },
+        { name: "Lint", status: "completed", conclusion: "success" },
+      ],
+      [{ state: "success" }],
+      { ignoredCheckNames: ["update-project"] },
+    ),
+    true,
+  );
+  assert.equal(
+    checksPassed(
+      [{ name: "update-project", status: "in_progress", conclusion: null }],
+      [],
+      { ignoredCheckNames: ["update-project"] },
+    ),
+    false,
+  );
+  assert.equal(
+    checksPassed(
+      [
+        { name: "update-project", status: "in_progress", conclusion: null },
+        { name: "Build", status: "completed", conclusion: "failure" },
+      ],
+      [{ state: "success" }],
+      { ignoredCheckNames: ["update-project"] },
+    ),
+    false,
+  );
+});
+
 test("hasIndependentApproval ignores the author and uses each reviewer's latest state", () => {
   assert.equal(
     hasIndependentApproval([{ user: { login: "author" }, state: "APPROVED" }], "author"),

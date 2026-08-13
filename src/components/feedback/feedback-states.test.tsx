@@ -1,0 +1,139 @@
+import { renderToStaticMarkup } from "react-dom/server";
+import { describe, expect, it } from "vitest";
+
+import { AuthErrorFeedback, getSafeAuthErrorCopy } from "./AuthErrorFeedback";
+import {
+  EmptyFeedback,
+  LoadingFeedback,
+  PermissionDeniedFeedback,
+  SuccessFeedback,
+  SystemErrorFeedback,
+} from "./FeedbackStates";
+
+describe("shared feedback states", () => {
+  it("renders a non-blank, polite loading status", () => {
+    const html = renderToStaticMarkup(
+      <LoadingFeedback title="Loading meetings" />,
+    );
+
+    expect(html).toContain('data-feedback-state="loading"');
+    expect(html).toContain('role="status"');
+    expect(html).toContain('aria-live="polite"');
+    expect(html).toContain('aria-busy="true"');
+    expect(html).toContain("Loading meetings");
+    expect(html).toContain("The latest information is being prepared");
+  });
+
+  it("renders a clear empty state and recovery action", () => {
+    const html = renderToStaticMarkup(
+      <EmptyFeedback
+        action={<a href="/meetings/new">Create a meeting</a>}
+        description="No meetings have been recorded."
+        title="No meetings"
+      />,
+    );
+
+    expect(html).toContain('data-feedback-state="empty"');
+    expect(html).toContain('role="status"');
+    expect(html).toContain("No meetings have been recorded.");
+    expect(html).toContain('href="/meetings/new"');
+  });
+
+  it("announces success with visible text rather than colour alone", () => {
+    const html = renderToStaticMarkup(
+      <SuccessFeedback message="The fictional meeting was saved." />,
+    );
+
+    expect(html).toContain('data-feedback-state="success"');
+    expect(html).toContain('role="status"');
+    expect(html).toContain("Success");
+    expect(html).toContain("The fictional meeting was saved.");
+  });
+
+  it("uses fixed safe copy for system errors", () => {
+    const html = renderToStaticMarkup(
+      <SystemErrorFeedback action={<button type="button">Try again</button>} />,
+    );
+
+    expect(html).toContain('data-feedback-state="error"');
+    expect(html).toContain('role="alert"');
+    expect(html).toContain('aria-live="assertive"');
+    expect(html).toContain("System error");
+    expect(html).toContain("Try again");
+    expect(html).not.toContain("SQL");
+    expect(html).not.toContain("participant@");
+  });
+
+  it("denies permission without rendering resource details", () => {
+    const protectedDetail = "fictional-participant@example.test";
+    const html = renderToStaticMarkup(
+      <PermissionDeniedFeedback
+        backAction={<a href="/events">Return to events</a>}
+      />,
+    );
+
+    expect(html).toContain('data-feedback-state="permission"');
+    expect(html).toContain('role="alert"');
+    expect(html).toContain("Permission denied");
+    expect(html).toContain("Return to events");
+    expect(html).not.toContain(protectedDetail);
+  });
+
+  it("gives every acceptance state a distinct visible text label", () => {
+    const htmlByState = [
+      renderToStaticMarkup(<LoadingFeedback />),
+      renderToStaticMarkup(<EmptyFeedback />),
+      renderToStaticMarkup(<SuccessFeedback message="Saved." />),
+      renderToStaticMarkup(<SystemErrorFeedback />),
+      renderToStaticMarkup(<PermissionDeniedFeedback />),
+    ];
+    const states = htmlByState.map(
+      (html) => html.match(/data-feedback-state="([^"]+)"/)?.[1],
+    );
+
+    expect(states).toEqual([
+      "loading",
+      "empty",
+      "success",
+      "error",
+      "permission",
+    ]);
+    expect(htmlByState[0]).toContain("In progress");
+    expect(htmlByState[1]).toContain("Empty");
+    expect(htmlByState[2]).toContain("Success");
+    expect(htmlByState[3]).toContain("System error");
+    expect(htmlByState[4]).toContain("Permission denied");
+    expect(htmlByState.every((html) => /<h2[^>]*>.+<\/h2>/.test(html))).toBe(
+      true,
+    );
+  });
+});
+
+describe("safe authentication feedback", () => {
+  it("maps the frozen public codes without exporting another contract", () => {
+    expect(getSafeAuthErrorCopy("AUTH_INVALID_CREDENTIALS")).toEqual({
+      message: "Check your sign-in details and try again.",
+      title: "Sign in failed",
+    });
+    expect(getSafeAuthErrorCopy("AUTH_INVALID_SESSION").title).toBe(
+      "Sign in again",
+    );
+    expect(getSafeAuthErrorCopy("AUTH_SERVICE_UNAVAILABLE").title).toBe(
+      "Sign in unavailable",
+    );
+  });
+
+  it("never echoes unknown provider details", () => {
+    const rawProviderDetail =
+      "SQL failed for fictional-participant@example.test using secret key";
+    const html = renderToStaticMarkup(
+      <AuthErrorFeedback code={rawProviderDetail} />,
+    );
+
+    expect(html).toContain('role="alert"');
+    expect(html).toContain("We could not sign you in. Try again shortly.");
+    expect(html).not.toContain(rawProviderDetail);
+    expect(html).not.toContain("SQL");
+    expect(html).not.toContain("secret key");
+  });
+});

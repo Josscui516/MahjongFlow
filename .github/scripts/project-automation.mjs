@@ -118,11 +118,19 @@ export function pullRequestRoute(pull) {
   );
 }
 
-export function checksPassed(checkRuns = [], statuses = []) {
-  if (checkRuns.length + statuses.length === 0) return false;
+export function checksPassed(
+  checkRuns = [],
+  statuses = [],
+  { ignoredCheckNames = [] } = {},
+) {
+  const ignoredNames = new Set(ignoredCheckNames);
+  const relevantCheckRuns = checkRuns.filter(
+    (check) => !ignoredNames.has(check.name),
+  );
+  if (relevantCheckRuns.length + statuses.length === 0) return false;
   const acceptableConclusions = new Set(["success", "neutral", "skipped"]);
   return (
-    checkRuns.every(
+    relevantCheckRuns.every(
       (check) =>
         check.status === "completed" &&
         acceptableConclusions.has(String(check.conclusion).toLowerCase()),
@@ -438,7 +446,11 @@ export class ProjectAutomation {
     return {
       pull,
       reviews,
-      checksPassed: checksPassed(checks.check_runs, [{ state: statuses.state }]),
+      checksPassed: checksPassed(
+        checks.check_runs,
+        [{ state: statuses.state }],
+        { ignoredCheckNames: ["update-project"] },
+      ),
       approved: hasIndependentApproval(reviews, pull.user.login),
       unresolvedThreads:
         threadData.repository.pullRequest.reviewThreads.nodes.filter(

@@ -1,0 +1,689 @@
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[]
+
+export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+  public: {
+    Tables: {
+      attendance_records: {
+        Row: {
+          attendance_status: Database["public"]["Enums"]["attendance_status"]
+          check_in_method: Database["public"]["Enums"]["check_in_method"]
+          checked_in_at: string
+          created_at: string
+          event_id: string
+          id: string
+          participant_id: string
+          recorded_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          attendance_status?: Database["public"]["Enums"]["attendance_status"]
+          check_in_method: Database["public"]["Enums"]["check_in_method"]
+          checked_in_at?: string
+          created_at?: string
+          event_id: string
+          id?: string
+          participant_id: string
+          recorded_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          attendance_status?: Database["public"]["Enums"]["attendance_status"]
+          check_in_method?: Database["public"]["Enums"]["check_in_method"]
+          checked_in_at?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          participant_id?: string
+          recorded_by?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "attendance_records_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "attendance_records_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      discussion_points: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          meeting_id: string
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          meeting_id: string
+          position: number
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          meeting_id?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "discussion_points_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_check_in_tokens: {
+        Row: {
+          created_at: string
+          created_by: string
+          event_id: string
+          id: string
+          revoked_at: string | null
+          token_digest: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          event_id: string
+          id?: string
+          revoked_at?: string | null
+          token_digest: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          event_id?: string
+          id?: string
+          revoked_at?: string | null
+          token_digest?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_check_in_tokens_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_check_in_tokens_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          check_in_closes_at: string | null
+          check_in_opens_at: string | null
+          created_at: string
+          created_by: string
+          description: string
+          event_type: Database["public"]["Enums"]["event_type"]
+          id: string
+          location: string
+          name: string
+          requires_student_id: boolean
+          starts_at: string
+          status: Database["public"]["Enums"]["event_status"]
+          updated_at: string
+        }
+        Insert: {
+          check_in_closes_at?: string | null
+          check_in_opens_at?: string | null
+          created_at?: string
+          created_by: string
+          description: string
+          event_type: Database["public"]["Enums"]["event_type"]
+          id?: string
+          location: string
+          name: string
+          requires_student_id?: boolean
+          starts_at: string
+          status?: Database["public"]["Enums"]["event_status"]
+          updated_at?: string
+        }
+        Update: {
+          check_in_closes_at?: string | null
+          check_in_opens_at?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          event_type?: Database["public"]["Enums"]["event_type"]
+          id?: string
+          location?: string
+          name?: string
+          requires_student_id?: boolean
+          starts_at?: string
+          status?: Database["public"]["Enums"]["event_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_attendees: {
+        Row: {
+          created_at: string
+          meeting_id: string
+          profile_id: string
+        }
+        Insert: {
+          created_at?: string
+          meeting_id: string
+          profile_id: string
+        }
+        Update: {
+          created_at?: string
+          meeting_id?: string
+          profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_attendees_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meeting_attendees_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meeting_decisions: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          meeting_id: string
+          position: number
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          meeting_id: string
+          position: number
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          meeting_id?: string
+          position?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meeting_decisions_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meetings: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          starts_at: string
+          summary: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          starts_at: string
+          summary: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          starts_at?: string
+          summary?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meetings_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      participants: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          student_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          student_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          student_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          committee_role: Database["public"]["Enums"]["committee_role"]
+          created_at: string
+          display_name: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          committee_role: Database["public"]["Enums"]["committee_role"]
+          created_at?: string
+          display_name: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          committee_role?: Database["public"]["Enums"]["committee_role"]
+          created_at?: string
+          display_name?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      registrations: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          participant_id: string
+          privacy_notice_acknowledged_at: string | null
+          recorded_by: string
+          registered_at: string
+          registration_status: Database["public"]["Enums"]["registration_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          participant_id: string
+          privacy_notice_acknowledged_at?: string | null
+          recorded_by: string
+          registered_at?: string
+          registration_status?: Database["public"]["Enums"]["registration_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          participant_id?: string
+          privacy_notice_acknowledged_at?: string | null
+          recorded_by?: string
+          registered_at?: string
+          registration_status?: Database["public"]["Enums"]["registration_status"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registrations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "registrations_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "registrations_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tasks: {
+        Row: {
+          assignee_id: string
+          created_at: string
+          created_by: string
+          description: string
+          due_date: string
+          event_id: string | null
+          id: string
+          source_decision_id: string | null
+          source_discussion_point_id: string | null
+          source_meeting_id: string | null
+          status: Database["public"]["Enums"]["task_status"]
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          assignee_id: string
+          created_at?: string
+          created_by: string
+          description: string
+          due_date: string
+          event_id?: string | null
+          id?: string
+          source_decision_id?: string | null
+          source_discussion_point_id?: string | null
+          source_meeting_id?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          assignee_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          due_date?: string
+          event_id?: string | null
+          id?: string
+          source_decision_id?: string | null
+          source_discussion_point_id?: string | null
+          source_meeting_id?: string | null
+          status?: Database["public"]["Enums"]["task_status"]
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assignee_id_fkey"
+            columns: ["assignee_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_source_decision_id_fkey"
+            columns: ["source_decision_id"]
+            isOneToOne: false
+            referencedRelation: "meeting_decisions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_source_discussion_point_id_fkey"
+            columns: ["source_discussion_point_id"]
+            isOneToOne: false
+            referencedRelation: "discussion_points"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_source_meeting_id_fkey"
+            columns: ["source_meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      [_ in never]: never
+    }
+    Enums: {
+      attendance_status: "confirmed" | "voided"
+      check_in_method: "qr" | "manual"
+      committee_role: "committee" | "authorised"
+      event_status: "scheduled" | "completed" | "cancelled"
+      event_type: "weekly_session" | "tournament"
+      registration_status: "registered" | "cancelled"
+      task_status: "not_started" | "in_progress" | "completed"
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
+}
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+        DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
+      DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])[TableName] extends {
+      Row: infer R
+    }
+    ? R
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])
+    ? (DefaultSchema["Tables"] &
+        DefaultSchema["Views"])[DefaultSchemaTableNameOrOptions] extends {
+        Row: infer R
+      }
+      ? R
+      : never
+    : never
+
+export type TablesInsert<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Insert: infer I
+    }
+    ? I
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Insert: infer I
+      }
+      ? I
+      : never
+    : never
+
+export type TablesUpdate<
+  DefaultSchemaTableNameOrOptions extends
+    | keyof DefaultSchema["Tables"]
+    | { schema: keyof DatabaseWithoutInternals },
+  TableName extends DefaultSchemaTableNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
+    : never = never,
+> = DefaultSchemaTableNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"][TableName] extends {
+      Update: infer U
+    }
+    ? U
+    : never
+  : DefaultSchemaTableNameOrOptions extends keyof DefaultSchema["Tables"]
+    ? DefaultSchema["Tables"][DefaultSchemaTableNameOrOptions] extends {
+        Update: infer U
+      }
+      ? U
+      : never
+    : never
+
+export type Enums<
+  DefaultSchemaEnumNameOrOptions extends
+    | keyof DefaultSchema["Enums"]
+    | { schema: keyof DatabaseWithoutInternals },
+  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
+    : never = never,
+> = DefaultSchemaEnumNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"][EnumName]
+  : DefaultSchemaEnumNameOrOptions extends keyof DefaultSchema["Enums"]
+    ? DefaultSchema["Enums"][DefaultSchemaEnumNameOrOptions]
+    : never
+
+export type CompositeTypes<
+  PublicCompositeTypeNameOrOptions extends
+    | keyof DefaultSchema["CompositeTypes"]
+    | { schema: keyof DatabaseWithoutInternals },
+  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+    schema: keyof DatabaseWithoutInternals
+  }
+    ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
+    : never = never,
+> = PublicCompositeTypeNameOrOptions extends {
+  schema: keyof DatabaseWithoutInternals
+}
+  ? DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"][CompositeTypeName]
+  : PublicCompositeTypeNameOrOptions extends keyof DefaultSchema["CompositeTypes"]
+    ? DefaultSchema["CompositeTypes"][PublicCompositeTypeNameOrOptions]
+    : never
+
+export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
+  public: {
+    Enums: {
+      attendance_status: ["confirmed", "voided"],
+      check_in_method: ["qr", "manual"],
+      committee_role: ["committee", "authorised"],
+      event_status: ["scheduled", "completed", "cancelled"],
+      event_type: ["weekly_session", "tournament"],
+      registration_status: ["registered", "cancelled"],
+      task_status: ["not_started", "in_progress", "completed"],
+    },
+  },
+} as const
+
