@@ -107,6 +107,10 @@ jobs:
       - name: Run database tests
         run: npm run db:test
 
+      - name: Run two-connection database acceptance
+        shell: pwsh
+        run: npm run db:test:concurrency
+
       - name: Lint database schema
         run: npm run db:lint
 
