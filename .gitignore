@@ -78,6 +78,7 @@ target/
 *.backup
 .supabase/
 supabase/.temp/
+supabase/snippets/
 supabase/.env
 supabase/.env.*
 !supabase/.env.example
