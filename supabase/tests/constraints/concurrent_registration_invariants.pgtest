@@ -1,0 +1,357 @@
+set search_path = public, extensions;
+
+delete from public.registrations where event_id in (
+  '49100000-0000-4000-8000-000000000001',
+  '49100000-0000-4000-8000-000000000002',
+  '49100000-0000-4000-8000-000000000003'
+);
+delete from public.participants where id in (
+  '49200000-0000-4000-8000-000000000001',
+  '49200000-0000-4000-8000-000000000002',
+  '49200000-0000-4000-8000-000000000003'
+);
+delete from public.events where id in (
+  '49100000-0000-4000-8000-000000000001',
+  '49100000-0000-4000-8000-000000000002',
+  '49100000-0000-4000-8000-000000000003'
+);
+delete from public.profiles where id = '49900000-0000-4000-8000-000000000001';
+delete from auth.users where id = '49900000-0000-4000-8000-000000000001';
+
+insert into auth.users (
+  instance_id, id, aud, role, email, confirmation_token, recovery_token,
+  email_change, raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+) values (
+  '00000000-0000-0000-0000-000000000000',
+  '49900000-0000-4000-8000-000000000001',
+  'authenticated', 'authenticated', 'concurrent-schema@example.test',
+  '', '', '', '{}', '{}', now(), now()
+);
+insert into public.profiles (id, display_name, committee_role) values
+  ('49900000-0000-4000-8000-000000000001', 'Concurrent Schema Owner', 'authorised');
+insert into public.events (
+  id, event_type, name, starts_at, location, description,
+  requires_student_id, created_by
+) values
+  ('49100000-0000-4000-8000-000000000001', 'weekly_session', 'Registration Race Event', now(), 'Test Room', 'Fictional race fixture.', false, '49900000-0000-4000-8000-000000000001'),
+  ('49100000-0000-4000-8000-000000000002', 'weekly_session', 'Participant Race Event', now(), 'Test Room', 'Fictional race fixture.', false, '49900000-0000-4000-8000-000000000001'),
+  ('49100000-0000-4000-8000-000000000003', 'weekly_session', 'Reverse Registration Race Event', now(), 'Test Room', 'Fictional reverse race fixture.', false, '49900000-0000-4000-8000-000000000001');
+insert into public.participants (id, full_name, email, student_id) values
+  ('49200000-0000-4000-8000-000000000001', 'Registration Race Participant', 'registration-race@example.test', null),
+  ('49200000-0000-4000-8000-000000000002', 'Participant Race Participant', 'participant-race@example.test', 'RACE-0002'),
+  ('49200000-0000-4000-8000-000000000003', 'Reverse Registration Race Participant', 'reverse-registration-race@example.test', null);
+insert into public.registrations (event_id, participant_id, recorded_by) values
+  ('49100000-0000-4000-8000-000000000002', '49200000-0000-4000-8000-000000000002', '49900000-0000-4000-8000-000000000001');
+
+create temporary table concurrency_observations (
+  scenario text primary key,
+  first_writer_holds_production_lock boolean not null,
+  second_writer_waits_for_production_lock boolean not null
+);
+
+create or replace function pg_temp.wait_for_registration_lock(
+  target_pid integer,
+  target_granted boolean
+)
+returns boolean
+language plpgsql
+as $$
+begin
+  for attempt in 1..200 loop
+    if exists (
+      select 1
+      from pg_catalog.pg_locks
+      where pid = target_pid
+        and locktype = 'advisory'
+        and classid = 39
+        and objid = 5
+        and objsubid = 2
+        and granted = target_granted
+    ) then
+      return true;
+    end if;
+
+    perform pg_catalog.pg_sleep(0.01);
+  end loop;
+
+  return false;
+end;
+$$;
+
+select plan(18);
+
+do $$
+declare
+  first_pid integer;
+  second_pid integer;
+  first_writer_holds_lock boolean;
+  second_writer_waits boolean;
+begin
+  perform extensions.dblink_connect_u('registration_first', 'dbname=postgres user=postgres');
+  perform extensions.dblink_connect_u('event_second', 'dbname=postgres user=postgres');
+  select pid into first_pid
+  from extensions.dblink('registration_first', 'select pg_catalog.pg_backend_pid()')
+    as connection(pid integer);
+  select pid into second_pid
+  from extensions.dblink('event_second', 'select pg_catalog.pg_backend_pid()')
+    as connection(pid integer);
+  perform extensions.dblink_exec('registration_first', 'begin');
+  perform extensions.dblink_send_query(
+    'registration_first',
+    $query$insert into public.registrations (event_id, participant_id, recorded_by)
+      values (
+        '49100000-0000-4000-8000-000000000001',
+        '49200000-0000-4000-8000-000000000001',
+        '49900000-0000-4000-8000-000000000001'
+      ) returning participant_id::text$query$
+  );
+  first_writer_holds_lock := pg_temp.wait_for_registration_lock(first_pid, true);
+  if not first_writer_holds_lock then
+    raise exception 'registration writer did not acquire the production coordination lock';
+  end if;
+  perform extensions.dblink_send_query(
+    'event_second',
+    $query$update public.events set requires_student_id = true
+      where id = '49100000-0000-4000-8000-000000000001'
+      returning id::text$query$
+  );
+  second_writer_waits := pg_temp.wait_for_registration_lock(second_pid, false);
+  if not second_writer_waits then
+    raise exception 'event writer did not wait for the production coordination lock';
+  end if;
+
+  insert into concurrency_observations values
+    ('registration-first', first_writer_holds_lock, second_writer_waits);
+end;
+$$;
+
+select ok(
+  (select first_writer_holds_production_lock from concurrency_observations
+   where scenario = 'registration-first'),
+  'the registration writer itself acquires the production coordination lock'
+);
+select ok(
+  (select second_writer_waits_for_production_lock from concurrency_observations
+   where scenario = 'registration-first'),
+  'the event writer waits for the registration writer production lock'
+);
+select is(
+  (select participant_id from extensions.dblink_get_result('registration_first') as result(participant_id text)),
+  '49200000-0000-4000-8000-000000000001',
+  'the concurrent no-ID registration commits first'
+);
+do $$
+begin
+  perform * from extensions.dblink_get_result('registration_first')
+    as result(participant_id text);
+end;
+$$;
+select extensions.dblink_exec('registration_first', 'commit');
+select throws_ok(
+  $$select * from extensions.dblink_get_result('event_second') as result(id text)$$,
+  '23514', null, 'the waiting event requirement update revalidates and fails'
+);
+select is(
+  (select count(*)::integer from public.registrations
+   where event_id = '49100000-0000-4000-8000-000000000001'),
+  1,
+  'the first race retains the committed registration'
+);
+select is(
+  (select requires_student_id from public.events
+   where id = '49100000-0000-4000-8000-000000000001'),
+  false,
+  'the first race retains a valid final event requirement'
+);
+
+do $$
+declare
+  first_pid integer;
+  second_pid integer;
+  first_writer_holds_lock boolean;
+  second_writer_waits boolean;
+begin
+  perform extensions.dblink_connect_u('requirement_first', 'dbname=postgres user=postgres');
+  perform extensions.dblink_connect_u('participant_second', 'dbname=postgres user=postgres');
+  select pid into first_pid
+  from extensions.dblink('requirement_first', 'select pg_catalog.pg_backend_pid()')
+    as connection(pid integer);
+  select pid into second_pid
+  from extensions.dblink('participant_second', 'select pg_catalog.pg_backend_pid()')
+    as connection(pid integer);
+  perform extensions.dblink_exec('requirement_first', 'begin');
+  perform extensions.dblink_send_query(
+    'requirement_first',
+    $query$update public.events set requires_student_id = true
+      where id = '49100000-0000-4000-8000-000000000002'
+      returning id::text$query$
+  );
+  first_writer_holds_lock := pg_temp.wait_for_registration_lock(first_pid, true);
+  if not first_writer_holds_lock then
+    raise exception 'event writer did not acquire the production coordination lock';
+  end if;
+  perform extensions.dblink_send_query(
+    'participant_second',
+    $query$update public.participants set student_id = null
+      where id = '49200000-0000-4000-8000-000000000002'
+      returning id::text$query$
+  );
+  second_writer_waits := pg_temp.wait_for_registration_lock(second_pid, false);
+  if not second_writer_waits then
+    raise exception 'participant writer did not wait for the production coordination lock';
+  end if;
+
+  insert into concurrency_observations values
+    ('requirement-first', first_writer_holds_lock, second_writer_waits);
+end;
+$$;
+
+select ok(
+  (select first_writer_holds_production_lock from concurrency_observations
+   where scenario = 'requirement-first'),
+  'the event writer itself acquires the production coordination lock'
+);
+select ok(
+  (select second_writer_waits_for_production_lock from concurrency_observations
+   where scenario = 'requirement-first'),
+  'the participant writer waits for the event writer production lock'
+);
+select is(
+  (select id from extensions.dblink_get_result('requirement_first') as result(id text)),
+  '49100000-0000-4000-8000-000000000002',
+  'the concurrent event requirement commits first'
+);
+do $$
+begin
+  perform * from extensions.dblink_get_result('requirement_first')
+    as result(id text);
+end;
+$$;
+select extensions.dblink_exec('requirement_first', 'commit');
+select throws_ok(
+  $$select * from extensions.dblink_get_result('participant_second') as result(id text)$$,
+  '23514', null, 'the waiting student-ID clear revalidates and fails'
+);
+select is(
+  (select requires_student_id from public.events
+   where id = '49100000-0000-4000-8000-000000000002'),
+  true,
+  'the second race retains the committed event requirement'
+);
+select is(
+  (select student_id from public.participants
+   where id = '49200000-0000-4000-8000-000000000002'),
+  'RACE-0002',
+  'the second race retains the valid participant student ID'
+);
+
+do $$
+declare
+  first_pid integer;
+  second_pid integer;
+  first_writer_holds_lock boolean;
+  second_writer_waits boolean;
+begin
+  perform extensions.dblink_connect_u('reverse_requirement_first', 'dbname=postgres user=postgres');
+  perform extensions.dblink_connect_u('registration_second', 'dbname=postgres user=postgres');
+  select pid into first_pid
+  from extensions.dblink('reverse_requirement_first', 'select pg_catalog.pg_backend_pid()')
+    as connection(pid integer);
+  select pid into second_pid
+  from extensions.dblink('registration_second', 'select pg_catalog.pg_backend_pid()')
+    as connection(pid integer);
+  perform extensions.dblink_exec('reverse_requirement_first', 'begin');
+  perform extensions.dblink_send_query(
+    'reverse_requirement_first',
+    $query$update public.events set requires_student_id = true
+      where id = '49100000-0000-4000-8000-000000000003'
+      returning id::text$query$
+  );
+  first_writer_holds_lock := pg_temp.wait_for_registration_lock(first_pid, true);
+  if not first_writer_holds_lock then
+    raise exception 'reverse event writer did not acquire the production coordination lock';
+  end if;
+  perform extensions.dblink_send_query(
+    'registration_second',
+    $query$insert into public.registrations (event_id, participant_id, recorded_by)
+      values (
+        '49100000-0000-4000-8000-000000000003',
+        '49200000-0000-4000-8000-000000000003',
+        '49900000-0000-4000-8000-000000000001'
+      ) returning participant_id::text$query$
+  );
+  second_writer_waits := pg_temp.wait_for_registration_lock(second_pid, false);
+  if not second_writer_waits then
+    raise exception 'registration writer did not wait for the production coordination lock';
+  end if;
+
+  insert into concurrency_observations values
+    ('registration-second', first_writer_holds_lock, second_writer_waits);
+end;
+$$;
+
+select ok(
+  (select first_writer_holds_production_lock from concurrency_observations
+   where scenario = 'registration-second'),
+  'the reverse event writer itself acquires the production coordination lock'
+);
+select ok(
+  (select second_writer_waits_for_production_lock from concurrency_observations
+   where scenario = 'registration-second'),
+  'the registration writer waits when it runs second'
+);
+select is(
+  (select id from extensions.dblink_get_result('reverse_requirement_first') as result(id text)),
+  '49100000-0000-4000-8000-000000000003',
+  'the reverse event requirement commits first'
+);
+do $$
+begin
+  perform * from extensions.dblink_get_result('reverse_requirement_first')
+    as result(id text);
+end;
+$$;
+select extensions.dblink_exec('reverse_requirement_first', 'commit');
+select throws_ok(
+  $$select * from extensions.dblink_get_result('registration_second') as result(participant_id text)$$,
+  '23514', null, 'the waiting no-ID registration revalidates and fails'
+);
+select is(
+  (select requires_student_id from public.events
+   where id = '49100000-0000-4000-8000-000000000003'),
+  true,
+  'the reverse race retains the committed event requirement'
+);
+select is(
+  (select count(*)::integer from public.registrations
+   where event_id = '49100000-0000-4000-8000-000000000003'),
+  0,
+  'the reverse race leaves no invalid registration'
+);
+
+select extensions.dblink_disconnect('registration_first');
+select extensions.dblink_disconnect('event_second');
+select extensions.dblink_disconnect('requirement_first');
+select extensions.dblink_disconnect('participant_second');
+select extensions.dblink_disconnect('reverse_requirement_first');
+select extensions.dblink_disconnect('registration_second');
+
+delete from public.registrations where event_id in (
+  '49100000-0000-4000-8000-000000000001',
+  '49100000-0000-4000-8000-000000000002',
+  '49100000-0000-4000-8000-000000000003'
+);
+delete from public.participants where id in (
+  '49200000-0000-4000-8000-000000000001',
+  '49200000-0000-4000-8000-000000000002',
+  '49200000-0000-4000-8000-000000000003'
+);
+delete from public.events where id in (
+  '49100000-0000-4000-8000-000000000001',
+  '49100000-0000-4000-8000-000000000002',
+  '49100000-0000-4000-8000-000000000003'
+);
+delete from public.profiles where id = '49900000-0000-4000-8000-000000000001';
+delete from auth.users where id = '49900000-0000-4000-8000-000000000001';
+
+select * from finish();
