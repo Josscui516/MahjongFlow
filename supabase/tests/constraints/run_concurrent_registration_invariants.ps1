@@ -1,21 +1,59 @@
 param(
-  [string]$ContainerName = "supabase_db_MahjongFlow"
+  [string]$ContainerName = "supabase_db_MahjongFlow",
+  [switch]$CleanupProbe
 )
 
 $ErrorActionPreference = "Stop"
 $testFile = Join-Path $PSScriptRoot "concurrent_registration_invariants.pgtest"
+$createdPgTap = $false
+$createdDblink = $false
+$grantedDblinkConnectU = $false
+$existingExtensions = @()
+$hadDblinkConnectU = $false
+$pendingError = $null
+$cleanupError = $null
 
 try {
-  & docker exec $ContainerName psql -v ON_ERROR_STOP=1 -U postgres -d postgres -c `
-    "create extension if not exists pgtap with schema extensions; create extension if not exists dblink with schema extensions;"
+  $existingExtensions = @(& docker exec $ContainerName psql -At -U postgres -d postgres -c `
+    "select extname from pg_extension where extname in ('pgtap', 'dblink') order by extname;")
   if ($LASTEXITCODE -ne 0) {
-    throw "Failed to create temporary pgTAP and dblink extensions."
+    throw "Failed to inspect database test extensions."
   }
 
-  & docker exec $ContainerName psql -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -c `
-    "grant execute on function extensions.dblink_connect_u(text, text) to postgres;"
+  if ($existingExtensions -notcontains "pgtap") {
+    & docker exec $ContainerName psql -v ON_ERROR_STOP=1 -U postgres -d postgres -c `
+      "create extension pgtap with schema extensions;"
+    if ($LASTEXITCODE -ne 0) {
+      throw "Failed to create the temporary pgTAP extension."
+    }
+    $createdPgTap = $true
+  }
+  if ($existingExtensions -notcontains "dblink") {
+    & docker exec $ContainerName psql -v ON_ERROR_STOP=1 -U postgres -d postgres -c `
+      "create extension dblink with schema extensions;"
+    if ($LASTEXITCODE -ne 0) {
+      throw "Failed to create the temporary dblink extension."
+    }
+    $createdDblink = $true
+  }
+
+  $dblinkPrivilege = & docker exec $ContainerName psql -At -U postgres -d postgres -c `
+    "select has_function_privilege('postgres', 'extensions.dblink_connect_u(text, text)', 'execute');"
   if ($LASTEXITCODE -ne 0) {
-    throw "Failed to grant temporary dblink_connect_u access."
+    throw "Failed to inspect dblink_connect_u privileges."
+  }
+  $hadDblinkConnectU = (($dblinkPrivilege | Out-String).Trim() -eq "t")
+  if (-not $hadDblinkConnectU) {
+    & docker exec $ContainerName psql -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -c `
+      "grant execute on function extensions.dblink_connect_u(text, text) to postgres;"
+    if ($LASTEXITCODE -ne 0) {
+      throw "Failed to grant temporary dblink_connect_u access."
+    }
+    $grantedDblinkConnectU = $true
+  }
+
+  if ($CleanupProbe) {
+    throw "Injected cleanup probe after extension and privilege setup."
   }
 
   $testOutput = Get-Content -Raw $testFile |
@@ -37,7 +75,66 @@ try {
     throw "Concurrent registration invariant pgTAP output does not satisfy its plan."
   }
 }
+catch {
+  $pendingError = $_
+}
 finally {
-  & docker exec $ContainerName psql -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -c `
-    "drop extension if exists dblink; drop extension if exists pgtap;"
+  if ($grantedDblinkConnectU -and -not $createdDblink) {
+    & docker exec $ContainerName psql -v ON_ERROR_STOP=1 -U supabase_admin -d postgres -c `
+      "revoke execute on function extensions.dblink_connect_u(text, text) from postgres;"
+    if ($LASTEXITCODE -ne 0) {
+      $cleanupError = "Failed to restore dblink_connect_u privileges."
+    }
+  }
+  if ($createdDblink) {
+    & docker exec $ContainerName psql -v ON_ERROR_STOP=1 -U postgres -d postgres -c `
+      "drop extension dblink;"
+    if ($LASTEXITCODE -ne 0) {
+      $cleanupError = "Failed to remove the temporary dblink extension."
+    }
+  }
+  if ($createdPgTap) {
+    & docker exec $ContainerName psql -v ON_ERROR_STOP=1 -U postgres -d postgres -c `
+      "drop extension pgtap;"
+    if ($LASTEXITCODE -ne 0) {
+      $cleanupError = "Failed to remove the temporary pgTAP extension."
+    }
+  }
+}
+
+if ($cleanupError) {
+  throw $cleanupError
+}
+
+if ($CleanupProbe) {
+  $restoredExtensions = @(& docker exec $ContainerName psql -At -U postgres -d postgres -c `
+    "select extname from pg_extension where extname in ('pgtap', 'dblink') order by extname;")
+  if ($LASTEXITCODE -ne 0) {
+    throw "Cleanup probe could not inspect restored extensions."
+  }
+  if (($restoredExtensions -join "|") -ne ($existingExtensions -join "|")) {
+    throw "Cleanup probe found that extension state was not restored."
+  }
+
+  if ($existingExtensions -contains "dblink") {
+    $restoredPrivilege = & docker exec $ContainerName psql -At -U postgres -d postgres -c `
+      "select has_function_privilege('postgres', 'extensions.dblink_connect_u(text, text)', 'execute');"
+    if ($LASTEXITCODE -ne 0) {
+      throw "Cleanup probe could not inspect restored dblink privileges."
+    }
+    $restoredHadPrivilege = (($restoredPrivilege | Out-String).Trim() -eq "t")
+    if ($restoredHadPrivilege -ne $hadDblinkConnectU) {
+      throw "Cleanup probe found that dblink_connect_u privileges were not restored."
+    }
+  }
+
+  if (-not $pendingError -or $pendingError.Exception.Message -notlike "Injected cleanup probe*") {
+    throw "Cleanup probe did not exercise the expected failure path."
+  }
+  Write-Output "Cleanup probe passed: extension and privilege state were restored."
+  return
+}
+
+if ($pendingError) {
+  throw $pendingError
 }
