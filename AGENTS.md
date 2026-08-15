@@ -55,6 +55,7 @@ GitHub Issues 和 GitHub Project 取代来源项目的 Linear 工作流。Issues
 7. Issue 应同步真实的分支、commit、PR、验证结果、阻塞和剩余风险，但不得复制完整 changelog。影响长期约定的决定必须回写本地权威文档。
 8. 读取和分析 Issue 不代表有权创建、编辑、评论、关闭或改变 Project 状态。只有用户明确要求相应 GitHub 写操作时才能执行；批量创建、重构 Project、改负责人或跨仓库写入必须单独确认。
 9. 无法访问正确仓库或 Project 时，报告缺失上下文，不得向猜测的仓库写入。
+10. GitHub Project 的成员、`Status`、`Sprint`、`Assignee`、`Acceptance Gate` 及其他字段均由 Joshua 手动维护。不得通过 GitHub Actions、Project 原生 workflow 或其他自动化新增项目项、推导字段、移动状态或关闭 Issue；任何手动写入仍需用户明确授权并按本节门禁核对证据。
 
 仓库内交付流程详见 `.agents/skills/project-delivery-workflow/SKILL.md`；实现与审查流程详见 `.agents/skills/mahjongflow-development/SKILL.md`。skills 细化步骤，但不扩大本文件授予的权限。
 
@@ -65,7 +66,7 @@ GitHub Issues 和 GitHub Project 取代来源项目的 Linear 工作流。Issues
 3. 成员 PR 只关联一个主要 Issue。完成个人验证、非作者审查和检查后合并到 Sprint 集成分支；对应 Issue 保持 `Testing`，不得因进入集成分支提前关闭或标记 `Done`。
 4. Sprint 集成负责人在所有纳入工作包进入 `Testing` 后，使用 Sprint 集成分支向 `main` 创建唯一的 Sprint 总 PR。总 PR 仍只有一个主要集成／验收 Issue，并在 `Included work package issues` 中列出其余 Issues；主要 Issue 与纳入 Issues 的完整集合必须与 GitHub Project 中该 `Sprint` 的 Issue 成员完全一致，PR 正文不得成为 Sprint 成员事实源。
 5. Sprint 总 PR 必须执行完整集成、回归、权限、隐私、migration 顺序和回滚检查。只有总 PR 的独立审查、必需 checks、所有 review threads 和全部纳入 Issue 验收均通过后，才可经用户明确授权合并到 `main`。
-6. Sprint 总 PR 合并后，自动化才可将主要集成 Issue 与纳入的工作包 Issues 从 `Testing` 更新为 `Done` 并关闭。批量完成必须可安全重试：已为 `Done` 的项不得阻止恢复，`Done` 但仍 open 的项必须继续关闭。任何未达到 `Testing`／`Done` 或 Acceptance Gate 未通过的 Issue 都会阻止 Sprint 完成。
+6. Sprint 总 PR 合并后，由 Joshua 在核对主要集成 Issue 与纳入工作包 Issues 的验收证据后，手动将它们从 `Testing` 更新为 `Done` 并关闭。手动批量完成必须逐项复核并可安全恢复：已为 `Done` 的项不重复修改，`Done` 但仍 open 的项继续关闭。任何未达到 `Testing`／`Done` 或 Acceptance Gate 未经人工确认通过的 Issue 都会阻止 Sprint 完成。
 7. Sprint 总 PR 的主要 Issue 或 `Included work package issues` 发生编辑时，必须重新核对 Project Sprint 成员并将已进入 `Testing` 的主要 Issue 退回 `Review`；修正正文后仍需新的非作者 review 才可再次进入 `Testing`。
 8. `main` 只接收 Sprint 总 PR。紧急修复或仓库管理例外必须由用户明确批准，并记录为什么不能进入当前 Sprint 集成流程、验证和回退方式。
 9. Codex 在任何分支、PR、review 或 merge 操作前必须核对统一周计划、成员工作文档、Issue 的 `Sprint` 字段、实际 base/head 和集成负责人。若缺少 GitHub Project 读取权限，应报告 Sprint 状态未知，不得凭文档声明代替实时核对。
