@@ -15,6 +15,7 @@ import { SubmitButton } from "@/components/forms/SubmitButton";
 import type {
   MeetingEditorError,
   MeetingEditorStatus,
+  MeetingEditorPort,
   MeetingEditorValues,
   MeetingRecordDTO,
 } from "./contracts";
@@ -74,13 +75,27 @@ function fieldError(
   return errors.find((error) => error.field === field)?.message;
 }
 
+type MeetingEditorProps = Readonly<
+  | {
+      initialRecord?: never;
+      mode: "create";
+      onSaved?: (record: MeetingRecordDTO) => void;
+      port: MeetingEditorPort;
+    }
+  | {
+      initialRecord: MeetingRecordDTO;
+      mode: "update";
+      onSaved?: (record: MeetingRecordDTO) => void;
+      port: MeetingEditorPort;
+    }
+>;
+
 export function MeetingEditor({
   initialRecord,
   mode,
-}: Readonly<{
-  initialRecord?: MeetingRecordDTO;
-  mode: "create" | "update";
-}>) {
+  onSaved,
+  port,
+}: MeetingEditorProps) {
   const [editing, setEditing] = useState(mode === "create");
   const [errors, setErrors] = useState<readonly MeetingEditorError[]>([]);
   const [pending, setPending] = useState(false);
@@ -128,12 +143,31 @@ export function MeetingEditor({
       return;
     }
 
-    await Promise.resolve();
+    const result =
+      mode === "create"
+        ? await port.createMeeting(values)
+        : await port.updateMeeting(initialRecord.id, values);
+
+    if (!result.ok) {
+      if (result.code === "VALIDATION") {
+        setErrors(result.errors ?? []);
+        setStatus("validation");
+      } else if (result.code === "DUPLICATE") {
+        setStatus("duplicate");
+      } else {
+        setStatus("system-error");
+      }
+      setPending(false);
+      return;
+    }
+
     lastSubmission.current = fingerprint;
     setErrors([]);
+    setValues(result.record);
     setStatus("success");
     setEditing(false);
     setPending(false);
+    onSaved?.(result.record);
   }
 
   if (!editing && initialRecord) {
@@ -224,6 +258,13 @@ export function MeetingEditor({
           description="This exact meeting submission was already accepted. Review the current values before trying again."
           state="duplicate"
           title="Already submitted"
+        />
+      ) : null}
+      {status === "system-error" ? (
+        <MeetingStatePanel
+          description="The meeting could not be saved in the browser fixture. Try again."
+          state="system"
+          title="Something went wrong"
         />
       ) : null}
 

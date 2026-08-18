@@ -2,12 +2,32 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
 import { MeetingEditor } from "./MeetingEditor";
+import {
+  createFixtureMeetingEditorPort,
+  type MeetingFixtureStorage,
+} from "./fixturePort";
 import { FICTIONAL_MEETING } from "./fixtures";
 import { MeetingLoadingSkeleton, MeetingStatePanel } from "./MeetingStatePanel";
 import {
   createSubmissionFingerprint,
   validateMeetingEditor,
 } from "./validation";
+
+function createMemoryStorage(
+  records = new Map<string, string>(),
+): MeetingFixtureStorage {
+  return {
+    getItem: (key) => records.get(key) ?? null,
+    setItem: (key, value) => {
+      records.set(key, value);
+    },
+  };
+}
+
+const presentationPort = createFixtureMeetingEditorPort({
+  createId: () => "fixture-created-meeting",
+  storage: createMemoryStorage(),
+});
 
 describe("meeting editor validation", () => {
   it("returns field errors in focus order for an empty meeting", () => {
@@ -47,7 +67,9 @@ describe("meeting editor validation", () => {
 
 describe("meeting editor presentation", () => {
   it("renders create fields in keyboard order with fictional participants", () => {
-    const html = renderToStaticMarkup(<MeetingEditor mode="create" />);
+    const html = renderToStaticMarkup(
+      <MeetingEditor mode="create" port={presentationPort} />,
+    );
 
     const title = html.indexOf('id="meeting-title"');
     const startsAt = html.indexOf('id="meeting-startsAt"');
@@ -64,7 +86,11 @@ describe("meeting editor presentation", () => {
 
   it("renders a safe detail view with a reserved future area", () => {
     const html = renderToStaticMarkup(
-      <MeetingEditor initialRecord={FICTIONAL_MEETING} mode="update" />,
+      <MeetingEditor
+        initialRecord={FICTIONAL_MEETING}
+        mode="update"
+        port={presentationPort}
+      />,
     );
 
     expect(html).toContain("Weekly committee meeting");
@@ -89,5 +115,34 @@ describe("meeting editor presentation", () => {
     expect(html).toContain('role="alert"');
     expect(html).toContain("Access required");
     expect(html).toContain('aria-hidden="true"');
+  });
+});
+
+describe("meeting editor fixture port", () => {
+  it("keeps a created meeting available to a fresh port after refresh", async () => {
+    const records = new Map<string, string>();
+    const storage = createMemoryStorage(records);
+    const createPort = createFixtureMeetingEditorPort({
+      createId: () => "fixture-created-meeting",
+      storage,
+    });
+    const created = await createPort.createMeeting({
+      attendeeIds: FICTIONAL_MEETING.attendeeIds,
+      decisions: FICTIONAL_MEETING.decisions,
+      discussionPoints: FICTIONAL_MEETING.discussionPoints,
+      startsAt: FICTIONAL_MEETING.startsAt,
+      summary: FICTIONAL_MEETING.summary,
+      title: "Created fixture meeting",
+    });
+
+    expect(created.ok).toBe(true);
+
+    const refreshedPort = createFixtureMeetingEditorPort({
+      createId: () => "unused-id",
+      storage,
+    });
+    const reloaded = await refreshedPort.getMeeting("fixture-created-meeting");
+
+    expect(reloaded).toEqual(created);
   });
 });

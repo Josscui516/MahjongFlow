@@ -3,6 +3,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
+vi.mock("next/navigation", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("next/navigation")>();
+  return {
+    ...actual,
+    useRouter: () => ({ push: vi.fn() }),
+  };
+});
+
 const authMocks = vi.hoisted(() => ({
   requireBackendUser: vi.fn(),
 }));
@@ -38,7 +46,7 @@ describe("meeting editor routes", () => {
     expect(html).toContain('aria-current="page"');
   });
 
-  it("renders the fictional detail route without task creation controls", async () => {
+  it("renders a safe loading state while the browser fixture is read", async () => {
     authMocks.requireBackendUser.mockResolvedValue({
       role: "authorised",
       userId: "fictional-user",
@@ -50,8 +58,8 @@ describe("meeting editor routes", () => {
       }),
     );
 
-    expect(html).toContain("Weekly committee meeting");
-    expect(html).toContain("Linked work");
+    expect(html).toContain("Loading meeting details");
+    expect(html).not.toContain("Weekly committee meeting");
     expect(html).not.toContain("Create task");
   });
 

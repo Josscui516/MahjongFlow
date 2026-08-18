@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { MeetingEditor } from "@/features/meetings/editor/MeetingEditor";
+import { FixtureMeetingEditorFlow } from "@/features/meetings/editor/FixtureMeetingEditorFlow";
 import { MeetingPageHeader } from "@/features/meetings/editor/MeetingPageHeader";
 import { MeetingRouteShell } from "@/features/meetings/editor/MeetingRouteShell";
 import { MeetingStatePanel } from "@/features/meetings/editor/MeetingStatePanel";
@@ -52,7 +52,7 @@ export default async function NewMeetingPage() {
         description="Record committee-safe meeting details, participants, discussion points and decisions."
         title="Create meeting"
       />
-      <MeetingEditor mode="create" />
+      <FixtureMeetingEditorFlow mode="create" />
     </MeetingRouteShell>
   );
 }

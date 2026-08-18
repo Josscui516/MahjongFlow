@@ -1,7 +1,6 @@
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 
-import { getFictionalMeeting } from "@/features/meetings/editor/fixtures";
-import { MeetingEditor } from "@/features/meetings/editor/MeetingEditor";
+import { FixtureMeetingEditorFlow } from "@/features/meetings/editor/FixtureMeetingEditorFlow";
 import { MeetingPageHeader } from "@/features/meetings/editor/MeetingPageHeader";
 import { MeetingRouteShell } from "@/features/meetings/editor/MeetingRouteShell";
 import { MeetingStatePanel } from "@/features/meetings/editor/MeetingStatePanel";
@@ -40,12 +39,6 @@ export default async function MeetingDetailPage({
     throw error;
   }
 
-  const meeting = getFictionalMeeting(meetingId);
-
-  if (!meeting) {
-    notFound();
-  }
-
   return (
     <MeetingRouteShell
       currentPath={`/meetings/${meetingId}`}
@@ -55,7 +48,7 @@ export default async function MeetingDetailPage({
         description="Review the recorded committee-safe summary and update the meeting when needed."
         title="Meeting details"
       />
-      <MeetingEditor initialRecord={meeting} mode="update" />
+      <FixtureMeetingEditorFlow meetingId={meetingId} mode="update" />
     </MeetingRouteShell>
   );
 }
