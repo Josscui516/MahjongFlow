@@ -536,7 +536,60 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_meeting_record: {
+        Args: {
+          attendee_ids: string[]
+          meeting_starts_at: string
+          meeting_summary: string
+          meeting_title: string
+        }
+        Returns: string
+      }
+      get_check_in_context: {
+        Args: { check_in_token: string }
+        Returns: {
+          event_id: string
+          event_name: string
+          location: string
+          result: string
+          starts_at: string
+          student_id_required: boolean
+          window_status: string
+        }[]
+      }
+      get_event_participation_totals: {
+        Args: { event_ids: string[] }
+        Returns: {
+          attendance_count: number
+          event_id: string
+          registration_count: number
+        }[]
+      }
+      rotate_event_check_in_token: {
+        Args: { actor_id: string; target_event_id: string }
+        Returns: {
+          created_at: string
+          token: string
+        }[]
+      }
+      submit_event_check_in: {
+        Args: {
+          check_in_token: string
+          participant_email: string
+          participant_student_id?: string
+        }
+        Returns: string
+      }
+      update_meeting_record: {
+        Args: {
+          attendee_ids: string[]
+          meeting_id: string
+          meeting_starts_at: string
+          meeting_summary: string
+          meeting_title: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       attendance_status: "confirmed" | "voided"
