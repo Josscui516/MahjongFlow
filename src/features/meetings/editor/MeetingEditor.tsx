@@ -22,6 +22,7 @@ import {
   mapMeetingValidationErrors,
   validateMeetingEditor,
 } from "./validation";
+import { submitMeetingSafely } from "./submission";
 
 const EMPTY_VALUES: MeetingEditorValues = { attendeeIds: [], startsAt: "", summary: "", title: "" };
 
@@ -51,14 +52,17 @@ function fieldError(errors: readonly MeetingEditorError[], field: MeetingEditorE
   return errors.find((error) => error.field === field)?.message;
 }
 
-type MeetingEditorProps = Readonly<{
+type MeetingEditorCommonProps = Readonly<{
   agendaSlot?: ReactNode;
   attendeeOptions: readonly MeetingAttendeeOption[];
-  initialRecord?: MeetingRecordDTO;
-  mode: "create" | "update";
   onSaved?: (record: MeetingRecordDTO) => void;
   port: MeetingEditorPort;
 }>;
+
+type MeetingEditorProps = MeetingEditorCommonProps & Readonly<
+  | { initialRecord?: never; mode: "create" }
+  | { initialRecord: MeetingRecordDTO; mode: "update" }
+>;
 
 export function MeetingEditor({ agendaSlot, attendeeOptions, initialRecord, mode, onSaved, port }: MeetingEditorProps) {
   const initialValues = useMemo(() => initialRecord ? valuesFromRecord(initialRecord) : EMPTY_VALUES, [initialRecord]);
@@ -90,9 +94,13 @@ export function MeetingEditor({ agendaSlot, attendeeOptions, initialRecord, mode
     if (fingerprint === lastSubmission.current) {
       setStatus("duplicate"); setPending(false); return;
     }
-    const result = mode === "create"
-      ? await port.createMeeting(values)
-      : await port.updateMeeting(initialRecord?.id ?? "", values);
+    const result = await submitMeetingSafely(
+      port,
+      mode === "create"
+        ? { mode }
+        : { initialRecord, mode },
+      values,
+    );
     if (!result.ok) {
       if (result.code === "VALIDATION") {
         setErrors(mapMeetingValidationErrors(result.errors ?? []));

@@ -80,7 +80,6 @@ describe("meeting editor routes", () => {
 
     expect(html).toContain("Create meeting");
     expect(html).toContain('id="meeting-title"');
-    expect(html).toContain('aria-current="page"');
   });
 
   it("renders the persisted meeting and agenda without task controls", async () => {

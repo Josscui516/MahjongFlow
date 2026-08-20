@@ -7,6 +7,7 @@ import type {
   AgendaSaveResult,
   MeetingAgendaDTO,
 } from "./contracts";
+import { saveAgendaSafely } from "./client-submission";
 
 type Props = Readonly<{
   agenda: MeetingAgendaDTO;
@@ -58,7 +59,7 @@ export function MeetingAgendaSection({ agenda, onSave }: Props) {
     setPending(true);
     setResult(null);
     try {
-      const nextResult = await onSave(draft);
+      const nextResult = await saveAgendaSafely(onSave, draft);
       setResult(nextResult);
       if (nextResult.ok) {
         setDraft({

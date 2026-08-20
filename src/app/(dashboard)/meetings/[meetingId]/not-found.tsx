@@ -1,18 +1,28 @@
 import Link from "next/link";
 
-import { MeetingStatePanel } from "@/features/meetings/editor/MeetingStatePanel";
+import { MeetingPageHeader } from "@/features/meetings/editor/MeetingPageHeader";
+import { MeetingRouteErrorPanel } from "@/features/meetings/editor/MeetingStatePanel";
 
 export default function MeetingNotFound() {
   return (
-    <MeetingStatePanel
-      action={
-        <Link className="font-semibold underline underline-offset-2" href="/meetings">
-          Back to meetings
-        </Link>
-      }
-      description="The requested meeting may have moved or no longer exists. No participant details are shown."
-      state="system"
-      title="Meeting not found"
-    />
+    <div className="space-y-6">
+      <MeetingPageHeader
+        description="Review the recorded committee-safe summary and update the meeting when needed."
+        title="Meeting details"
+      />
+      <MeetingRouteErrorPanel
+        action={
+          <Link
+            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-950 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+            href="/meetings"
+          >
+            Back to meetings
+          </Link>
+        }
+        description="This meeting may have moved or no longer exists. Return to meeting history to choose an available record."
+        kind="not-found"
+        title="Meeting not found"
+      />
+    </div>
   );
 }

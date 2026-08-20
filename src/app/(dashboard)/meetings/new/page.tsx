@@ -2,7 +2,6 @@ import { redirect } from "next/navigation";
 
 import { MeetingEditorFlow } from "@/features/meetings/editor/MeetingEditorFlow";
 import { MeetingPageHeader } from "@/features/meetings/editor/MeetingPageHeader";
-import { MeetingRouteShell } from "@/features/meetings/editor/MeetingRouteShell";
 import { MeetingStatePanel } from "@/features/meetings/editor/MeetingStatePanel";
 import { listMeetingAttendeeOptions } from "@/features/meetings/editor/server";
 import {
@@ -11,10 +10,8 @@ import {
 } from "@/lib/auth/authorization";
 
 export default async function NewMeetingPage() {
-  let context;
-
   try {
-    context = await requireBackendUser();
+    await requireBackendUser();
   } catch (error) {
     if (error instanceof AuthorizationError) {
       if (error.code === "UNAUTHENTICATED") {
@@ -48,25 +45,35 @@ export default async function NewMeetingPage() {
   }
 
   const attendeeResult = await listMeetingAttendeeOptions();
+
   if (!attendeeResult.ok) {
     return (
-      <MeetingRouteShell currentPath="/meetings/new" role={context.role}>
-        <MeetingStatePanel
-          description="Committee profiles could not be loaded. Refresh and try again."
-          state={attendeeResult.code === "PERMISSION_DENIED" ? "permission" : "system"}
-          title={attendeeResult.code === "PERMISSION_DENIED" ? "Access required" : "Something went wrong"}
-        />
-      </MeetingRouteShell>
+      <MeetingStatePanel
+        description="Committee profiles could not be loaded. Refresh and try again."
+        state={
+          attendeeResult.code === "PERMISSION_DENIED"
+            ? "permission"
+            : "system"
+        }
+        title={
+          attendeeResult.code === "PERMISSION_DENIED"
+            ? "Access required"
+            : "Something went wrong"
+        }
+      />
     );
   }
 
   return (
-    <MeetingRouteShell currentPath="/meetings/new" role={context.role}>
+    <>
       <MeetingPageHeader
         description="Record committee-safe meeting details and participants. Add ordered agenda items after the meeting is created."
         title="Create meeting"
       />
-      <MeetingEditorFlow attendeeOptions={attendeeResult.options} mode="create" />
-    </MeetingRouteShell>
+      <MeetingEditorFlow
+        attendeeOptions={attendeeResult.options}
+        mode="create"
+      />
+    </>
   );
 }

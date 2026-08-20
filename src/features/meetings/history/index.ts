@@ -6,6 +6,7 @@ export {
 } from "./MeetingHistoryList";
 export {
   MEETING_HISTORY_DESCRIPTION,
+  MeetingHistoryPageHeader,
   MeetingHistoryPageView,
   MeetingHistoryPermissionDeniedView,
   MeetingHistorySystemErrorView,

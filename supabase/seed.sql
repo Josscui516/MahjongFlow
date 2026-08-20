@@ -1,24 +1,25 @@
 -- Fictional, deterministic local development data for Issue #39.
--- These users have no password and no usable token. Do not run this seed remotely.
+-- The authorised test user has a local-only bcrypt password hash; no plaintext password is stored.
+-- The committee user remains passwordless. Do not run this seed remotely.
 
 begin;
 
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
-  confirmation_token, recovery_token, email_change,
+  confirmation_token, recovery_token, email_change, email_change_token_new,
   raw_app_meta_data, raw_user_meta_data, created_at, updated_at
 ) values
   (
     '00000000-0000-0000-0000-000000000000',
     '11111111-1111-4111-8111-111111111111',
     'authenticated', 'authenticated', 'committee01@example.test', null, now(),
-    '', '', '', '{"provider":"email","providers":["email"]}', '{}', now(), now()
+    '', '', '', '', '{"provider":"email","providers":["email"]}', '{}', now(), now()
   ),
   (
     '00000000-0000-0000-0000-000000000000',
     '22222222-2222-4222-8222-222222222222',
-    'authenticated', 'authenticated', 'authorised01@example.test', null, now(),
-    '', '', '', '{"provider":"email","providers":["email"]}', '{}', now(), now()
+    'authenticated', 'authenticated', 'authorised01@example.test', '$2a$06$TO18gilxGmYGisgZaJjd2O.Gl9M1CbdoceKqHhSF2WhYc1WvZDabe', now(),
+    '', '', '', '', '{"provider":"email","providers":["email"]}', '{}', now(), now()
   );
 
 insert into auth.identities (

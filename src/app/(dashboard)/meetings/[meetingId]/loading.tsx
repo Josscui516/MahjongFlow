@@ -1,7 +1,7 @@
 import { MeetingPageHeader } from "@/features/meetings/editor/MeetingPageHeader";
 import {
-  MeetingLoadingSkeleton,
-  MeetingStatePanel,
+  MeetingEditorLoadingSkeleton,
+  MeetingLoadingStatus,
 } from "@/features/meetings/editor/MeetingStatePanel";
 
 export default function MeetingDetailLoading() {
@@ -11,12 +11,13 @@ export default function MeetingDetailLoading() {
         description="Loading the latest committee-safe meeting record."
         title="Meeting details"
       />
-      <MeetingStatePanel
-        description="Please wait while the latest meeting details are retrieved."
-        state="loading"
-        title="Loading meeting…"
-      />
-      <MeetingLoadingSkeleton />
+      <div className="space-y-4" data-feedback-state="loading">
+        <MeetingLoadingStatus
+          description="retrieving the summary, agenda and linked information."
+          title="Loading meeting details"
+        />
+        <MeetingEditorLoadingSkeleton mode="detail" />
+      </div>
     </div>
   );
 }

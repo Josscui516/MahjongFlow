@@ -1,5 +1,7 @@
 import "server-only";
 
+import { cache } from "react";
+
 import {
   AuthorizationError,
   requireBackendUser,
@@ -11,7 +13,7 @@ import { createMeetingHistoryQuery } from "./query-adapter";
 
 const MEETING_HISTORY_COLUMNS = "id,title,starts_at,summary";
 
-export async function getMeetingHistoryAccess(): Promise<MeetingHistoryAccessResult> {
+async function resolveMeetingHistoryAccess(): Promise<MeetingHistoryAccessResult> {
   try {
     const context = await requireBackendUser();
 
@@ -30,6 +32,8 @@ export async function getMeetingHistoryAccess(): Promise<MeetingHistoryAccessRes
     return { ok: false, reason: "system-error" };
   }
 }
+
+export const getMeetingHistoryAccess = cache(resolveMeetingHistoryAccess);
 
 export const queryMeetingHistory = createMeetingHistoryQuery(async () => {
   const supabase = await createServerSupabaseClient();

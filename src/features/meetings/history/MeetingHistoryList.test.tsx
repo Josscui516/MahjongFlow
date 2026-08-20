@@ -24,6 +24,8 @@ describe("MeetingHistoryList", () => {
       'href="/meetings/00000000-0000-4000-8000-000000000003"',
     );
     expect(html).toContain('dateTime="2026-08-12T10:30:00.000Z"');
+    expect(html).toContain("View record");
+    expect(html).toContain("Newest first");
     expect([...html.matchAll(/href="([^"]+)"/g)].map((match) => match[1])).toEqual([
       "/meetings/00000000-0000-4000-8000-000000000003",
       "/meetings/00000000-0000-4000-8000-000000000001",

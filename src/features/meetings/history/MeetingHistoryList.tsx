@@ -36,47 +36,64 @@ export function MeetingHistoryList({ items }: MeetingHistoryListProps) {
   }
 
   return (
-    <div className="space-y-4" data-history-state="success">
-      <p className="text-sm text-slate-600" role="status">
-        {orderedItems.length} {orderedItems.length === 1 ? "meeting" : "meetings"}
-        {" available, newest first."}
-      </p>
+    <div className="space-y-3" data-history-state="success">
+      <div className="flex items-center justify-between gap-4">
+        <p className="text-sm font-semibold text-slate-800" role="status">
+          {orderedItems.length}{" "}
+          {orderedItems.length === 1 ? "meeting" : "meetings"}
+        </p>
+        <p className="text-sm text-slate-500">Newest first</p>
+      </div>
 
-      <ol className="grid gap-4">
+      <ol className="divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         {orderedItems.map((item, index) => {
           const headingId = `meeting-history-item-${index}`;
 
           return (
             <li key={item.id}>
-              <article
-                aria-labelledby={headingId}
-                className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-              >
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-                  <div className="min-w-0">
-                    <p className="text-sm font-medium text-emerald-800">
+              <article aria-labelledby={headingId}>
+                <Link
+                  className="group grid min-h-28 gap-4 p-5 transition-colors hover:bg-emerald-50/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-600 sm:grid-cols-[10rem_minmax(0,1fr)_auto] sm:items-center sm:px-6"
+                  href={getMeetingDetailsHref(item.id)}
+                >
+                  <div className="sm:self-start sm:pt-0.5">
+                    <p className="text-sm font-semibold text-emerald-800">
                       <time dateTime={item.startsAt}>
                         {formatMeetingStart(item.startsAt)}
                       </time>
                     </p>
+                  </div>
+
+                  <div className="min-w-0">
                     <h2
-                      className="mt-1 text-lg font-semibold text-slate-950"
+                      className="text-lg font-semibold text-slate-950"
                       id={headingId}
                     >
                       {item.title}
                     </h2>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">
+                    <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-slate-600">
                       {item.summary ?? "No summary has been recorded."}
                     </p>
                   </div>
 
-                  <Link
-                    className="shrink-0 rounded-lg border border-emerald-700 px-4 py-2 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-50 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2"
-                    href={getMeetingDetailsHref(item.id)}
-                  >
-                    Open details for {item.title}
-                  </Link>
-                </div>
+                  <span className="inline-flex min-h-10 items-center gap-2 self-start text-sm font-semibold text-emerald-900 sm:self-center">
+                    View record
+                    <svg
+                      aria-hidden="true"
+                      className="size-4 motion-safe:transition-transform motion-safe:group-hover:translate-x-0.5"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        d="m9 18 6-6-6-6"
+                        stroke="currentColor"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth="2"
+                      />
+                    </svg>
+                  </span>
+                </Link>
               </article>
             </li>
           );

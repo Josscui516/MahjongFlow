@@ -1,22 +1,23 @@
 import { MeetingPageHeader } from "@/features/meetings/editor/MeetingPageHeader";
 import {
-  MeetingLoadingSkeleton,
-  MeetingStatePanel,
+  MeetingEditorLoadingSkeleton,
+  MeetingLoadingStatus,
 } from "@/features/meetings/editor/MeetingStatePanel";
 
 export default function NewMeetingLoading() {
   return (
     <div className="space-y-6">
       <MeetingPageHeader
-        description="Preparing the meeting editor."
+        description="Record committee-safe meeting details and participants. Add ordered agenda items after the meeting is created."
         title="Create meeting"
       />
-      <MeetingStatePanel
-        description="Please wait while the editor is prepared."
-        state="loading"
-        title="Loading meeting editor…"
-      />
-      <MeetingLoadingSkeleton />
+      <div className="space-y-4" data-feedback-state="loading">
+        <MeetingLoadingStatus
+          description="preparing committee profiles and form controls."
+          title="Preparing the meeting editor"
+        />
+        <MeetingEditorLoadingSkeleton mode="create" />
+      </div>
     </div>
   );
 }

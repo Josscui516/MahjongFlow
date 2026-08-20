@@ -18,7 +18,7 @@ vi.mock("@/features/meetings/history/server", () => ({
   queryMeetingHistory: mocks.queryMeetingHistory,
 }));
 
-import MeetingsPage from "./page";
+import MeetingsPage from "./(history)/page";
 
 const FICTIONAL_ITEM = {
   id: "00000000-0000-4000-8000-000000000020",
@@ -64,7 +64,7 @@ describe("meetings history page", () => {
   });
 
   it.each(["committee", "authorised"] as const)(
-    "renders a trusted %s shell and a freshly queried history list",
+    "renders a freshly queried history list for a trusted %s user",
     async (role) => {
       mocks.getMeetingHistoryAccess.mockResolvedValue({
         context: {
@@ -80,9 +80,9 @@ describe("meetings history page", () => {
 
       const html = renderToStaticMarkup(await MeetingsPage());
 
-      expect(html).toContain(`Role: ${role === "committee" ? "Committee" : "Authorised"}`);
-      expect(html).toContain('aria-current="page"');
       expect(html).toContain(FICTIONAL_ITEM.title);
+      expect(html).toContain('href="/meetings/new"');
+      expect(html).toContain("Create meeting");
       expect(html).toContain(
         'href="/meetings/00000000-0000-4000-8000-000000000020"',
       );
@@ -90,7 +90,7 @@ describe("meetings history page", () => {
     },
   );
 
-  it("renders the empty state inside the trusted shell", async () => {
+  it("renders the empty state", async () => {
     mocks.getMeetingHistoryAccess.mockResolvedValue({
       context: {
         role: "committee",
@@ -104,9 +104,11 @@ describe("meetings history page", () => {
 
     expect(html).toContain('data-feedback-state="empty"');
     expect(html).toContain("No meetings recorded");
+    expect(html).toContain('href="/meetings/new"');
+    expect(html).toContain("Create meeting");
   });
 
-  it("keeps the trusted shell but hides data when the query fails", async () => {
+  it("hides data when the query fails", async () => {
     mocks.getMeetingHistoryAccess.mockResolvedValue({
       context: {
         role: "authorised",
@@ -121,12 +123,11 @@ describe("meetings history page", () => {
 
     const html = renderToStaticMarkup(await MeetingsPage());
 
-    expect(html).toContain("Role: Authorised");
     expect(html).toContain('data-feedback-state="error"');
     expect(html).not.toContain(FICTIONAL_ITEM.title);
   });
 
-  it("fails closed without a shell when access resolution has a system error", async () => {
+  it("fails closed when access resolution has a system error", async () => {
     mocks.getMeetingHistoryAccess.mockResolvedValue({
       ok: false,
       reason: "system-error",
@@ -135,7 +136,6 @@ describe("meetings history page", () => {
     const html = renderToStaticMarkup(await MeetingsPage());
 
     expect(html).toContain('data-feedback-state="error"');
-    expect(html).not.toContain("Role:");
     expect(html).not.toContain(FICTIONAL_ITEM.title);
     expect(mocks.queryMeetingHistory).not.toHaveBeenCalled();
   });

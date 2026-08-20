@@ -2,7 +2,6 @@ import { notFound, redirect } from "next/navigation";
 
 import { MeetingEditorFlow } from "@/features/meetings/editor/MeetingEditorFlow";
 import { MeetingPageHeader } from "@/features/meetings/editor/MeetingPageHeader";
-import { MeetingRouteShell } from "@/features/meetings/editor/MeetingRouteShell";
 import { MeetingStatePanel } from "@/features/meetings/editor/MeetingStatePanel";
 import {
   listMeetingAttendeeOptions,
@@ -18,10 +17,9 @@ export default async function MeetingDetailPage({
   params,
 }: Readonly<{ params: Promise<{ meetingId: string }> }>) {
   const { meetingId } = await params;
-  let context;
 
   try {
-    context = await requireBackendUser();
+    await requireBackendUser();
   } catch (error) {
     if (error instanceof AuthorizationError) {
       if (error.code === "UNAUTHENTICATED") {
@@ -49,13 +47,11 @@ export default async function MeetingDetailPage({
   if (!meetingResult.ok) {
     if (meetingResult.code === "NOT_FOUND") notFound();
     return (
-      <MeetingRouteShell currentPath={`/meetings/${meetingId}`} role={context.role}>
-        <MeetingStatePanel
-          description={meetingResult.code === "PERMISSION_DENIED" ? "You do not have permission to view or edit this meeting." : "This meeting could not be loaded. Return to meeting history and try again."}
-          state={meetingResult.code === "PERMISSION_DENIED" ? "permission" : "system"}
-          title={meetingResult.code === "PERMISSION_DENIED" ? "Access required" : "Something went wrong"}
-        />
-      </MeetingRouteShell>
+      <MeetingStatePanel
+        description={meetingResult.code === "PERMISSION_DENIED" ? "You do not have permission to view or edit this meeting." : "This meeting could not be loaded. Return to meeting history and try again."}
+        state={meetingResult.code === "PERMISSION_DENIED" ? "permission" : "system"}
+        title={meetingResult.code === "PERMISSION_DENIED" ? "Access required" : "Something went wrong"}
+      />
     );
   }
 
@@ -67,21 +63,16 @@ export default async function MeetingDetailPage({
   if (!agenda || !attendeeResult.ok) {
     const permissionDenied = !attendeeResult.ok && attendeeResult.code === "PERMISSION_DENIED";
     return (
-      <MeetingRouteShell currentPath={`/meetings/${meetingId}`} role={context.role}>
-        <MeetingStatePanel
-          description={permissionDenied ? "You do not have permission to view or edit this meeting." : "This meeting is unavailable. Return to meeting history and try again."}
-          state={permissionDenied ? "permission" : "system"}
-          title={permissionDenied ? "Access required" : "Meeting unavailable"}
-        />
-      </MeetingRouteShell>
+      <MeetingStatePanel
+        description={permissionDenied ? "You do not have permission to view or edit this meeting." : "This meeting is unavailable. Return to meeting history and try again."}
+        state={permissionDenied ? "permission" : "system"}
+        title={permissionDenied ? "Access required" : "Meeting unavailable"}
+      />
     );
   }
 
   return (
-    <MeetingRouteShell
-      currentPath={`/meetings/${meetingId}`}
-      role={context.role}
-    >
+    <>
       <MeetingPageHeader
         description="Review the recorded committee-safe summary and update the meeting when needed."
         title="Meeting details"
@@ -92,6 +83,6 @@ export default async function MeetingDetailPage({
         initialRecord={meetingResult.record}
         mode="update"
       />
-    </MeetingRouteShell>
+    </>
   );
 }
