@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 
-import { FixtureMeetingEditorFlow } from "@/features/meetings/editor/FixtureMeetingEditorFlow";
+import { MeetingEditorFlow } from "@/features/meetings/editor/MeetingEditorFlow";
 import { MeetingPageHeader } from "@/features/meetings/editor/MeetingPageHeader";
 import { MeetingRouteShell } from "@/features/meetings/editor/MeetingRouteShell";
 import { MeetingStatePanel } from "@/features/meetings/editor/MeetingStatePanel";
+import { listMeetingAttendeeOptions } from "@/features/meetings/editor/server";
 import {
   AuthorizationError,
   requireBackendUser,
@@ -46,13 +47,26 @@ export default async function NewMeetingPage() {
     );
   }
 
+  const attendeeResult = await listMeetingAttendeeOptions();
+  if (!attendeeResult.ok) {
+    return (
+      <MeetingRouteShell currentPath="/meetings/new" role={context.role}>
+        <MeetingStatePanel
+          description="Committee profiles could not be loaded. Refresh and try again."
+          state={attendeeResult.code === "PERMISSION_DENIED" ? "permission" : "system"}
+          title={attendeeResult.code === "PERMISSION_DENIED" ? "Access required" : "Something went wrong"}
+        />
+      </MeetingRouteShell>
+    );
+  }
+
   return (
     <MeetingRouteShell currentPath="/meetings/new" role={context.role}>
       <MeetingPageHeader
-        description="Record committee-safe meeting details, participants, discussion points and decisions."
+        description="Record committee-safe meeting details and participants. Add ordered agenda items after the meeting is created."
         title="Create meeting"
       />
-      <FixtureMeetingEditorFlow mode="create" />
+      <MeetingEditorFlow attendeeOptions={attendeeResult.options} mode="create" />
     </MeetingRouteShell>
   );
 }

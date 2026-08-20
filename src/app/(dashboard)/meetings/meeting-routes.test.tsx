@@ -15,10 +15,25 @@ const authMocks = vi.hoisted(() => ({
   requireBackendUser: vi.fn(),
 }));
 
+const meetingMocks = vi.hoisted(() => ({
+  listMeetingAttendeeOptions: vi.fn(),
+  readMeeting: vi.fn(),
+  readMeetingAgenda: vi.fn(),
+}));
+
 vi.mock("@/lib/auth/authorization", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/auth/authorization")>();
   return { ...actual, requireBackendUser: authMocks.requireBackendUser };
 });
+
+vi.mock("@/features/meetings/editor/server", () => meetingMocks);
+
+vi.mock("@/features/meetings/editor/actions", () => ({
+  createMeetingAction: vi.fn(),
+  getMeetingAction: vi.fn(),
+  saveMeetingAgendaAction: vi.fn(),
+  updateMeetingAction: vi.fn(),
+}));
 
 vi.mock("@/app/(auth)/backoffice/logout-form", () => ({
   LogoutForm: () => <form><button type="submit">Sign out</button></form>,
@@ -31,6 +46,28 @@ import { AuthorizationError } from "@/lib/auth/authorization";
 describe("meeting editor routes", () => {
   beforeEach(() => {
     authMocks.requireBackendUser.mockReset();
+    meetingMocks.listMeetingAttendeeOptions.mockResolvedValue({
+      ok: true,
+      options: [{ id: "11111111-1111-4111-8111-111111111111", label: "Alex Example" }],
+    });
+    meetingMocks.readMeeting.mockResolvedValue({
+      ok: true,
+      record: {
+        attendeeIds: ["11111111-1111-4111-8111-111111111111"],
+        createdAt: "2026-08-18T08:30:00.000Z",
+        createdBy: "11111111-1111-4111-8111-111111111111",
+        id: "22222222-2222-4222-8222-222222222222",
+        startsAt: "2026-08-18T08:30:00.000Z",
+        summary: "Safe fictional summary.",
+        title: "Weekly committee meeting",
+        updatedAt: "2026-08-18T08:30:00.000Z",
+      },
+    });
+    meetingMocks.readMeetingAgenda.mockResolvedValue({
+      meetingId: "22222222-2222-4222-8222-222222222222",
+      discussionPoints: [],
+      decisions: [],
+    });
   });
 
   it("allows a committee user to open the create route", async () => {
@@ -46,7 +83,7 @@ describe("meeting editor routes", () => {
     expect(html).toContain('aria-current="page"');
   });
 
-  it("renders a safe loading state while the browser fixture is read", async () => {
+  it("renders the persisted meeting and agenda without task controls", async () => {
     authMocks.requireBackendUser.mockResolvedValue({
       role: "authorised",
       userId: "fictional-user",
@@ -54,12 +91,12 @@ describe("meeting editor routes", () => {
 
     const html = renderToStaticMarkup(
       await MeetingDetailPage({
-        params: Promise.resolve({ meetingId: "fixture-weekly-committee" }),
+        params: Promise.resolve({ meetingId: "22222222-2222-4222-8222-222222222222" }),
       }),
     );
 
-    expect(html).toContain("Loading meeting details");
-    expect(html).not.toContain("Weekly committee meeting");
+    expect(html).toContain("Weekly committee meeting");
+    expect(html).toContain("Meeting agenda");
     expect(html).not.toContain("Create task");
   });
 
@@ -73,6 +110,15 @@ describe("meeting editor routes", () => {
     });
   });
 
+  it("uses the route not-found boundary for a missing meeting", async () => {
+    authMocks.requireBackendUser.mockResolvedValue({ role: "committee", userId: "fictional-user" });
+    meetingMocks.readMeeting.mockResolvedValue({ ok: false, code: "NOT_FOUND" });
+
+    await expect(MeetingDetailPage({
+      params: Promise.resolve({ meetingId: "40000000-0000-4000-8000-000000000004" }),
+    })).rejects.toMatchObject({ digest: "NEXT_HTTP_ERROR_FALLBACK;404" });
+  });
+
   it("returns fixed denial copy without meeting content for a forbidden role", async () => {
     authMocks.requireBackendUser.mockRejectedValue(
       new AuthorizationError("FORBIDDEN"),
@@ -80,7 +126,7 @@ describe("meeting editor routes", () => {
 
     const html = renderToStaticMarkup(
       await MeetingDetailPage({
-        params: Promise.resolve({ meetingId: "fixture-weekly-committee" }),
+        params: Promise.resolve({ meetingId: "22222222-2222-4222-8222-222222222222" }),
       }),
     );
 
