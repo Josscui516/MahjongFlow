@@ -1,5 +1,5 @@
 begin;
-select plan(13);
+select plan(19);
 
 truncate table auth.users cascade;
 insert into auth.users (instance_id, id, aud, role, email, confirmation_token, recovery_token, email_change, raw_app_meta_data, raw_user_meta_data, created_at, updated_at) values
@@ -41,11 +41,44 @@ select ok(public.update_meeting_record(
 select is((select title from public.meetings m join created_meeting c on c.id = m.id), 'Updated fictional Sprint 3 meeting', 'updated fields persist on re-read');
 select is((select profile_id from public.meeting_attendees a join created_meeting c on c.id = a.meeting_id), 'a2222222-2222-4222-8222-222222222222'::uuid, 'attendee replacement remains non-empty');
 
+select set_config('request.jwt.claim.sub', 'a2222222-2222-4222-8222-222222222222', true);
+select ok(public.update_meeting_record(
+  (select id from created_meeting),
+  'Authorised fictional Sprint 3 meeting',
+  '2026-08-21T09:30:00Z',
+  'Authorised fictional persistence evidence.',
+  array['a1111111-1111-4111-8111-111111111111'::uuid]
+), 'M-01 permits an authorised user to update a meeting');
+select is(
+  (select title from public.meetings m join created_meeting c on c.id = m.id),
+  'Authorised fictional Sprint 3 meeting',
+  'the authorised update persists on re-read'
+);
+
+select throws_ok(
+  format(
+    $$select public.update_meeting_record(%L, 'Partially updated meeting', now(), 'Must roll back.', array['afffffff-ffff-4fff-8fff-ffffffffffff'::uuid])$$,
+    (select id from created_meeting)
+  ),
+  '23503', null, 'invalid attendee rolls the whole meeting update back'
+);
+select is(
+  (select title from public.meetings m join created_meeting c on c.id = m.id),
+  'Authorised fictional Sprint 3 meeting',
+  'failed update preserves the previous meeting fields'
+);
+
 select throws_ok(
   $$select public.create_meeting_record('Invalid attendee meeting', now(), 'Must roll back.', array['afffffff-ffff-4fff-8fff-ffffffffffff'::uuid])$$,
   '23503', null, 'invalid attendee rolls the whole meeting write back'
 );
 select is((select count(*)::integer from public.meetings where title = 'Invalid attendee meeting'), 0, 'failed create leaves no partial meeting');
+
+select throws_ok(
+  $$select public.create_meeting_record('Empty attendee meeting', now(), 'Must roll back.', array[]::uuid[])$$,
+  '23514', null, 'an empty attendee set is rejected at the database boundary'
+);
+select is((select count(*)::integer from public.meetings where title = 'Empty attendee meeting'), 0, 'empty attendee rejection leaves no partial meeting');
 
 select set_config('request.jwt.claim.sub', 'a3333333-3333-4333-8333-333333333333', true);
 select throws_ok(

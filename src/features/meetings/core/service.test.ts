@@ -5,7 +5,7 @@ vi.mock("server-only", () => ({}));
 import { AuthorizationError } from "@/lib/auth/authorization";
 import type { MeetingInput, NormalisedMeetingInput } from "../schemas";
 import type { MeetingRecordDTO } from "./contracts";
-import type { MeetingRepository } from "./repository";
+import { MeetingRepositoryError, type MeetingRepository } from "./repository";
 import { createMeetingService } from "./service";
 
 const actorId = "11111111-1111-4111-8111-111111111111";
@@ -47,13 +47,27 @@ describe("meeting core service", () => {
     expect(await service.getMeeting(meetingId)).toEqual(created);
   });
 
-  test("M-02 rejects invalid input before authorisation or persistence", async () => {
+  test("M-02 rejects invalid input after authorisation but before persistence", async () => {
     const authorise = vi.fn(async () => ({ role: "committee" as const, userId: actorId }));
     const persistence = repository();
     const service = createMeetingService({ authorise, repository: persistence });
     const result = await service.createMeeting({ ...validInput, title: "" });
     expect(result).toMatchObject({ code: "VALIDATION", ok: false });
-    expect(authorise).not.toHaveBeenCalled();
+    expect(authorise).toHaveBeenCalledOnce();
+    expect(persistence.create).not.toHaveBeenCalled();
+  });
+
+  test("M-05 denies unauthenticated mutations before returning validation details", async () => {
+    const persistence = repository();
+    const service = createMeetingService({
+      authorise: async () => { throw new AuthorizationError("UNAUTHENTICATED"); },
+      repository: persistence,
+    });
+
+    await expect(service.createMeeting({ ...validInput, title: "" })).resolves.toEqual({
+      code: "PERMISSION_DENIED",
+      ok: false,
+    });
     expect(persistence.create).not.toHaveBeenCalled();
   });
 
@@ -79,6 +93,35 @@ describe("meeting core service", () => {
     });
 
     await expect(service.updateMeeting(meetingId, validInput)).resolves.toEqual({ code: "NOT_FOUND", ok: false });
+  });
+
+  test("rejects malformed meeting identifiers before persistence", async () => {
+    const persistence = repository();
+    const service = createMeetingService({
+      authorise: async () => ({ role: "committee", userId: actorId }),
+      repository: persistence,
+    });
+
+    await expect(service.getMeeting("not-a-uuid")).resolves.toEqual({ code: "NOT_FOUND", ok: false });
+    await expect(service.getMeeting(` ${meetingId} `)).resolves.toEqual({ code: "NOT_FOUND", ok: false });
+    await expect(service.updateMeeting("not-a-uuid", validInput)).resolves.toEqual({ code: "NOT_FOUND", ok: false });
+    expect(persistence.get).not.toHaveBeenCalled();
+    expect(persistence.update).not.toHaveBeenCalled();
+  });
+
+  test("maps a stale attendee selection to a safe field validation error", async () => {
+    const service = createMeetingService({
+      authorise: async () => ({ role: "committee", userId: actorId }),
+      repository: repository({
+        create: async () => { throw new MeetingRepositoryError("23503", "provider detail"); },
+      }),
+    });
+
+    await expect(service.createMeeting(validInput)).resolves.toEqual({
+      code: "VALIDATION",
+      errors: [{ field: "attendeeIds", message: "Select attendees who are current committee members." }],
+      ok: false,
+    });
   });
 
   test("returns stable history items and hides persistence failures", async () => {

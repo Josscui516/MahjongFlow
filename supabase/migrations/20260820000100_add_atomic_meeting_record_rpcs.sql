@@ -1,6 +1,8 @@
 -- Issue #12: atomic persistence boundary for a meeting and its attendee set.
 -- Existing tables and RLS remain unchanged. These security-invoker functions
 -- use the caller's JWT role and are available only to authenticated clients.
+-- Deploy after the Week 2 schema/RLS migrations. Roll back by dropping these
+-- two exact function signatures; no table shape or existing row is changed.
 
 create or replace function public.create_meeting_record(
   meeting_title text,
