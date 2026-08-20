@@ -536,6 +536,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_meeting_record: {
+        Args: {
+          attendee_ids: string[]
+          meeting_starts_at: string
+          meeting_summary: string
+          meeting_title: string
+        }
+        Returns: string
+      }
       get_check_in_context: {
         Args: { check_in_token: string }
         Returns: {
@@ -578,6 +587,16 @@ export type Database = {
           participant_student_id?: string
         }
         Returns: string
+      }
+      update_meeting_record: {
+        Args: {
+          attendee_ids: string[]
+          meeting_id: string
+          meeting_starts_at: string
+          meeting_summary: string
+          meeting_title: string
+        }
+        Returns: boolean
       }
     }
     Enums: {
