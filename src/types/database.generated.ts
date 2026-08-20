@@ -572,6 +572,14 @@ export type Database = {
           token: string
         }[]
       }
+      save_meeting_agenda: {
+        Args: {
+          decision_items: Json
+          discussion_items: Json
+          target_meeting_id: string
+        }
+        Returns: undefined
+      }
       submit_event_check_in: {
         Args: {
           check_in_token: string
