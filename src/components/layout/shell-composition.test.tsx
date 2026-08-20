@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
@@ -40,7 +41,7 @@ describe("shared shell composition", () => {
     const html = renderToStaticMarkup(
       <PageFrame
         feedbackSlot={<EmptyFeedback title="No meetings" />}
-        primaryAction={<a href="/meetings/new">New meeting</a>}
+        primaryAction={<Link href="/meetings/new">New meeting</Link>}
         title="Meetings"
       >
         <p>Meeting content</p>

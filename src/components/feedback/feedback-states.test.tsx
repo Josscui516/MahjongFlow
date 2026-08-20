@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
@@ -27,7 +28,7 @@ describe("shared feedback states", () => {
   it("renders a clear empty state and recovery action", () => {
     const html = renderToStaticMarkup(
       <EmptyFeedback
-        action={<a href="/meetings/new">Create a meeting</a>}
+        action={<Link href="/meetings/new">Create a meeting</Link>}
         description="No meetings have been recorded."
         title="No meetings"
       />,
