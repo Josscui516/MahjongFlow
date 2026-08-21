@@ -1,72 +1,15 @@
-import { redirect } from "next/navigation";
-
-import { LogoutForm } from "@/app/(auth)/backoffice/logout-form";
-import { BackofficeShell } from "@/components/layout";
 import {
   AccountDirectory,
   getAccountManagementService,
   InviteAccountForm,
 } from "@/features/account-management";
-import {
-  AuthorizationError,
-  requireAccountAdmin,
-} from "@/lib/auth/authorization";
-
-function AccessFailure({ system }: Readonly<{ system: boolean }>) {
-  return (
-    <main className="grid min-h-screen place-items-center bg-slate-100 px-4 py-10">
-      <section className="w-full max-w-xl rounded-3xl border border-slate-200 bg-white p-7 shadow-xl">
-        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-800">
-          Account administration
-        </p>
-        <h1 className="mt-2 text-2xl font-bold text-slate-950">
-          {system ? "Account service unavailable" : "Access required"}
-        </h1>
-        <p className="mt-3 leading-7 text-slate-600">
-          {system
-            ? "We could not load the account directory. Refresh the page and try again."
-            : "Your committee account does not have account-administration access."}
-        </p>
-      </section>
-    </main>
-  );
-}
 
 export default async function AccountManagementPage() {
-  let context;
-
-  try {
-    context = await requireAccountAdmin();
-  } catch (error) {
-    if (error instanceof AuthorizationError) {
-      if (error.code === "UNAUTHENTICATED") {
-        redirect("/login?next=%2Fadmin%2Fusers");
-      }
-
-      return <AccessFailure system={false} />;
-    }
-
-    return <AccessFailure system />;
-  }
-
-  let accounts;
-
-  try {
-    const service = await getAccountManagementService();
-    accounts = await service.listAccounts();
-  } catch {
-    return <AccessFailure system />;
-  }
+  const service = await getAccountManagementService();
+  const accounts = await service.listAccounts();
 
   return (
-    <BackofficeShell
-      accountSlot={<span>Signed in</span>}
-      canManageAccounts
-      currentPath="/admin/users"
-      role={context.role}
-      signOutSlot={<LogoutForm />}
-    >
-      <div className="space-y-8">
+    <div className="space-y-8">
         <header>
           <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-800">
             Administration
@@ -104,7 +47,6 @@ export default async function AccountManagementPage() {
           </div>
           <AccountDirectory accounts={accounts} />
         </section>
-      </div>
-    </BackofficeShell>
+    </div>
   );
 }

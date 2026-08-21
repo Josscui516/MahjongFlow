@@ -1,7 +1,13 @@
 import { redirect } from "next/navigation";
 
 import { LogoutForm } from "@/app/(auth)/backoffice/logout-form";
-import { SuccessFeedback } from "@/components/feedback";
+import {
+  PermissionDeniedFeedback,
+  PRIMARY_ROUTE_ACTION_CLASS,
+  SECONDARY_ROUTE_ACTION_CLASS,
+  SuccessFeedback,
+  SystemErrorFeedback,
+} from "@/components/feedback";
 import { BackofficeShell, PageFrame } from "@/components/layout";
 import {
   AuthorizationError,
@@ -12,19 +18,25 @@ import {
 function AccessUnavailable({ forbidden }: Readonly<{ forbidden: boolean }>) {
   return (
     <main className="grid min-h-screen place-items-center bg-slate-100 px-4 py-10 text-slate-950">
-      <section className="w-full max-w-lg rounded-3xl border border-slate-200 bg-white p-6 shadow-xl sm:p-8">
-        <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-800">
-          MahjongFlow
-        </p>
-        <h1 className="mt-2 text-2xl font-bold">
-          {forbidden ? "Back-office access unavailable" : "Service unavailable"}
-        </h1>
-        <p className="mt-3 leading-7 text-slate-600">
-          {forbidden
-            ? "Your account does not currently have a committee role. Contact the committee administrator if you need access."
-            : "We could not verify your access right now. Please try again."}
-        </p>
-      </section>
+      <div className="w-full max-w-2xl">
+        {forbidden ? (
+          <PermissionDeniedFeedback
+            backAction={
+              <a className={SECONDARY_ROUTE_ACTION_CLASS} href="/login">
+                Return to sign in
+              </a>
+            }
+          />
+        ) : (
+          <SystemErrorFeedback
+            action={
+              <a className={PRIMARY_ROUTE_ACTION_CLASS} href="/backoffice">
+                Try again
+              </a>
+            }
+          />
+        )}
+      </div>
     </main>
   );
 }

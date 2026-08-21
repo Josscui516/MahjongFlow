@@ -1,23 +1,56 @@
 "use client";
 
+import Link from "next/link";
+import { useEffect } from "react";
+
+import {
+  PRIMARY_ROUTE_ACTION_CLASS,
+  RouteErrorFeedback,
+  SECONDARY_ROUTE_ACTION_CLASS,
+} from "@/components/feedback";
+import { PageFrame } from "@/components/layout";
+
 export default function AccountManagementError({
-  reset,
-}: Readonly<{ error: Error & { digest?: string }; reset: () => void }>) {
+  error,
+  retry,
+}: Readonly<{
+  error: Error & { digest?: string };
+  retry: () => void;
+}>) {
+  useEffect(() => {
+    console.error("Account management route failed", {
+      digest: error.digest ?? "unavailable",
+    });
+  }, [error.digest]);
+
   return (
-    <main className="mx-auto w-full max-w-xl px-4 py-10">
-      <section className="rounded-2xl border border-rose-200 bg-white p-6 shadow-sm" role="alert">
-        <h1 className="text-xl font-bold text-slate-950">Account service unavailable</h1>
-        <p className="mt-2 text-slate-600">
-          No confirmed change was made. Try loading the account directory again.
-        </p>
-        <button
-          className="mt-5 rounded-xl bg-emerald-950 px-4 py-2.5 text-sm font-semibold text-white"
-          onClick={reset}
-          type="button"
-        >
-          Try again
-        </button>
-      </section>
-    </main>
+    <PageFrame
+      description="Invite committee members, maintain roles, and manage account access."
+      title="Committee accounts"
+    >
+      <RouteErrorFeedback
+        actions={
+          <>
+            <button
+              className={PRIMARY_ROUTE_ACTION_CLASS}
+              onClick={retry}
+              type="button"
+            >
+              Try again
+            </button>
+            <Link className={SECONDARY_ROUTE_ACTION_CLASS} href="/backoffice">
+              Return to back office
+            </Link>
+          </>
+        }
+        description="The account directory could not be loaded. Try again, or return to the back office and come back later."
+        note="No confirmed account changes were made."
+        recoveryItems={[
+          "Retry loading the account directory",
+          "Return to the back office if the account service remains unavailable",
+        ]}
+        title="Account service unavailable"
+      />
+    </PageFrame>
   );
 }

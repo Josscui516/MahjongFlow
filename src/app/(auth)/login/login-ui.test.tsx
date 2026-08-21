@@ -61,7 +61,7 @@ describe("integrated login UI", () => {
     );
 
     expect(html).toContain('role="alert"');
-    expect(html).toContain("Authentication error");
+    expect(html).toContain("Sign in failed");
     expect(html).toContain("Check your sign-in details and try again.");
     expect(html).not.toContain("unknown account");
   });

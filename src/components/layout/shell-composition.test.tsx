@@ -72,7 +72,6 @@ describe("shared shell composition", () => {
     );
 
     expect(html).toContain("Events");
-    expect(html).toContain("System error");
     expect(html).toContain("Something went wrong");
     expect(html).toContain("Existing content remains available.");
   });
