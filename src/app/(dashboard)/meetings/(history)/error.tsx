@@ -22,7 +22,7 @@ export default function MeetingHistoryError({
   return (
     <PageFrame
       description={MEETING_HISTORY_DESCRIPTION}
-      title="Meeting history"
+      title="Meetings"
     >
       <section
         aria-labelledby="meeting-history-error-title"

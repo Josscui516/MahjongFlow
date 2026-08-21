@@ -5,10 +5,12 @@ import { BackofficeShell } from "@/components/layout/BackofficeShell";
 import type { BackendRole } from "@/lib/auth/authorization";
 
 export function MeetingRouteShell({
+  canManageAccounts,
   children,
   currentPath,
   role,
 }: Readonly<{
+  canManageAccounts?: boolean;
   children: ReactNode;
   currentPath: string;
   role: BackendRole;
@@ -16,6 +18,7 @@ export function MeetingRouteShell({
   return (
     <BackofficeShell
       accountSlot={<span>Signed in</span>}
+      canManageAccounts={canManageAccounts}
       currentPath={currentPath}
       role={role}
       signOutSlot={<LogoutForm />}

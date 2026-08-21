@@ -82,8 +82,10 @@
 | 资源／操作 | 未登录或 token 参与者 | `committee` | `authorised` | 数据库控制 |
 |---|---|---|---|---|
 | 登录／登出／当前会话 | 登录、本人会话操作 | 本人会话 | 本人会话 | Supabase Auth；业务表不保存凭据 |
-| `profiles` 后台目录 | — | R：`id/display_name/committee_role` | R：同左 | `TO authenticated` + backend role helper；无 app 写 policy |
-| 修改本人或他人角色 | — | — | — | 无 insert/update/delete policy；仅受控维护流程 |
+| `profiles` 后台目录 | — | R：委员会安全目录字段 | R：同左 | `TO authenticated` + active backend role helper；无直接 app 写 policy |
+| 修改账号资料、角色或状态 | — | 仅 `can_manage_accounts` | 仅 `can_manage_accounts` | 窄 `SECURITY DEFINER` RPC 再验证账号管理员；直接表写入保持拒绝 |
+| 邀请／停用／恢复 Auth 用户 | — | 仅 `can_manage_accounts` | 仅 `can_manage_accounts` | 先验证用户会话与 profile 能力，再由 server-only Auth Admin 适配器执行 |
+| 查看账号管理审计 | — | 仅 `can_manage_accounts` | 仅 `can_manage_accounts` | audit 表仅 SELECT policy；写入只来自受保护 RPC |
 | `meetings` | — | C/R/U | C/R/U | backend policy；`created_by = auth.uid()`；无永久删除 |
 | `meeting_attendees` | — | C/R/D* | C/R/D* | backend policy；复合键；不得删除最后一名参会人 |
 | `discussion_points` | — | C/R/U；未被任务引用时 D* | 同左 | backend policy + source FK `RESTRICT` |
@@ -92,8 +94,8 @@
 | `events` 基础字段 | 仅 token 页经服务端得到最小片段 | C/R/U | C/R/U | backend policy；匿名无 table select |
 | Dashboard／任务／活动派生数据 | — | R | R | 从可读协调表派生；不含个人参与数据 |
 
-`profiles` 的角色列对后台成员只读，是为了让负责人选择和角色提示可用；任何
-角色提升都不通过应用页面。会议子项的 `D*` 仅用于更新会议内容，服务端必须
+`profiles` 对普通后台成员保持直接只读，是为了让负责人选择和角色提示可用；
+账号管理员的变更只能通过窄 RPC 完成并记录审计，不能获得直接表写权限。会议子项的 `D*` 仅用于更新会议内容，服务端必须
 在同一事务中检查至少一名参会人和来源引用，不能扩展成会议永久删除。
 
 ### 5.2 敏感活动资源
@@ -261,6 +263,7 @@ server-only secret 绕过 RLS，因此代码规范必须禁止使用该 client �
 | PG-14 Registrations | authorised-only shell | authorised 会话；资源和字段校验 | sensitive RLS、唯一报名 |
 | PG-15 Attendance | authorised-only shell | authorised 会话；原状态／目标状态校验 | sensitive RLS、唯一签到、审计检查 |
 | PG-16 Dinner | authorised-only shell；无资格编辑控件 | authorised 会话；实时查询当前签到 | sensitive RLS；资格无可写列 |
+| `/admin/users` 账号管理 | 仅账号管理员显示入口；密码永不显示 | active backend 会话 + `can_manage_accounts`；Auth Admin secret 仅服务端 | profile 管理 RPC、最后管理员保护、append-only audit；直接表写拒绝 |
 
 所有 Route Handler／Server Action 在查询前验证会话和角色。敏感路由不能先用
 elevated client 取回数据再在 React 中隐藏；拒绝必须发生在查询之前。

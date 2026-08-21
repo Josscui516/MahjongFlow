@@ -12,10 +12,28 @@ import {
   MeetingHistorySystemErrorView,
 } from "./MeetingHistoryPageView";
 
+const DEFAULT_CRITERIA = {
+  page: 1,
+  pageSize: 8,
+  search: "",
+  sort: "newest",
+  time: "all",
+} as const;
+
+function result(items = createMeetingHistoryFixture(), totalCount = items.length) {
+  return {
+    items,
+    page: 1,
+    pageCount: Math.max(1, Math.ceil(totalCount / 8)),
+    pageSize: 8,
+    totalCount,
+  };
+}
+
 describe("MeetingHistoryList", () => {
   it("renders updated fictional meetings newest-first with detail links", () => {
     const html = renderToStaticMarkup(
-      <MeetingHistoryList items={createMeetingHistoryFixture()} />,
+      <MeetingHistoryList criteria={DEFAULT_CRITERIA} result={result()} />,
     );
 
     expect(html).toContain('data-history-state="success"');
@@ -24,8 +42,8 @@ describe("MeetingHistoryList", () => {
       'href="/meetings/00000000-0000-4000-8000-000000000003"',
     );
     expect(html).toContain('dateTime="2026-08-12T10:30:00.000Z"');
-    expect(html).toContain("View record");
-    expect(html).toContain("Newest first");
+    expect(html).toContain("Open meeting");
+    expect(html).toContain("Sorted by date · newest first");
     expect([...html.matchAll(/href="([^"]+)"/g)].map((match) => match[1])).toEqual([
       "/meetings/00000000-0000-4000-8000-000000000003",
       "/meetings/00000000-0000-4000-8000-000000000001",
@@ -37,10 +55,46 @@ describe("MeetingHistoryList", () => {
   });
 
   it("renders a clear empty state instead of a blank list", () => {
-    const html = renderToStaticMarkup(<MeetingHistoryList items={[]} />);
+    const html = renderToStaticMarkup(
+      <MeetingHistoryList criteria={DEFAULT_CRITERIA} result={result([])} />,
+    );
 
     expect(html).toContain('data-feedback-state="empty"');
     expect(html).toContain("No meetings recorded");
+  });
+
+  it("renders filter-specific empty feedback and pagination links", () => {
+    const filteredCriteria = {
+      ...DEFAULT_CRITERIA,
+      page: 2,
+      search: "planning",
+      time: "past",
+    } as const;
+    const filteredEmptyHtml = renderToStaticMarkup(
+      <MeetingHistoryList
+        criteria={{ ...filteredCriteria, page: 1 }}
+        result={result([])}
+      />,
+    );
+    const pagedHtml = renderToStaticMarkup(
+      <MeetingHistoryList
+        criteria={filteredCriteria}
+        result={{
+          ...result(createMeetingHistoryFixture(), 24),
+          page: 2,
+          pageCount: 3,
+        }}
+      />,
+    );
+
+    expect(filteredEmptyHtml).toContain("No matching meetings");
+    expect(filteredEmptyHtml).toContain("Clear search and filters");
+    expect(pagedHtml).toContain(
+      'href="/meetings?q=planning&amp;time=past"',
+    );
+    expect(pagedHtml).toContain(
+      'href="/meetings?q=planning&amp;time=past&amp;page=3"',
+    );
   });
 
   it("formats meeting time using Australia/Sydney semantics", () => {
@@ -54,13 +108,14 @@ describe("MeetingHistoryList", () => {
 
   it("does not expose destructive controls", () => {
     const html = renderToStaticMarkup(
-      <MeetingHistoryPageView items={createMeetingHistoryFixture()} />,
+      <MeetingHistoryPageView
+        criteria={DEFAULT_CRITERIA}
+        result={result()}
+      />,
     );
 
     expect(html).not.toMatch(/>\s*(delete|archive)\b/i);
     expect(html).not.toMatch(/aria-label="[^"]*(delete|archive)/i);
-    expect(html).not.toContain("<button");
-    expect(html).not.toContain("<form");
     expect(html).not.toContain('data-method="delete"');
   });
 

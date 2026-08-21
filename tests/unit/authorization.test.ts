@@ -12,15 +12,31 @@ vi.mock("@/lib/supabase/server", () => ({
 
 import {
   AuthorizationError,
+  requireAccountAdmin,
   requireAuthorised,
   requireBackendUser,
 } from "@/lib/auth/authorization";
 
-function configureSupabase(role: unknown, userId = "fictional-user-id") {
+function configureSupabase(
+  role: unknown,
+  userId = "fictional-user-id",
+  options: Readonly<{
+    canManageAccounts?: boolean;
+    isActive?: boolean;
+  }> = {},
+) {
   const maybeSingle = vi.fn(async () =>
     role === null
       ? { data: null, error: null }
-      : { data: { committee_role: role }, error: null },
+      : {
+          data: {
+            can_manage_accounts: options.canManageAccounts ?? false,
+            committee_role: role,
+            display_name: "Alex Example",
+            is_active: options.isActive ?? true,
+          },
+          error: null,
+        },
   );
   const eq = vi.fn(() => ({ maybeSingle }));
   const select = vi.fn(() => ({ eq }));
@@ -49,6 +65,8 @@ describe("requireBackendUser", () => {
       const supabase = configureSupabase(role);
 
       await expect(requireBackendUser()).resolves.toEqual({
+        canManageAccounts: false,
+        displayName: "Alex Example",
         role,
         userId: "fictional-user-id",
       });
@@ -86,6 +104,14 @@ describe("requireBackendUser", () => {
       });
     },
   );
+
+  test("rejects an inactive profile even when its role is valid", async () => {
+    configureSupabase("committee", "fictional-user-id", { isActive: false });
+
+    await expect(requireBackendUser()).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+  });
 });
 
 describe("requireAuthorised", () => {
@@ -93,6 +119,8 @@ describe("requireAuthorised", () => {
     configureSupabase("authorised");
 
     await expect(requireAuthorised()).resolves.toEqual({
+      canManageAccounts: false,
+      displayName: "Alex Example",
       role: "authorised",
       userId: "fictional-user-id",
     });
@@ -106,6 +134,29 @@ describe("requireAuthorised", () => {
     );
     configureSupabase("committee");
     await expect(requireAuthorised()).rejects.toMatchObject({
+      code: "FORBIDDEN",
+    });
+  });
+});
+
+describe("requireAccountAdmin", () => {
+  test("returns the independently authorised account-management context", async () => {
+    configureSupabase("committee", "fictional-user-id", {
+      canManageAccounts: true,
+    });
+
+    await expect(requireAccountAdmin()).resolves.toEqual({
+      canManageAccounts: true,
+      displayName: "Alex Example",
+      role: "committee",
+      userId: "fictional-user-id",
+    });
+  });
+
+  test("does not treat participant-data access as account administration", async () => {
+    configureSupabase("authorised");
+
+    await expect(requireAccountAdmin()).rejects.toMatchObject({
       code: "FORBIDDEN",
     });
   });

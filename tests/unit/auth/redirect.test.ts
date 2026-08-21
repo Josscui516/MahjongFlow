@@ -14,6 +14,7 @@ describe("getSafeBackofficeRedirectPath", () => {
     ["/tasks/fictional-task-id", "/tasks/fictional-task-id"],
     ["/events/fictional-event-id", "/events/fictional-event-id"],
     ["/registrations", "/registrations"],
+    ["/admin/users", "/admin/users"],
     [
       "/attendance/fictional-event-id",
       "/attendance/fictional-event-id",

@@ -1,6 +1,7 @@
 import type {
   MeetingHistoryAccessPort,
-  MeetingHistoryItem,
+  MeetingHistoryCriteria,
+  MeetingHistoryPageResult,
   MeetingHistoryQueryPort,
   MeetingHistoryRole,
 } from "./contracts";
@@ -14,12 +15,13 @@ export type MeetingHistoryScreenState =
       status: "system-error";
     }>
   | Readonly<{
-      items: readonly MeetingHistoryItem[];
+      result: MeetingHistoryPageResult;
       role: MeetingHistoryRole;
       status: "ready";
     }>;
 
 type MeetingHistoryScreenDependencies = Readonly<{
+  criteria: MeetingHistoryCriteria;
   getAccess: MeetingHistoryAccessPort;
   queryHistory: MeetingHistoryQueryPort;
 }>;
@@ -29,6 +31,7 @@ type MeetingHistoryScreenDependencies = Readonly<{
  * adapt the existing auth guard to `getAccess` without duplicating auth logic.
  */
 export async function resolveMeetingHistoryScreen({
+  criteria,
   getAccess,
   queryHistory,
 }: MeetingHistoryScreenDependencies): Promise<MeetingHistoryScreenState> {
@@ -53,14 +56,14 @@ export async function resolveMeetingHistoryScreen({
   }
 
   try {
-    const history = await queryHistory();
+    const history = await queryHistory(criteria);
 
     if (!history.ok) {
       return { role: access.context.role, status: "system-error" };
     }
 
     return {
-      items: history.items,
+      result: history.result,
       role: access.context.role,
       status: "ready",
     };

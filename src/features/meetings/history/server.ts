@@ -35,13 +35,37 @@ async function resolveMeetingHistoryAccess(): Promise<MeetingHistoryAccessResult
 
 export const getMeetingHistoryAccess = cache(resolveMeetingHistoryAccess);
 
-export const queryMeetingHistory = createMeetingHistoryQuery(async () => {
-  const supabase = await createServerSupabaseClient();
-  const { data, error } = await supabase
-    .from("meetings")
-    .select(MEETING_HISTORY_COLUMNS)
-    .order("starts_at", { ascending: false })
-    .order("id", { ascending: true });
+function escapeIlikePattern(value: string) {
+  return value
+    .replaceAll("\\", "\\\\")
+    .replaceAll("%", "\\%")
+    .replaceAll("_", "\\_");
+}
 
-  return { data, error };
+export const queryMeetingHistory = createMeetingHistoryQuery(async (criteria) => {
+  const supabase = await createServerSupabaseClient();
+  let query = supabase
+    .from("meetings")
+    .select(MEETING_HISTORY_COLUMNS, { count: "exact" });
+
+  if (criteria.search) {
+    query = query.ilike("title", `%${escapeIlikePattern(criteria.search)}%`);
+  }
+
+  const now = new Date().toISOString();
+
+  if (criteria.time === "past") {
+    query = query.lt("starts_at", now);
+  } else if (criteria.time === "upcoming") {
+    query = query.gte("starts_at", now);
+  }
+
+  const rangeStart = (criteria.page - 1) * criteria.pageSize;
+  const rangeEnd = rangeStart + criteria.pageSize - 1;
+  const { count, data, error } = await query
+    .order("starts_at", { ascending: criteria.sort === "oldest" })
+    .order("id", { ascending: true })
+    .range(rangeStart, rangeEnd);
+
+  return { count, data, error };
 });

@@ -27,6 +27,16 @@ const FICTIONAL_ITEM = {
   title: "Fictional committee meeting",
 } as const;
 
+function pageResult(items = [FICTIONAL_ITEM], totalCount = items.length) {
+  return {
+    items,
+    page: 1,
+    pageCount: Math.max(1, Math.ceil(totalCount / 8)),
+    pageSize: 8,
+    totalCount,
+  };
+}
+
 describe("meetings history page", () => {
   beforeEach(() => {
     mocks.getMeetingHistoryAccess.mockReset();
@@ -74,8 +84,8 @@ describe("meetings history page", () => {
         ok: true,
       });
       mocks.queryMeetingHistory.mockResolvedValue({
-        items: [FICTIONAL_ITEM],
         ok: true,
+        result: pageResult(),
       });
 
       const html = renderToStaticMarkup(await MeetingsPage());
@@ -87,8 +97,76 @@ describe("meetings history page", () => {
         'href="/meetings/00000000-0000-4000-8000-000000000020"',
       );
       expect(html).not.toContain("00000000-0000-4000-8000-000000000021");
+      expect(mocks.queryMeetingHistory).toHaveBeenCalledWith({
+        page: 1,
+        pageSize: 8,
+        search: "",
+        sort: "newest",
+        time: "all",
+      });
     },
   );
+
+  it("passes normalised URL criteria to the server query", async () => {
+    mocks.getMeetingHistoryAccess.mockResolvedValue({
+      context: {
+        canManageAccounts: false,
+        role: "committee",
+        userId: "00000000-0000-4000-8000-000000000024",
+      },
+      ok: true,
+    });
+    mocks.queryMeetingHistory.mockResolvedValue({
+      ok: true,
+      result: pageResult(),
+    });
+
+    const html = renderToStaticMarkup(
+      await MeetingsPage({
+        searchParams: Promise.resolve({
+          page: "1",
+          q: "  planning ",
+          sort: "oldest",
+          time: "past",
+        }),
+      }),
+    );
+
+    expect(mocks.queryMeetingHistory).toHaveBeenCalledWith({
+      page: 1,
+      pageSize: 8,
+      search: "planning",
+      sort: "oldest",
+      time: "past",
+    });
+    expect(html).toContain('value="planning"');
+    expect(html).toContain("Sorted by date · oldest first");
+  });
+
+  it("redirects an out-of-range page while preserving active filters", async () => {
+    mocks.getMeetingHistoryAccess.mockResolvedValue({
+      context: {
+        canManageAccounts: false,
+        role: "committee",
+        userId: "00000000-0000-4000-8000-000000000025",
+      },
+      ok: true,
+    });
+    mocks.queryMeetingHistory.mockResolvedValue({
+      ok: true,
+      result: {
+        ...pageResult([FICTIONAL_ITEM], 12),
+        page: 9,
+        pageCount: 2,
+      },
+    });
+
+    await expect(
+      MeetingsPage({
+        searchParams: Promise.resolve({ page: "9", q: "planning" }),
+      }),
+    ).rejects.toThrow("NEXT_REDIRECT:/meetings?q=planning&page=2");
+  });
 
   it("renders the empty state", async () => {
     mocks.getMeetingHistoryAccess.mockResolvedValue({
@@ -98,7 +176,10 @@ describe("meetings history page", () => {
       },
       ok: true,
     });
-    mocks.queryMeetingHistory.mockResolvedValue({ items: [], ok: true });
+    mocks.queryMeetingHistory.mockResolvedValue({
+      ok: true,
+      result: pageResult([]),
+    });
 
     const html = renderToStaticMarkup(await MeetingsPage());
 

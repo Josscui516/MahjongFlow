@@ -31,6 +31,7 @@ export async function listMeetingAttendeeOptions(): Promise<MeetingAttendeeOptio
       .from("profiles")
       .select("id, display_name")
       .in("committee_role", ["committee", "authorised"])
+      .eq("is_active", true)
       .order("display_name")
       .order("id");
 

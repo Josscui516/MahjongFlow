@@ -1,4 +1,4 @@
-import type { MeetingHistoryItem } from "./contracts";
+import type { MeetingHistoryItem, MeetingHistorySort } from "./contracts";
 
 type MeetingHistoryRow = Readonly<{
   id: string;
@@ -40,8 +40,12 @@ function parseMeetingHistoryRow(value: unknown): MeetingHistoryRow {
 export function compareMeetingHistoryItems(
   left: MeetingHistoryItem,
   right: MeetingHistoryItem,
+  sort: MeetingHistorySort = "newest",
 ) {
-  const timeDifference = Date.parse(right.startsAt) - Date.parse(left.startsAt);
+  const timeDifference =
+    sort === "newest"
+      ? Date.parse(right.startsAt) - Date.parse(left.startsAt)
+      : Date.parse(left.startsAt) - Date.parse(right.startsAt);
 
   if (timeDifference !== 0) {
     return timeDifference;
@@ -60,12 +64,16 @@ export function compareMeetingHistoryItems(
 
 export function sortMeetingHistoryItems(
   items: readonly MeetingHistoryItem[],
+  sort: MeetingHistorySort = "newest",
 ): readonly MeetingHistoryItem[] {
-  return [...items].sort(compareMeetingHistoryItems);
+  return [...items].sort((left, right) =>
+    compareMeetingHistoryItems(left, right, sort),
+  );
 }
 
 export function projectMeetingHistoryRows(
   value: unknown,
+  sort: MeetingHistorySort = "newest",
 ): readonly MeetingHistoryItem[] {
   if (!Array.isArray(value)) {
     throw new TypeError("Invalid meeting history response");
@@ -82,5 +90,5 @@ export function projectMeetingHistoryRows(
     } satisfies MeetingHistoryItem;
   });
 
-  return sortMeetingHistoryItems(items);
+  return sortMeetingHistoryItems(items, sort);
 }

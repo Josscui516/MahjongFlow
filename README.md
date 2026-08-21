@@ -117,10 +117,10 @@ On PowerShell, use `Copy-Item .env.example .env.local`. `db:start` creates the l
 services. The initial `db:reset` then applies the repository migrations in order and loads the
 fictional seed data.
 
-The seed includes the shared local `authorised01@example.test` login. Its bcrypt password hash is
-stored in the seed, so the account remains available after every `db:reset`; the plaintext password
-is intentionally not stored in the repository. Obtain the shared password through the team's
-private development channel. This account is for local development only.
+The seed includes the single shared local `admin@mahjongflow.com` administrator login. Its bcrypt
+password hash is stored in the seed, so the account remains available after every `db:reset`; the
+plaintext password is intentionally not stored in the repository. Obtain the shared password through
+the team's private development channel. This account is for local development only.
 
 The default `db:start` command excludes the Supabase Vector log collector. On Windows, that
 collector requires Docker Desktop to expose the Docker daemon on unauthenticated TCP port 2375;

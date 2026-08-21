@@ -1,11 +1,15 @@
 import {
   MEETING_HISTORY_QUERY_ERROR,
+  type MeetingHistoryCriteria,
   type MeetingHistoryQueryPort,
 } from "./contracts";
 import { projectMeetingHistoryRows } from "./projection";
 
-export type MeetingHistoryRowLoader = () => Promise<
+export type MeetingHistoryRowLoader = (
+  criteria: MeetingHistoryCriteria,
+) => Promise<
   Readonly<{
+    count: number | null;
     data: unknown;
     error: unknown | null;
   }>
@@ -18,15 +22,24 @@ export type MeetingHistoryRowLoader = () => Promise<
 export function createMeetingHistoryQuery(
   loadRows: MeetingHistoryRowLoader,
 ): MeetingHistoryQueryPort {
-  return async () => {
+  return async (criteria) => {
     try {
-      const { data, error } = await loadRows();
+      const { count, data, error } = await loadRows(criteria);
 
-      if (error !== null) {
+      if (error !== null || count === null || count < 0) {
         return { error: MEETING_HISTORY_QUERY_ERROR, ok: false };
       }
 
-      return { items: projectMeetingHistoryRows(data), ok: true };
+      return {
+        ok: true,
+        result: {
+          items: projectMeetingHistoryRows(data, criteria.sort),
+          page: criteria.page,
+          pageCount: Math.max(1, Math.ceil(count / criteria.pageSize)),
+          pageSize: criteria.pageSize,
+          totalCount: count,
+        },
+      };
     } catch {
       return { error: MEETING_HISTORY_QUERY_ERROR, ok: false };
     }

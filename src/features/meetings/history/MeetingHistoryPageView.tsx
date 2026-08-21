@@ -6,18 +6,21 @@ import {
 } from "@/components/feedback";
 import { PageFrame } from "@/components/layout";
 
-import type { MeetingHistoryItem } from "./contracts";
+import type {
+  MeetingHistoryCriteria,
+  MeetingHistoryPageResult,
+} from "./contracts";
 import { MeetingHistoryList } from "./MeetingHistoryList";
 
 export const MEETING_HISTORY_DESCRIPTION =
-  "Review previous committee meetings and reopen their recorded details.";
+  "Find, review, and reopen committee meeting records.";
 
 export function MeetingHistoryPageHeader() {
   return (
     <header className="flex flex-col gap-6 border-b border-slate-200 pb-7 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0">
         <h1 className="text-3xl font-bold tracking-tight text-slate-950">
-          Meeting history
+          Meetings
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
           {MEETING_HISTORY_DESCRIPTION}
@@ -48,13 +51,17 @@ export function MeetingHistoryPageHeader() {
 }
 
 export function MeetingHistoryPageView({
-  items,
-}: Readonly<{ items: readonly MeetingHistoryItem[] }>) {
+  criteria,
+  result,
+}: Readonly<{
+  criteria: MeetingHistoryCriteria;
+  result: MeetingHistoryPageResult;
+}>) {
   return (
     <div className="space-y-6">
       <MeetingHistoryPageHeader />
       <section aria-label="Meeting history content" className="min-w-0">
-        <MeetingHistoryList items={items} />
+        <MeetingHistoryList criteria={criteria} result={result} />
       </section>
     </div>
   );
@@ -76,7 +83,7 @@ export function MeetingHistoryPermissionDeniedView() {
           }
         />
       }
-      title="Meeting history"
+      title="Meetings"
     >
       <p className="text-sm text-slate-600">
         No meeting information has been displayed.
@@ -91,8 +98,21 @@ export function MeetingHistorySystemErrorView({
   return (
     <PageFrame
       description={MEETING_HISTORY_DESCRIPTION}
-      feedbackSlot={<SystemErrorFeedback action={action} />}
-      title="Meeting history"
+      feedbackSlot={
+        <SystemErrorFeedback
+          action={
+            action ?? (
+              <a
+                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-rose-900 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-rose-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-700"
+                href=""
+              >
+                Try again
+              </a>
+            )
+          }
+        />
+      }
+      title="Meetings"
     >
       <p className="text-sm text-slate-600">
         No meeting information has been displayed.

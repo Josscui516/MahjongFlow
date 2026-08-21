@@ -3,6 +3,14 @@ import { describe, expect, it, vi } from "vitest";
 import { MEETING_HISTORY_QUERY_ERROR } from "./contracts";
 import { resolveMeetingHistoryScreen } from "./screen-state";
 
+const CRITERIA = {
+  page: 1,
+  pageSize: 8,
+  search: "",
+  sort: "newest",
+  time: "all",
+} as const;
+
 describe("meeting history screen state", () => {
   it.each(["unauthenticated", "forbidden"] as const)(
     "does not query meetings when access is %s",
@@ -10,6 +18,7 @@ describe("meeting history screen state", () => {
       const queryHistory = vi.fn();
 
       const state = await resolveMeetingHistoryScreen({
+        criteria: CRITERIA,
         getAccess: async () => ({ ok: false, reason }),
         queryHistory,
       });
@@ -31,22 +40,38 @@ describe("meeting history screen state", () => {
     } as const;
 
     const state = await resolveMeetingHistoryScreen({
+      criteria: CRITERIA,
       getAccess: async () => {
         order.push("access");
         return {
-          context: { role: "committee", userId: "fictional-user-id" },
+          context: { canManageAccounts: false, role: "committee", userId: "fictional-user-id" },
           ok: true,
         };
       },
       queryHistory: async () => {
         order.push("query");
-        return { items: [item], ok: true };
+        return {
+          ok: true,
+          result: {
+            items: [item],
+            page: 1,
+            pageCount: 1,
+            pageSize: 8,
+            totalCount: 1,
+          },
+        };
       },
     });
 
     expect(order).toEqual(["access", "query"]);
     expect(state).toEqual({
-      items: [item],
+      result: {
+        items: [item],
+        page: 1,
+        pageCount: 1,
+        pageSize: 8,
+        totalCount: 1,
+      },
       role: "committee",
       status: "ready",
     });
@@ -56,8 +81,9 @@ describe("meeting history screen state", () => {
 
   it("keeps an authenticated shell role while hiding failed query data", async () => {
     const state = await resolveMeetingHistoryScreen({
+      criteria: CRITERIA,
       getAccess: async () => ({
-        context: { role: "authorised", userId: "fictional-user-id" },
+        context: { canManageAccounts: false, role: "authorised", userId: "fictional-user-id" },
         ok: true,
       }),
       queryHistory: async () => ({
@@ -74,6 +100,7 @@ describe("meeting history screen state", () => {
     const queryHistory = vi.fn();
 
     const state = await resolveMeetingHistoryScreen({
+      criteria: CRITERIA,
       getAccess: async () => {
         throw new Error("provider detail");
       },

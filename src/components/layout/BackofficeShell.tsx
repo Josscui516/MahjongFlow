@@ -5,6 +5,7 @@ import type { BackofficeRole } from "./navigation";
 
 export type BackofficeShellProps = Readonly<{
   accountSlot?: ReactNode;
+  canManageAccounts?: boolean;
   children: ReactNode;
   currentPath?: string;
   role: BackofficeRole;
@@ -25,6 +26,7 @@ const ROLE_LABELS: Readonly<Record<BackofficeRole, string>> = {
  */
 export function BackofficeShell({
   accountSlot,
+  canManageAccounts,
   children,
   currentPath,
   role,
@@ -39,7 +41,11 @@ export function BackofficeShell({
         Skip to main content
       </a>
 
-      <AppNavigation currentPath={currentPath} role={role} />
+      <AppNavigation
+        canManageAccounts={canManageAccounts}
+        currentPath={currentPath}
+        role={role}
+      />
 
       <div className="md:pl-72">
         <header className="border-b border-slate-200 bg-white px-4 py-3 sm:px-6 lg:px-10">

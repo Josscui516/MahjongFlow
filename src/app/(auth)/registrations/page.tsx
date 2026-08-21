@@ -39,8 +39,11 @@ function RegistrationAccessFailure({
 }
 
 export default async function RegistrationsPage() {
+  let canManageAccounts = false;
+
   try {
-    await requireAuthorised();
+    const context = await requireAuthorised();
+    canManageAccounts = context.canManageAccounts;
   } catch (error) {
     if (error instanceof AuthorizationError) {
       if (error.code === "UNAUTHENTICATED") {
@@ -56,6 +59,7 @@ export default async function RegistrationsPage() {
   return (
     <BackofficeShell
       accountSlot={<span>Signed in</span>}
+      canManageAccounts={canManageAccounts}
       currentPath="/registrations"
       role="authorised"
       signOutSlot={<LogoutForm />}

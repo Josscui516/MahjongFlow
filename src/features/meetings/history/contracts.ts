@@ -5,12 +5,31 @@ export type MeetingHistoryItem = Readonly<{
   title: string;
 }>;
 
+export type MeetingHistoryTimeFilter = "all" | "past" | "upcoming";
+export type MeetingHistorySort = "newest" | "oldest";
+
+export type MeetingHistoryCriteria = Readonly<{
+  page: number;
+  pageSize: number;
+  search: string;
+  sort: MeetingHistorySort;
+  time: MeetingHistoryTimeFilter;
+}>;
+
+export type MeetingHistoryPageResult = Readonly<{
+  items: readonly MeetingHistoryItem[];
+  page: number;
+  pageCount: number;
+  pageSize: number;
+  totalCount: number;
+}>;
+
 export const MEETING_HISTORY_QUERY_ERROR =
   "MEETING_HISTORY_UNAVAILABLE" as const;
 
 export type MeetingHistoryQueryResult =
   | Readonly<{
-      items: readonly MeetingHistoryItem[];
+      result: MeetingHistoryPageResult;
       ok: true;
     }>
   | Readonly<{
@@ -18,13 +37,17 @@ export type MeetingHistoryQueryResult =
       ok: false;
     }>;
 
-export type MeetingHistoryQueryPort = () => Promise<MeetingHistoryQueryResult>;
+export type MeetingHistoryQueryPort = (
+  criteria: MeetingHistoryCriteria,
+) => Promise<MeetingHistoryQueryResult>;
 
 export type MeetingHistoryRole = "authorised" | "committee";
 
 export type MeetingHistoryAccessResult =
   | Readonly<{
       context: Readonly<{
+        canManageAccounts: boolean;
+        displayName?: string;
         role: MeetingHistoryRole;
         userId: string;
       }>;

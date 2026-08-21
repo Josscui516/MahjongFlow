@@ -49,6 +49,7 @@ export default async function BackofficePage() {
   return (
     <BackofficeShell
       accountSlot={<span>Signed in</span>}
+      canManageAccounts={context.canManageAccounts}
       role={context.role}
       signOutSlot={<LogoutForm />}
     >

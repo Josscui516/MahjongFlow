@@ -16,7 +16,7 @@ describe("meeting history route states", () => {
     expect(html).toContain('data-feedback-state="loading"');
     expect(html).toContain('data-loading-pattern="meeting-timeline"');
     expect(html).toContain('aria-busy="true"');
-    expect(html).toContain("Loading meeting history");
+    expect(html).toContain("Loading meetings");
     expect(html).toContain("motion-safe:animate-pulse");
   });
 

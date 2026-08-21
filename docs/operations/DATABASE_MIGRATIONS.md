@@ -66,3 +66,19 @@ direct pushes to `main` can otherwise trigger both a Vercel Production deploymen
 production migration.
 
 Reference: [Supabase GitHub integration](https://supabase.com/docs/guides/deployment/branching/github-integration).
+
+## 6. 账号管理 migration 部署与回退
+
+`20260821012217_add_account_management.sql` 增加 profile 的委员会职位、独立账号管理
+能力、有效状态、append-only 审计表以及四个窄管理 RPC。部署时必须先应用 migration，
+再发布引用新生成类型和新 RPC 的应用代码；随后配置 server-only
+`SUPABASE_SECRET_KEY`、`APP_BASE_URL` 与 Supabase Auth redirect allow-list。生产数据
+升级会把当时最早创建的一个 `authorised` profile 设为初始账号管理员；部署后必须由
+维护者核对该对象是否正确，再通过应用内受保护流程授权其他管理员。
+
+已发布后不应直接删除列、类型、RPC 或审计表，因为现有 profile、会议、任务和审计
+关系需要保留。回退应用时先撤下 `/admin/users` 与 Auth Admin 调用，保留新增 schema
+为向后兼容状态；随后用新的前向 migration 撤销函数执行权限并冻结管理写入。只有在
+确认没有新账号、角色／状态变更或审计依赖，且已备份相关表后，才能通过另一个经审查
+的 migration 删除结构。账号停用不删除 profile 或历史外键记录，恢复时同时解除 Auth
+ban 并把 `profiles.is_active` 恢复为 true。

@@ -41,14 +41,14 @@ describe("meeting core service", () => {
       },
       async get(id) { return store.get(id) ?? null; },
     });
-    const service = createMeetingService({ authorise: async () => ({ role: "committee", userId: actorId }), repository: memoryRepository });
+    const service = createMeetingService({ authorise: async () => ({ canManageAccounts: false, role: "committee", userId: actorId }), repository: memoryRepository });
     const created = await service.createMeeting(validInput);
     expect(created).toMatchObject({ ok: true, record: { id: meetingId } });
     expect(await service.getMeeting(meetingId)).toEqual(created);
   });
 
   test("M-02 rejects invalid input after authorisation but before persistence", async () => {
-    const authorise = vi.fn(async () => ({ role: "committee" as const, userId: actorId }));
+    const authorise = vi.fn(async () => ({ canManageAccounts: false, role: "committee" as const, userId: actorId }));
     const persistence = repository();
     const service = createMeetingService({ authorise, repository: persistence });
     const result = await service.createMeeting({ ...validInput, title: "" });
@@ -80,7 +80,7 @@ describe("meeting core service", () => {
 
   test("allows authorised users to update the attendee set", async () => {
     const persistence = repository();
-    const service = createMeetingService({ authorise: async () => ({ role: "authorised", userId: actorId }), repository: persistence });
+    const service = createMeetingService({ authorise: async () => ({ canManageAccounts: false, role: "authorised", userId: actorId }), repository: persistence });
     const result = await service.updateMeeting(meetingId, { ...validInput, attendeeIds: [otherAttendeeId] });
     expect(result).toMatchObject({ ok: true, record: { attendeeIds: [otherAttendeeId] } });
     expect(persistence.update).toHaveBeenCalledOnce();
@@ -88,7 +88,7 @@ describe("meeting core service", () => {
 
   test("returns NOT_FOUND when an update targets a missing meeting", async () => {
     const service = createMeetingService({
-      authorise: async () => ({ role: "committee", userId: actorId }),
+      authorise: async () => ({ canManageAccounts: false, role: "committee", userId: actorId }),
       repository: repository({ update: async () => null }),
     });
 
@@ -98,7 +98,7 @@ describe("meeting core service", () => {
   test("rejects malformed meeting identifiers before persistence", async () => {
     const persistence = repository();
     const service = createMeetingService({
-      authorise: async () => ({ role: "committee", userId: actorId }),
+      authorise: async () => ({ canManageAccounts: false, role: "committee", userId: actorId }),
       repository: persistence,
     });
 
@@ -111,7 +111,7 @@ describe("meeting core service", () => {
 
   test("maps a stale attendee selection to a safe field validation error", async () => {
     const service = createMeetingService({
-      authorise: async () => ({ role: "committee", userId: actorId }),
+      authorise: async () => ({ canManageAccounts: false, role: "committee", userId: actorId }),
       repository: repository({
         create: async () => { throw new MeetingRepositoryError("23503", "provider detail"); },
       }),
@@ -125,9 +125,9 @@ describe("meeting core service", () => {
   });
 
   test("returns stable history items and hides persistence failures", async () => {
-    const service = createMeetingService({ authorise: async () => ({ role: "committee", userId: actorId }), repository: repository() });
+    const service = createMeetingService({ authorise: async () => ({ canManageAccounts: false, role: "committee", userId: actorId }), repository: repository() });
     await expect(service.listMeetingHistory()).resolves.toMatchObject({ ok: true, items: [{ id: meetingId }] });
-    const failed = createMeetingService({ authorise: async () => ({ role: "committee", userId: actorId }), repository: repository({ get: async () => { throw new Error("provider detail"); } }) });
+    const failed = createMeetingService({ authorise: async () => ({ canManageAccounts: false, role: "committee", userId: actorId }), repository: repository({ get: async () => { throw new Error("provider detail"); } }) });
     await expect(failed.getMeeting(meetingId)).resolves.toEqual({ code: "SYSTEM_ERROR", ok: false });
   });
 });

@@ -54,7 +54,11 @@ export async function MeetingEditorRouteLayout({
   }
 
   return (
-    <MeetingRouteShell currentPath={currentPath} role={context.role}>
+    <MeetingRouteShell
+      canManageAccounts={context.canManageAccounts}
+      currentPath={currentPath}
+      role={context.role}
+    >
       {children}
     </MeetingRouteShell>
   );
