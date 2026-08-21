@@ -1,24 +1,19 @@
 -- Fictional, deterministic local development data for Issue #39.
--- These users have no password and no usable token. Do not run this seed remotely.
+-- The single local administrator has a bcrypt password hash; no plaintext password is stored.
+-- Do not run this seed remotely.
 
 begin;
 
 insert into auth.users (
   instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
-  confirmation_token, recovery_token, email_change,
+  confirmation_token, recovery_token, email_change, email_change_token_new,
   raw_app_meta_data, raw_user_meta_data, created_at, updated_at
 ) values
   (
     '00000000-0000-0000-0000-000000000000',
-    '11111111-1111-4111-8111-111111111111',
-    'authenticated', 'authenticated', 'committee01@example.test', null, now(),
-    '', '', '', '{"provider":"email","providers":["email"]}', '{}', now(), now()
-  ),
-  (
-    '00000000-0000-0000-0000-000000000000',
     '22222222-2222-4222-8222-222222222222',
-    'authenticated', 'authenticated', 'authorised01@example.test', null, now(),
-    '', '', '', '{"provider":"email","providers":["email"]}', '{}', now(), now()
+    'authenticated', 'authenticated', 'admin@mahjongflow.com', '$2a$06$5Of3AHEhCt6F3Fqu0Ce.xO4GjSp6OcnvTg5bfWIwi1EvYLVz5nC/e', now(),
+    '', '', '', '', '{"provider":"email","providers":["email"]}', '{}', now(), now()
   );
 
 insert into auth.identities (
@@ -26,23 +21,27 @@ insert into auth.identities (
   last_sign_in_at, created_at, updated_at
 ) values
   (
-    '11111111-1111-4111-8111-111111111112',
-    '11111111-1111-4111-8111-111111111111',
-    '11111111-1111-4111-8111-111111111111',
-    '{"sub":"11111111-1111-4111-8111-111111111111","email":"committee01@example.test"}',
-    'email', now(), now(), now()
-  ),
-  (
     '22222222-2222-4222-8222-222222222223',
     '22222222-2222-4222-8222-222222222222',
     '22222222-2222-4222-8222-222222222222',
-    '{"sub":"22222222-2222-4222-8222-222222222222","email":"authorised01@example.test"}',
+    '{"sub":"22222222-2222-4222-8222-222222222222","email":"admin@mahjongflow.com"}',
     'email', now(), now(), now()
   );
 
-insert into public.profiles (id, display_name, committee_role) values
-  ('11111111-1111-4111-8111-111111111111', 'Committee Tester', 'committee'),
-  ('22222222-2222-4222-8222-222222222222', 'Authorised Tester', 'authorised');
+insert into public.profiles (
+  id,
+  display_name,
+  committee_role,
+  committee_position,
+  can_manage_accounts
+) values
+  (
+    '22222222-2222-4222-8222-222222222222',
+    'Administrator',
+    'authorised',
+    'Administrator',
+    true
+  );
 
 insert into public.meetings (id, title, starts_at, summary, created_by) values
   (
@@ -53,7 +52,6 @@ insert into public.meetings (id, title, starts_at, summary, created_by) values
   );
 
 insert into public.meeting_attendees (meeting_id, profile_id) values
-  ('30000000-0000-4000-8000-000000000001', '11111111-1111-4111-8111-111111111111'),
   ('30000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222');
 
 insert into public.discussion_points (id, meeting_id, content, position) values
@@ -75,10 +73,10 @@ insert into public.tasks (
   id, title, description, assignee_id, due_date, status,
   source_meeting_id, source_decision_id, event_id, created_by
 ) values
-  ('50000000-0000-4000-8000-000000000001', 'Book the fictional room', 'Task created from the fictional decision.', '11111111-1111-4111-8111-111111111111', current_date + 3, 'not_started', '30000000-0000-4000-8000-000000000001', '32000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222'),
+  ('50000000-0000-4000-8000-000000000001', 'Book the fictional room', 'Task created from the fictional decision.', '22222222-2222-4222-8222-222222222222', current_date + 3, 'not_started', '30000000-0000-4000-8000-000000000001', '32000000-0000-4000-8000-000000000001', '40000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222'),
   ('50000000-0000-4000-8000-000000000002', 'Review old fictional notes', 'Independent overdue task.', '22222222-2222-4222-8222-222222222222', current_date - 1, 'not_started', null, null, null, '22222222-2222-4222-8222-222222222222'),
-  ('50000000-0000-4000-8000-000000000003', 'Prepare fictional score sheets', 'Independent due-soon task.', '11111111-1111-4111-8111-111111111111', current_date + 7, 'in_progress', null, null, '40000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222'),
-  ('50000000-0000-4000-8000-000000000004', 'Complete fictional setup', 'Completed event preparation task.', '11111111-1111-4111-8111-111111111111', current_date, 'completed', null, null, '40000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222');
+  ('50000000-0000-4000-8000-000000000003', 'Prepare fictional score sheets', 'Independent due-soon task.', '22222222-2222-4222-8222-222222222222', current_date + 7, 'in_progress', null, null, '40000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222'),
+  ('50000000-0000-4000-8000-000000000004', 'Complete fictional setup', 'Completed event preparation task.', '22222222-2222-4222-8222-222222222222', current_date, 'completed', null, null, '40000000-0000-4000-8000-000000000001', '22222222-2222-4222-8222-222222222222');
 
 insert into public.participants (id, full_name, email, student_id) values
   ('60000000-0000-4000-8000-000000000001', 'Participant Alpha', 'alpha@example.test', null),

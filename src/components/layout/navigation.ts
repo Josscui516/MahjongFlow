@@ -26,6 +26,11 @@ const SHARED_NAVIGATION_SECTION = {
   items: SHARED_NAVIGATION_ITEMS,
 } as const satisfies NavigationSection;
 
+const ACCOUNT_ADMINISTRATION_SECTION = {
+  label: "Administration",
+  items: [{ href: "/admin/users", label: "Accounts" }],
+} as const satisfies NavigationSection;
+
 /**
  * Returns navigation visibility for a role that has already been verified on
  * the server. This controls presentation only; it is not an authorisation
@@ -33,12 +38,19 @@ const SHARED_NAVIGATION_SECTION = {
  */
 export function getNavigationSections(
   role: BackofficeRole,
+  canManageAccounts = false,
 ): readonly NavigationSection[] {
+  const sections: NavigationSection[] = [SHARED_NAVIGATION_SECTION];
+
   if (role === "authorised") {
-    return [SHARED_NAVIGATION_SECTION, SENSITIVE_NAVIGATION_SECTION];
+    sections.push(SENSITIVE_NAVIGATION_SECTION);
   }
 
-  return [SHARED_NAVIGATION_SECTION];
+  if (canManageAccounts) {
+    sections.push(ACCOUNT_ADMINISTRATION_SECTION);
+  }
+
+  return sections;
 }
 
 export function isNavigationItemCurrent(

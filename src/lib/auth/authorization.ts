@@ -9,6 +9,8 @@ export type AuthenticatedUser = Readonly<{
 }>;
 
 export type AccessContext = Readonly<{
+  canManageAccounts: boolean;
+  displayName?: string;
   userId: string;
   role: BackendRole;
 }>;
@@ -27,11 +29,33 @@ export class AuthorizationError extends Error {
 
 type AuthorizationDependencies = Readonly<{
   getAuthenticatedUser: () => Promise<AuthenticatedUser | null>;
-  getRoleForUser: (userId: string) => Promise<unknown>;
+  getProfileAccessForUser: (userId: string) => Promise<unknown>;
+}>;
+
+type ProfileAccess = Readonly<{
+  canManageAccounts: boolean;
+  displayName: string;
+  isActive: boolean;
+  role: BackendRole;
 }>;
 
 function isBackendRole(value: unknown): value is BackendRole {
   return value === "committee" || value === "authorised";
+}
+
+function isProfileAccess(value: unknown): value is ProfileAccess {
+  if (!value || typeof value !== "object") {
+    return false;
+  }
+
+  const candidate = value as Record<string, unknown>;
+
+  return (
+    isBackendRole(candidate.role) &&
+    typeof candidate.canManageAccounts === "boolean" &&
+    typeof candidate.displayName === "string" &&
+    typeof candidate.isActive === "boolean"
+  );
 }
 
 async function createDefaultDependencies(): Promise<AuthorizationDependencies> {
@@ -50,10 +74,10 @@ async function createDefaultDependencies(): Promise<AuthorizationDependencies> {
 
       return { id: user.id };
     },
-    async getRoleForUser(userId) {
+    async getProfileAccessForUser(userId) {
       const { data, error } = await supabase
         .from("profiles")
-        .select("committee_role")
+        .select("committee_role, can_manage_accounts, display_name, is_active")
         .eq("id", userId)
         .maybeSingle();
 
@@ -61,7 +85,12 @@ async function createDefaultDependencies(): Promise<AuthorizationDependencies> {
         return null;
       }
 
-      return data.committee_role;
+      return {
+        canManageAccounts: data.can_manage_accounts,
+        displayName: data.display_name,
+        isActive: data.is_active,
+        role: data.committee_role,
+      };
     },
   };
 }
@@ -74,13 +103,18 @@ async function resolveAccessContext(): Promise<AccessContext> {
     throw new AuthorizationError("UNAUTHENTICATED");
   }
 
-  const role = await dependencies.getRoleForUser(user.id);
+  const profileAccess = await dependencies.getProfileAccessForUser(user.id);
 
-  if (!isBackendRole(role)) {
+  if (!isProfileAccess(profileAccess) || !profileAccess.isActive) {
     throw new AuthorizationError("FORBIDDEN");
   }
 
-  return { userId: user.id, role };
+  return {
+    canManageAccounts: profileAccess.canManageAccounts,
+    displayName: profileAccess.displayName,
+    userId: user.id,
+    role: profileAccess.role,
+  };
 }
 
 export async function requireBackendUser(): Promise<AccessContext> {
@@ -97,4 +131,16 @@ export async function requireAuthorised(): Promise<
   }
 
   return { ...context, role: "authorised" };
+}
+
+export async function requireAccountAdmin(): Promise<
+  AccessContext & Readonly<{ canManageAccounts: true }>
+> {
+  const context = await resolveAccessContext();
+
+  if (!context.canManageAccounts) {
+    throw new AuthorizationError("FORBIDDEN");
+  }
+
+  return { ...context, canManageAccounts: true };
 }

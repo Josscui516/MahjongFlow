@@ -58,6 +58,7 @@ describe("authentication proxy", () => {
     ["/registrations", true],
     ["/attendance/fictional-event-id", true],
     ["/dinner-verification/fictional-event-id", true],
+    ["/admin/users", true],
     ["/api/backoffice/session", true],
     ["/login", false],
     ["/check-in/fictional-token", false],
@@ -82,6 +83,7 @@ describe("authentication proxy", () => {
     "/registrations",
     "/attendance/fictional-event-id",
     "/dinner-verification/fictional-event-id",
+    "/admin/users",
   ])(
     "X-03 redirects an anonymous %s request to the constrained login path",
     async (path) => {

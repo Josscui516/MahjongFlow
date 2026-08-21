@@ -26,6 +26,7 @@ Next.js loads local environment files automatically. In development, a developer
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | Yes | HTTPS URL of the selected Supabase development project |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes | Yes | Low-privilege project key used by browser and user-session clients |
 | `SUPABASE_SECRET_KEY` | No | Never | Optional narrow server-only administration path that bypasses RLS |
+| `APP_BASE_URL` | When account management is enabled | Never | Canonical origin for invitation and password-recovery redirects; HTTPS outside local development |
 
 Only variables prefixed with `NEXT_PUBLIC_` may be read by Client Components. Next.js inlines
 those values into browser JavaScript at build time, so they must be treated as public.
@@ -42,9 +43,11 @@ After the dedicated Supabase development project is created:
 2. Open the project's API settings or Connect dialog;
 3. copy the project URL into `NEXT_PUBLIC_SUPABASE_URL` in `.env.local`;
 4. copy the publishable key into `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`;
-5. leave `SUPABASE_SECRET_KEY` empty unless an approved server-only workflow explicitly needs it;
-6. restart the Next.js development server after changing local values;
-7. run the step 5 connection check without printing any value.
+5. set `SUPABASE_SECRET_KEY` only for the approved account-management server runtime;
+6. set `APP_BASE_URL` to `http://localhost:3000` locally and the canonical HTTPS origin when deployed;
+7. allow `${APP_BASE_URL}/account/password` in Supabase Auth redirect URLs;
+8. restart the Next.js development server after changing local values;
+9. run the step 5 connection check without printing any value.
 
 Do not paste project values into Markdown, chat, Issue descriptions, Pull Requests, screenshots,
 test fixtures or committed configuration. Supabase CLI access tokens and database passwords are

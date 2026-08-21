@@ -123,6 +123,7 @@ export const config = {
     "/events/:path*",
     "/registrations/:path*",
     "/attendance/:path*",
+    "/admin/:path*",
     "/dinner-verification/:path*",
     "/api/backoffice/:path*",
   ],

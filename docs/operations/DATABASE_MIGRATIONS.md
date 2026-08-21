@@ -66,3 +66,32 @@ direct pushes to `main` can otherwise trigger both a Vercel Production deploymen
 production migration.
 
 Reference: [Supabase GitHub integration](https://supabase.com/docs/guides/deployment/branching/github-integration).
+
+## 6. 账号管理 migration 部署与回退
+
+`20260821012217_add_account_management.sql` 增加 profile 的委员会职位、独立账号管理
+能力、有效状态、append-only 审计表以及四个窄管理 RPC。部署时必须先应用 migration，
+再发布引用新生成类型和新 RPC 的应用代码；随后配置 server-only
+`SUPABASE_SECRET_KEY`、`APP_BASE_URL` 与 Supabase Auth redirect allow-list。生产数据
+升级会把当时最早创建的一个 `authorised` profile 设为初始账号管理员；部署后必须由
+维护者核对该对象是否正确，再通过应用内受保护流程授权其他管理员。
+
+已发布后不应直接删除列、类型、RPC 或审计表，因为现有 profile、会议、任务和审计
+关系需要保留。回退应用时先撤下 `/admin/users` 与 Auth Admin 调用，保留新增 schema
+为向后兼容状态；随后用新的前向 migration 撤销函数执行权限并冻结管理写入。只有在
+确认没有新账号、角色／状态变更或审计依赖，且已备份相关表后，才能通过另一个经审查
+的 migration 删除结构。账号停用不删除 profile 或历史外键记录，恢复时同时解除 Auth
+ban 并把 `profiles.is_active` 恢复为 true。
+
+## 7. 会议删除 migration 部署与回退
+
+`20260821060847_add_meeting_delete_boundary.sql` 增加仅后台用户可执行的窄函数
+`delete_meeting_record(uuid)`。函数删除会议主记录，并依赖既有外键级联删除参会关系、
+讨论点和关键决策；如果已有任务引用该会议，则返回 `linked_tasks` 并保留全部记录。
+应用代码必须在 migration 应用并重新生成数据库类型后发布。该 migration 不转换或
+删除已有数据，也不向 `authenticated` 授予会议表的直接 `DELETE` 权限。
+
+回退时先撤下应用中的删除入口，再通过新的前向 migration 撤销
+`delete_meeting_record(uuid)` 的执行权限并删除该函数，同时恢复上一版
+`prevent_last_meeting_attendee_delete()`。已经通过该功能删除的会议无法通过 schema
+回退恢复；上线前必须确认数据库备份和恢复流程可用，发生误删时只能从删除前备份恢复。

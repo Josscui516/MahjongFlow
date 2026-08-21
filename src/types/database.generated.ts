@@ -34,6 +34,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_management_audit: {
+        Row: {
+          action: Database["public"]["Enums"]["account_management_action"]
+          actor_profile_id: string
+          created_at: string
+          id: string
+          new_can_manage_accounts: boolean | null
+          new_is_active: boolean | null
+          new_role: Database["public"]["Enums"]["committee_role"] | null
+          previous_can_manage_accounts: boolean | null
+          previous_is_active: boolean | null
+          previous_role: Database["public"]["Enums"]["committee_role"] | null
+          target_profile_id: string
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["account_management_action"]
+          actor_profile_id: string
+          created_at?: string
+          id?: string
+          new_can_manage_accounts?: boolean | null
+          new_is_active?: boolean | null
+          new_role?: Database["public"]["Enums"]["committee_role"] | null
+          previous_can_manage_accounts?: boolean | null
+          previous_is_active?: boolean | null
+          previous_role?: Database["public"]["Enums"]["committee_role"] | null
+          target_profile_id: string
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["account_management_action"]
+          actor_profile_id?: string
+          created_at?: string
+          id?: string
+          new_can_manage_accounts?: boolean | null
+          new_is_active?: boolean | null
+          new_role?: Database["public"]["Enums"]["committee_role"] | null
+          previous_can_manage_accounts?: boolean | null
+          previous_is_active?: boolean | null
+          previous_role?: Database["public"]["Enums"]["committee_role"] | null
+          target_profile_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "account_management_audit_actor_profile_id_fkey"
+            columns: ["actor_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "account_management_audit_target_profile_id_fkey"
+            columns: ["target_profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       attendance_records: {
         Row: {
           attendance_status: Database["public"]["Enums"]["attendance_status"]
@@ -360,24 +417,33 @@ export type Database = {
       }
       profiles: {
         Row: {
+          can_manage_accounts: boolean
+          committee_position: string | null
           committee_role: Database["public"]["Enums"]["committee_role"]
           created_at: string
           display_name: string
           id: string
+          is_active: boolean
           updated_at: string
         }
         Insert: {
+          can_manage_accounts?: boolean
+          committee_position?: string | null
           committee_role: Database["public"]["Enums"]["committee_role"]
           created_at?: string
           display_name: string
           id: string
+          is_active?: boolean
           updated_at?: string
         }
         Update: {
+          can_manage_accounts?: boolean
+          committee_position?: string | null
           committee_role?: Database["public"]["Enums"]["committee_role"]
           created_at?: string
           display_name?: string
           id?: string
+          is_active?: boolean
           updated_at?: string
         }
         Relationships: []
@@ -536,9 +602,108 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_managed_profile: {
+        Args: {
+          target_can_manage_accounts?: boolean
+          target_committee_position?: string
+          target_display_name: string
+          target_profile_id: string
+          target_role: Database["public"]["Enums"]["committee_role"]
+        }
+        Returns: undefined
+      }
+      create_meeting_record: {
+        Args: {
+          attendee_ids: string[]
+          meeting_starts_at: string
+          meeting_summary: string
+          meeting_title: string
+        }
+        Returns: string
+      }
+      delete_meeting_record: {
+        Args: { target_meeting_id: string }
+        Returns: string
+      }
+      get_check_in_context: {
+        Args: { check_in_token: string }
+        Returns: {
+          event_id: string
+          event_name: string
+          location: string
+          result: string
+          starts_at: string
+          student_id_required: boolean
+          window_status: string
+        }[]
+      }
+      get_event_participation_totals: {
+        Args: { event_ids: string[] }
+        Returns: {
+          attendance_count: number
+          event_id: string
+          registration_count: number
+        }[]
+      }
+      record_account_recovery_sent: {
+        Args: { target_profile_id: string }
+        Returns: undefined
+      }
+      rotate_event_check_in_token: {
+        Args: { actor_id: string; target_event_id: string }
+        Returns: {
+          created_at: string
+          token: string
+        }[]
+      }
+      save_meeting_agenda: {
+        Args: {
+          decision_items: Json
+          discussion_items: Json
+          target_meeting_id: string
+        }
+        Returns: undefined
+      }
+      set_managed_profile_active: {
+        Args: { target_is_active: boolean; target_profile_id: string }
+        Returns: undefined
+      }
+      submit_event_check_in: {
+        Args: {
+          check_in_token: string
+          participant_email: string
+          participant_student_id?: string
+        }
+        Returns: string
+      }
+      update_managed_profile: {
+        Args: {
+          target_can_manage_accounts?: boolean
+          target_committee_position?: string
+          target_display_name: string
+          target_profile_id: string
+          target_role: Database["public"]["Enums"]["committee_role"]
+        }
+        Returns: undefined
+      }
+      update_meeting_record: {
+        Args: {
+          attendee_ids: string[]
+          meeting_id: string
+          meeting_starts_at: string
+          meeting_summary: string
+          meeting_title: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      account_management_action:
+        | "invited"
+        | "profile_updated"
+        | "disabled"
+        | "reactivated"
+        | "recovery_sent"
       attendance_status: "confirmed" | "voided"
       check_in_method: "qr" | "manual"
       committee_role: "committee" | "authorised"
@@ -676,6 +841,13 @@ export const Constants = {
   },
   public: {
     Enums: {
+      account_management_action: [
+        "invited",
+        "profile_updated",
+        "disabled",
+        "reactivated",
+        "recovery_sent",
+      ],
       attendance_status: ["confirmed", "voided"],
       check_in_method: ["qr", "manual"],
       committee_role: ["committee", "authorised"],

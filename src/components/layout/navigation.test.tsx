@@ -38,6 +38,17 @@ describe("role-aware navigation", () => {
     ]);
   });
 
+  it("adds account administration independently from the data role", () => {
+    expect(getNavigationSections("committee", true)).toContainEqual({
+      label: "Administration",
+      items: [{ href: "/admin/users", label: "Accounts" }],
+    });
+    expect(getNavigationSections("authorised", false)).not.toContainEqual({
+      label: "Administration",
+      items: [{ href: "/admin/users", label: "Accounts" }],
+    });
+  });
+
   it("never exposes context-only attendance or dinner destinations", () => {
     const allNavigation = JSON.stringify([
       ...getNavigationSections("committee"),

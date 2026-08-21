@@ -63,7 +63,7 @@ Foundation 与共享支撑 Epic #1 以及 Enabler #9–#11、#39–#41 映射 `U
 | `Story ID` | 追踪到六个规范 User Stories |
 | `Item Type` | `Epic`、`User Story`、`Enabler`、`Bug` |
 | `Sprint` | 团队已经明确承诺进入哪个 Sprint |
-| `Acceptance Gate` | 从 Issue 的 Acceptance criteria checkbox 派生：`Not checked`、`Incomplete`、`Passed` |
+| `Acceptance Gate` | Joshua 对照 Issue 的 Acceptance criteria checkbox 手动维护：`Not checked`、`Incomplete`、`Passed` |
 
 `Target Development Week` 是预测，`Sprint` 是承诺，两者不可互相替代。
 未完成 Sprint planning 的项目不预填未来 Sprint，以免把路线图错误表达为承诺。
@@ -96,11 +96,11 @@ Foundation 与共享支撑 Epic #1 以及 Enabler #9–#11、#39–#41 映射 `U
 5. PR 可审查后进入 `Review`；非作者批准后进入 `Testing`；验收、检查、文档、合并和必要部署完成后才能进入 `Done`。
 6. 范围、角色、权限、Schema 或架构变化必须先更新对应权威文档；新需求默认进入 Post-MVP Backlog。
 7. Sprint 中途新增工作时，应记录原因并明确移入或移出项，避免静默扩大承诺范围。
-8. `Backlog → Ready` 由团队在 refinement 后手动确认；其余状态由
-   [GitHub Project 自动化](../operations/GITHUB_PROJECT_AUTOMATION.md) 按分支、PR、
-   独立审查、CI、验收条件和 WIP 门禁推进，不得手动跳过中间状态。
+8. 所有 Project 成员和字段均由 Joshua 按
+   [GitHub Project 手动维护规则](../operations/GITHUB_PROJECT_AUTOMATION.md) 更新；每次状态变化前核对分支、PR、
+   独立审查、CI、验收条件和 WIP 门禁，不得跳过中间状态。
 9. 每个 Sprint 只有一个 `sprint/<number>-<theme>` 集成分支。成员 PR 进入该分支并让 Issue 保持 `Testing`；统一周计划指定一个现有集成／验收 Issue作为 Sprint 总 PR 的唯一主要 Issue。
-10. Sprint 总 PR 从集成分支进入 `main`，并列出其余工作包 Issues。主要 Issue 与纳入 Issues 的集合必须与 Project `Sprint` 字段中的完整成员一致；PR 正文不得成为 Sprint 成员事实源。只有总 PR 合并后，自动化才将同一 Sprint 中已通过验收的纳入项更新为 `Done`。
+10. Sprint 总 PR 从集成分支进入 `main`，并列出其余工作包 Issues。主要 Issue 与纳入 Issues 的集合必须与 Project `Sprint` 字段中的完整成员一致；PR 正文不得成为 Sprint 成员事实源。只有总 PR 合并且验收证据复核通过后，Joshua 才手动将同一 Sprint 的纳入项更新为 `Done`。
 11. Sprint 总 PR 的 Issue 引用发生编辑时必须重新校验成员集合并返回 `Review`；批量完成必须可重试，允许已为 `Done` 的成员继续参与恢复。
 12. Review 发现必须先判断是否由当前 PR 引入并属于主要 Issue、文件所有权或冻结输出合同；其他工作包缺陷回到对应 Issue，不通过当前作者越界修复。
 
@@ -120,6 +120,6 @@ Foundation 与共享支撑 Epic #1 以及 Enabler #9–#11、#39–#41 映射 `U
 原先 #9–#37 对 `Josscui516` 的批量初始分配已清除；Sprint 2 的五个独立工作包
 分别分配给 #9、#39、#40、#11、#41；#10 由 Joshua 负责上层协调，但不作为第六个个人工作包。
 未来工作在进入对应 Sprint planning 前保持
-未分配，避免把路线图预测误写成个人承诺。Acceptance Gate 已在 Product
-Backlog、Current Sprint 和 Kanban 卡片中显示；8 个 Epic 因不使用该标题为
-`Not checked`，32 个实施／支撑 Issue 当前均有未完成验收项，因此为 `Incomplete`。
+未分配，避免把路线图预测误写成个人承诺。Acceptance Gate 继续显示在 Product
+Backlog、Current Sprint 和 Kanban 卡片中，但自 Sprint 3 起由 Joshua 对照 Issue
+验收 checkbox 手动维护，不再由仓库或 Project workflow 派生。

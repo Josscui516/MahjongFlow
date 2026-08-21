@@ -7,6 +7,7 @@ import {
 } from "./navigation";
 
 export type AppNavigationProps = Readonly<{
+  canManageAccounts?: boolean;
   currentPath?: string;
   role: BackofficeRole;
 }>;
@@ -19,11 +20,12 @@ type NavigationLinksProps = AppNavigationProps &
 
 function NavigationLinks({
   ariaLabel,
+  canManageAccounts,
   currentPath,
   idPrefix,
   role,
 }: NavigationLinksProps) {
-  const sections = getNavigationSections(role);
+  const sections = getNavigationSections(role, canManageAccounts);
 
   return (
     <nav aria-label={ariaLabel} className="space-y-7">
@@ -74,7 +76,11 @@ function NavigationLinks({
   );
 }
 
-export function AppNavigation({ currentPath, role }: AppNavigationProps) {
+export function AppNavigation({
+  canManageAccounts,
+  currentPath,
+  role,
+}: AppNavigationProps) {
   return (
     <>
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-72 border-r border-slate-200 bg-white px-5 py-7 md:block">
@@ -92,6 +98,7 @@ export function AppNavigation({ currentPath, role }: AppNavigationProps) {
 
         <NavigationLinks
           ariaLabel="Desktop navigation"
+          canManageAccounts={canManageAccounts}
           currentPath={currentPath}
           idPrefix="desktop-navigation"
           role={role}
@@ -114,6 +121,7 @@ export function AppNavigation({ currentPath, role }: AppNavigationProps) {
             <div className="absolute right-0 z-30 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">
               <NavigationLinks
                 ariaLabel="Mobile navigation"
+                canManageAccounts={canManageAccounts}
                 currentPath={currentPath}
                 idPrefix="mobile-navigation"
                 role={role}

@@ -6,7 +6,6 @@ type FeedbackPanelProps = Readonly<{
   action?: ReactNode;
   busy?: boolean;
   description: string;
-  eyebrow: string;
   live: "assertive" | "polite";
   role: "alert" | "status";
   state: FeedbackState;
@@ -14,26 +13,57 @@ type FeedbackPanelProps = Readonly<{
 }>;
 
 const STATE_STYLES: Readonly<Record<FeedbackState, string>> = {
-  empty: "border-slate-300 bg-white text-slate-900",
-  error: "border-rose-300 bg-rose-50 text-rose-950",
-  loading: "border-sky-300 bg-sky-50 text-sky-950",
-  permission: "border-amber-300 bg-amber-50 text-amber-950",
-  success: "border-emerald-300 bg-emerald-50 text-emerald-950",
+  empty: "bg-slate-100 text-slate-700 ring-slate-200",
+  error: "bg-rose-50 text-rose-700 ring-rose-200",
+  loading: "bg-sky-50 text-sky-700 ring-sky-200",
+  permission: "bg-amber-50 text-amber-800 ring-amber-200",
+  success: "bg-emerald-50 text-emerald-700 ring-emerald-200",
 };
 
-const STATE_MARKS: Readonly<Record<FeedbackState, string>> = {
-  empty: "—",
-  error: "!",
-  loading: "…",
-  permission: "!",
-  success: "✓",
-};
+function StateIcon({ state }: Readonly<{ state: FeedbackState }>) {
+  if (state === "loading") {
+    return (
+      <span className="relative grid size-4 place-items-center">
+        <span className="absolute size-4 rounded-full bg-current opacity-20 motion-safe:animate-ping" />
+        <span className="relative size-2 rounded-full bg-current" />
+      </span>
+    );
+  }
+
+  return (
+    <svg className="size-5" fill="none" viewBox="0 0 24 24">
+      {state === "success" ? (
+        <path
+          d="m7 12 3 3 7-7"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+      ) : state === "empty" ? (
+        <path
+          d="M5 8h14M7 12h10M9 16h6"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="2"
+        />
+      ) : (
+        <path
+          d="M12 8v4m0 4h.01M10.3 4.8 3.4 17a2 2 0 0 0 1.7 3h13.8a2 2 0 0 0 1.7-3L13.7 4.8a2 2 0 0 0-3.4 0Z"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+      )}
+    </svg>
+  );
+}
 
 function FeedbackPanel({
   action,
   busy,
   description,
-  eyebrow,
   live,
   role,
   state,
@@ -46,26 +76,29 @@ function FeedbackPanel({
       aria-busy={busy || undefined}
       aria-labelledby={titleId}
       aria-live={live}
-      className={`rounded-2xl border p-4 sm:p-5 ${STATE_STYLES[state]}`}
+      className="rounded-2xl border border-slate-200 bg-white p-5 text-slate-950 shadow-sm sm:p-6"
       data-feedback-state={state}
       role={role}
     >
       <div className="flex items-start gap-3">
         <span
           aria-hidden="true"
-          className="grid size-8 shrink-0 place-items-center rounded-full border border-current text-sm font-bold"
+          className={`grid size-10 shrink-0 place-items-center rounded-xl ring-1 ring-inset ${STATE_STYLES[state]}`}
         >
-          {STATE_MARKS[state]}
+          <StateIcon state={state} />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-bold uppercase tracking-[0.14em]">
-            {eyebrow}
-          </p>
-          <h2 className="mt-1 text-base font-semibold" id={titleId}>
+          <h2 className="text-base font-semibold text-slate-950" id={titleId}>
             {title}
           </h2>
-          <p className="mt-1 text-sm leading-6 opacity-85">{description}</p>
-          {action ? <div className="mt-4">{action}</div> : null}
+          <p className="mt-1.5 max-w-2xl text-sm leading-6 text-slate-600">
+            {description}
+          </p>
+          {action ? (
+            <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
+              {action}
+            </div>
+          ) : null}
         </div>
       </div>
     </section>
@@ -85,7 +118,6 @@ export function LoadingFeedback({
     <FeedbackPanel
       busy
       description={description}
-      eyebrow="In progress"
       live="polite"
       role="status"
       state="loading"
@@ -109,7 +141,6 @@ export function EmptyFeedback({
     <FeedbackPanel
       action={action}
       description={description}
-      eyebrow="Empty"
       live="polite"
       role="status"
       state="empty"
@@ -133,7 +164,6 @@ export function SuccessFeedback({
     <FeedbackPanel
       action={action}
       description={message}
-      eyebrow="Success"
       live="polite"
       role="status"
       state="success"
@@ -152,7 +182,6 @@ export function SystemErrorFeedback({ action }: SystemErrorFeedbackProps) {
     <FeedbackPanel
       action={action}
       description="We could not complete the request. Try again, and contact the committee if the problem continues."
-      eyebrow="System error"
       live="assertive"
       role="alert"
       state="error"
@@ -173,7 +202,6 @@ export function PermissionDeniedFeedback({
     <FeedbackPanel
       action={backAction}
       description="This page is not available to your account. Return to a page you can access or contact the committee if you need help."
-      eyebrow="Permission denied"
       live="assertive"
       role="alert"
       state="permission"

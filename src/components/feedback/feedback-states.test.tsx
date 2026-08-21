@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 
@@ -9,8 +10,39 @@ import {
   SuccessFeedback,
   SystemErrorFeedback,
 } from "./FeedbackStates";
+import { RouteErrorFeedback, RouteLoadingStatus } from "./RouteState";
 
 describe("shared feedback states", () => {
+  it("renders the shared route loading status with motion-safe progress", () => {
+    const html = renderToStaticMarkup(
+      <RouteLoadingStatus
+        description="preparing the latest information."
+        title="Loading workspace"
+      />,
+    );
+
+    expect(html).toContain('data-route-loading-status="true"');
+    expect(html).toContain('role="status"');
+    expect(html).toContain('aria-live="polite"');
+    expect(html).toContain("motion-safe:animate-ping");
+  });
+
+  it("renders a safe, responsive route recovery panel", () => {
+    const html = renderToStaticMarkup(
+      <RouteErrorFeedback
+        actions={<button type="button">Try again</button>}
+        description="The fictional workspace could not be loaded."
+        title="Workspace unavailable"
+      />,
+    );
+
+    expect(html).toContain('data-feedback-state="error"');
+    expect(html).toContain('role="alert"');
+    expect(html).toContain("Recovery options");
+    expect(html).toContain("Try again");
+    expect(html).toContain("No confirmed changes were made.");
+  });
+
   it("renders a non-blank, polite loading status", () => {
     const html = renderToStaticMarkup(
       <LoadingFeedback title="Loading meetings" />,
@@ -27,7 +59,7 @@ describe("shared feedback states", () => {
   it("renders a clear empty state and recovery action", () => {
     const html = renderToStaticMarkup(
       <EmptyFeedback
-        action={<a href="/meetings/new">Create a meeting</a>}
+        action={<Link href="/meetings/new">Create a meeting</Link>}
         description="No meetings have been recorded."
         title="No meetings"
       />,
@@ -46,7 +78,7 @@ describe("shared feedback states", () => {
 
     expect(html).toContain('data-feedback-state="success"');
     expect(html).toContain('role="status"');
-    expect(html).toContain("Success");
+    expect(html).toContain("Changes saved");
     expect(html).toContain("The fictional meeting was saved.");
   });
 
@@ -58,7 +90,7 @@ describe("shared feedback states", () => {
     expect(html).toContain('data-feedback-state="error"');
     expect(html).toContain('role="alert"');
     expect(html).toContain('aria-live="assertive"');
-    expect(html).toContain("System error");
+    expect(html).toContain("Something went wrong");
     expect(html).toContain("Try again");
     expect(html).not.toContain("SQL");
     expect(html).not.toContain("participant@");
@@ -74,12 +106,12 @@ describe("shared feedback states", () => {
 
     expect(html).toContain('data-feedback-state="permission"');
     expect(html).toContain('role="alert"');
-    expect(html).toContain("Permission denied");
+    expect(html).toContain("You cannot access this page");
     expect(html).toContain("Return to events");
     expect(html).not.toContain(protectedDetail);
   });
 
-  it("gives every acceptance state a distinct visible text label", () => {
+  it("gives every acceptance state a distinct visible title", () => {
     const htmlByState = [
       renderToStaticMarkup(<LoadingFeedback />),
       renderToStaticMarkup(<EmptyFeedback />),
@@ -98,11 +130,11 @@ describe("shared feedback states", () => {
       "error",
       "permission",
     ]);
-    expect(htmlByState[0]).toContain("In progress");
-    expect(htmlByState[1]).toContain("Empty");
-    expect(htmlByState[2]).toContain("Success");
-    expect(htmlByState[3]).toContain("System error");
-    expect(htmlByState[4]).toContain("Permission denied");
+    expect(htmlByState[0]).toContain("Loading");
+    expect(htmlByState[1]).toContain("No results");
+    expect(htmlByState[2]).toContain("Changes saved");
+    expect(htmlByState[3]).toContain("Something went wrong");
+    expect(htmlByState[4]).toContain("You cannot access this page");
     expect(htmlByState.every((html) => /<h2[^>]*>.+<\/h2>/.test(html))).toBe(
       true,
     );

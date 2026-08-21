@@ -49,17 +49,34 @@ export function AuthErrorFeedback({ code }: AuthErrorFeedbackProps) {
     <section
       aria-labelledby={titleId}
       aria-live="assertive"
-      className="rounded-2xl border border-rose-300 bg-rose-50 p-4 text-rose-950"
+      className="rounded-2xl border border-slate-200 bg-white p-5 text-slate-950 shadow-sm"
       data-feedback-state="error"
       role="alert"
     >
-      <p className="text-xs font-bold uppercase tracking-[0.14em]">
-        Authentication error
-      </p>
-      <h2 className="mt-1 font-semibold" id={titleId}>
-        {copy.title}
-      </h2>
-      <p className="mt-1 text-sm leading-6">{copy.message}</p>
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden="true"
+          className="grid size-10 shrink-0 place-items-center rounded-xl bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200"
+        >
+          <svg className="size-5" fill="none" viewBox="0 0 24 24">
+            <path
+              d="M12 8v4m0 4h.01M10.3 4.8 3.4 17a2 2 0 0 0 1.7 3h13.8a2 2 0 0 0 1.7-3L13.7 4.8a2 2 0 0 0-3.4 0Z"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="2"
+            />
+          </svg>
+        </span>
+        <div className="min-w-0 flex-1">
+          <h2 className="font-semibold" id={titleId}>
+            {copy.title}
+          </h2>
+          <p className="mt-1.5 text-sm leading-6 text-slate-600">
+            {copy.message}
+          </p>
+        </div>
+      </div>
     </section>
   );
 }

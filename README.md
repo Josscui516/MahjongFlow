@@ -4,7 +4,7 @@
 
 - **Course:** FIT3162 Computer Science Project
 - **Team:** S1_CS_01
-- **Stage:** Week 1 accepted with recorded reservations; Week 2 foundation work is ready
+- **Stage:** Sprint 2 is merged to `main`; Sprint 3 meeting management is integrated and awaiting Sprint acceptance
 - **Project board:** [MahjongFlow MVP GitHub Project](https://github.com/users/Josscui516/projects/5)
 
 ## Overview
@@ -15,13 +15,16 @@ MahjongFlow connects the club's operational workflow:
 Meeting → Decision → Task → Event → Registration → Check-in → Dinner verification
 ```
 
-The MVP provides:
+The delivered and integrated baseline currently includes:
 
-- committee authentication with predefined `committee` and `authorised` roles;
-- traceable meetings, decisions, tasks, deadlines, and dashboard summaries;
-- weekly session and tournament planning with authorised registration management;
-- event-specific QR check-in with window and duplicate protection;
-- attendance-derived dinner eligibility for authorised users.
+- protected committee authentication with predefined `committee` and `authorised` roles;
+- server-side authorisation, Supabase RLS, shared backoffice navigation, and safe UI feedback states;
+- validated meeting creation, detail, update, and deterministic history flows;
+- ordered discussion points and key decisions with atomic PostgreSQL persistence;
+- fictional local seed data, repeatable migrations, permission tests, and acceptance-test infrastructure.
+
+Task management, event preparation, registration, QR check-in, attendance, and dinner eligibility
+remain approved MVP roadmap work; they are not yet part of the current delivered baseline.
 
 The approved scope and exclusions are defined in the [MVP project proposal](docs/project/MVP_PROJECT_PROPOSAL.md).
 
@@ -49,12 +52,26 @@ defines their Project field and Issue mappings.
 
 ## Current status
 
-Week 1 has established the approved scope, backlog, interface and data design, runnable application
-scaffold, Supabase connection, migration baseline, Production and protected Preview deployments,
-quality CI, and new-member setup guide. Local and deployed health checks pass, and all six Sprint 2
-items are `Ready`; #10 remains a coordination Enabler rather than a sixth personal work package.
+Sprint 2 was merged to `main` through Sprint PR #52. It established the authenticated backoffice,
+the `committee` and `authorised` role model, protected route and service boundaries, the core MVP
+schema and RLS policies, shared loading/error/form states, repeatable local migrations, and the
+integrated quality pipeline.
 
-Production: [mahjong-flow.vercel.app](https://mahjong-flow.vercel.app)
+Sprint 3 meeting-management work packages #12, #13, #56, and #14 have been merged into
+`sprint/3-meeting-management` through PRs #61, #59, #58, and #57. The integration branch supports
+meeting creation, refresh-safe detail and update flows, ordered discussion points and decisions,
+deterministic meeting history, anonymous denial, and a non-destructive meeting boundary. Atomic
+meeting and agenda writes are delivered through timestamped Supabase migrations and authenticated
+security-invoker RPCs.
+
+The current local integration passes lint, typecheck, 206 application tests, 120 acceptance tests,
+222 database assertions, database concurrency checks, database lint and drift checks, a production
+build, and an authenticated Chrome create/edit/agenda/history flow using fictional data. Sprint 3 is
+not yet complete: Epic #2 and child Issues #12, #13, #14, and #56 remain open, the Sprint-level US-01
+acceptance record is still pending, and the Sprint integration branch has not been merged to `main`.
+
+Production (current `main` / Sprint 2 baseline):
+[mahjong-flow.vercel.app](https://mahjong-flow.vercel.app)
 
 ## Technology
 
@@ -73,8 +90,8 @@ The lockfile fixes Next.js `16.3.0`, React `19.2.8` and the compatible toolchain
 
 - Git and repository read access;
 - Node.js `24.x` and npm `11.16.0`;
-- access to the MahjongFlow Supabase project for its public URL and publishable key;
-- Docker Desktop only for local database work;
+- Docker Desktop for the local Supabase development stack;
+- access to the hosted MahjongFlow Supabase project only for shared integration or deployment work;
 - Vercel project access only for deployment administration.
 
 Use the committed `.nvmrc`, npm and `package-lock.json`; do not add another package manager or
@@ -82,27 +99,68 @@ lockfile.
 
 ## Quick start
 
+### First local setup
+
+Before starting, install the Node.js and npm versions listed in Prerequisites, install Docker
+Desktop, and make sure Docker Desktop is running.
+
 ```bash
 git clone https://github.com/Josscui516/MahjongFlow.git
 cd MahjongFlow
 npm ci
 cp .env.example .env.local
+npm run db:start
+npm run db:reset
 ```
 
-On PowerShell, use `Copy-Item .env.example .env.local`. Add the following public project values
-from Supabase **Connect** or **Project Settings → API Keys**:
+On PowerShell, use `Copy-Item .env.example .env.local`. `db:start` creates the local Supabase
+services. The initial `db:reset` then applies the repository migrations in order and loads the
+fictional seed data.
+
+The seed includes the single shared local `admin@mahjongflow.com` administrator login. Its bcrypt
+password hash is stored in the seed, so the account remains available after every `db:reset`; the
+plaintext password is intentionally not stored in the repository. Obtain the shared password through
+the team's private development channel. This account is for local development only.
+
+The default `db:start` command excludes the Supabase Vector log collector. On Windows, that
+collector requires Docker Desktop to expose the Docker daemon on unauthenticated TCP port 2375;
+without it, the container repeatedly restarts. Excluding this logging-only service does not disable
+PostgreSQL, Auth, REST, Realtime, Storage, Studio, or PostgreSQL vector capabilities.
+
+Run `npx supabase status` to view the local API URL and publishable key, then add the corresponding
+values to the Git-ignored `.env.local` file:
 
 ```dotenv
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=
+NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY=<local publishable key shown by npx supabase status>
+SUPABASE_SECRET_KEY=
 ```
 
-Leave `SUPABASE_SECRET_KEY` empty unless a reviewed server-only workflow requires it. Then start
-the application:
+Do not copy or commit the secret/service-role key, database password, or connection strings shown
+by `supabase status`. Leave `SUPABASE_SECRET_KEY` empty by default. After completing the local
+configuration, start the application:
 
 ```bash
 npm run dev
 ```
+
+### Start an existing local setup
+
+Make sure Docker Desktop is running, then run the following commands from the existing checkout:
+
+```bash
+cd MahjongFlow
+npm run db:start
+npm run dev
+```
+
+If local Supabase is already running, `db:start` reports that PostgreSQL is running and does not
+rebuild the database. Otherwise, it restarts the existing local services and data. Do not run
+`db:reset` during routine startup because it clears and rebuilds the local database. If only
+`npm run dev` was previously stopped and the database is still running, run `npm run dev` directly.
+The intentionally excluded Vector log collector is not required for normal application development.
+
+### Verify the startup
 
 Open <http://localhost:3000> and verify Supabase reachability:
 
@@ -110,8 +168,8 @@ Open <http://localhost:3000> and verify Supabase reachability:
 curl --fail http://localhost:3000/api/health/supabase
 ```
 
-PowerShell equivalent: `Invoke-RestMethod http://localhost:3000/api/health/supabase`.
-The expected status is `ok`. Run the baseline checks before handoff:
+PowerShell equivalent: `Invoke-RestMethod http://localhost:3000/api/health/supabase`. The expected
+status is `ok`. Run the baseline checks before handoff:
 
 ```bash
 npm run lint
@@ -139,6 +197,8 @@ Detailed setup, troubleshooting and platform procedures live in the
 | [MVP project proposal](docs/project/MVP_PROJECT_PROPOSAL.md) | Authoritative scope, roles, roadmap, and acceptance baseline |
 | [Backlog and sprint management](docs/product/BACKLOG_AND_SPRINT_MANAGEMENT.md) | Product Backlog, Current Sprint, Kanban, fields, and canonical User Stories |
 | [Week 1 plan](docs/plans/week-1/WEEK_1_IMPLEMENTATION_PLAN.md) | Five-day preparation and setup plan |
+| [Sprint 2 acceptance record](docs/plans/week-2/M1_ACCEPTANCE_RECORD.md) | Authentication, role, database, shared UI, and quality-gate evidence |
+| [Sprint 3 implementation plan](docs/plans/week-3/WEEK_3_IMPLEMENTATION_PLAN.md) | Meeting work packages, integration contracts, and remaining Sprint acceptance |
 | [P0 backlog](docs/plans/week-1/artifacts/day-2/DAY_2_STEP_3_P0_PRODUCT_BACKLOG.md) | Epics, Issues, acceptance conditions, and dependencies |
 | [Database ERD](docs/plans/week-1/artifacts/day-3/DAY_3_STEP_3_DATABASE_ERD.md) | Entities and core business relationships |
 | [Permission matrix](docs/plans/week-1/artifacts/day-3/DAY_3_STEP_5_PERMISSION_MATRIX_AND_CONTROL_POINTS.md) | Role permissions and enforcement points |
