@@ -2,6 +2,40 @@ begin;
 
 select plan(16);
 
+insert into auth.users (
+  instance_id,
+  id,
+  aud,
+  role,
+  email,
+  confirmation_token,
+  recovery_token,
+  email_change,
+  raw_app_meta_data,
+  raw_user_meta_data,
+  created_at,
+  updated_at
+) values (
+  '00000000-0000-0000-0000-000000000000',
+  '11111111-1111-4111-8111-111111111111',
+  'authenticated',
+  'authenticated',
+  'agenda-committee@example.test',
+  '',
+  '',
+  '',
+  '{}',
+  '{}',
+  now(),
+  now()
+) on conflict (id) do nothing;
+
+insert into public.profiles (id, display_name, committee_role) values (
+  '11111111-1111-4111-8111-111111111111',
+  'Agenda Committee Tester',
+  'committee'
+) on conflict (id) do nothing;
+
 insert into public.meetings (id, title, starts_at, summary, created_by) values (
   '30000000-0000-4000-8000-000000000013',
   'Fictional Agenda Test Meeting',

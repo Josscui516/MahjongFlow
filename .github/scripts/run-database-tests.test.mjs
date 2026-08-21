@@ -1,8 +1,12 @@
 import assert from "node:assert/strict";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import test from "node:test";
 
 import {
   databaseTestEvidenceError,
+  findDatabaseTestFiles,
   hasExecutedDatabaseTests,
 } from "./run-database-tests.mjs";
 
@@ -26,4 +30,19 @@ test("rejects a test file that contains no assertions", () => {
 
 test("rejects output without a prove-compatible summary", () => {
   assert.equal(hasExecutedDatabaseTests("Database command completed"), false);
+});
+
+test("discovers database test files recursively in deterministic order", (context) => {
+  const fixtureRoot = mkdtempSync(join(tmpdir(), "mahjongflow-db-tests-"));
+  const nestedDirectory = join(fixtureRoot, "nested");
+  mkdirSync(nestedDirectory);
+  writeFileSync(join(fixtureRoot, "second.sql"), "select 1;");
+  writeFileSync(join(fixtureRoot, "ignored.ps1"), "exit 0");
+  writeFileSync(join(nestedDirectory, "first.pg"), "select 1;");
+  context.after(() => rmSync(fixtureRoot, { force: true, recursive: true }));
+
+  assert.deepEqual(findDatabaseTestFiles(fixtureRoot), [
+    join(fixtureRoot, "second.sql"),
+    join(nestedDirectory, "first.pg"),
+  ].sort((left, right) => left.localeCompare(right)));
 });
