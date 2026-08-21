@@ -13,6 +13,7 @@ export class MeetingRepositoryError extends Error {
 type MeetingRow = Database["public"]["Tables"]["meetings"]["Row"];
 export type MeetingRepository = Readonly<{
   create: (actorId: string, input: NormalisedMeetingInput) => Promise<MeetingRecordDTO>;
+  delete: (meetingId: string) => Promise<"deleted" | "linked_tasks" | "not_found">;
   get: (meetingId: string) => Promise<MeetingRecordDTO | null>;
   listHistory: () => Promise<readonly MeetingHistoryItem[]>;
   update: (meetingId: string, input: NormalisedMeetingInput) => Promise<MeetingRecordDTO | null>;
@@ -37,6 +38,16 @@ export function createMeetingRepository(getClient: () => Promise<SupabaseClient<
       const record = await readMeeting(client, result.data);
       if (!record || record.createdBy !== actorId) throw new MeetingRepositoryError("PGRST116");
       return record;
+    },
+    async delete(meetingId) {
+      const result = await (await getClient()).rpc("delete_meeting_record", {
+        target_meeting_id: meetingId,
+      });
+      if (result.error) fail(result.error);
+      if (result.data === "deleted" || result.data === "linked_tasks" || result.data === "not_found") {
+        return result.data;
+      }
+      throw new MeetingRepositoryError("PGRST116");
     },
     async get(meetingId) { return readMeeting(await getClient(), meetingId); },
     async listHistory() {

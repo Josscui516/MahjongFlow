@@ -4,7 +4,13 @@ import { describe, expect, it } from "vitest";
 import type { MeetingEditorPort, MeetingRecordDTO } from "./contracts";
 import { MeetingEditor } from "./MeetingEditor";
 import { MeetingLoadingSkeleton, MeetingStatePanel } from "./MeetingStatePanel";
-import { createSubmissionFingerprint, formatSydneyDateTimeInput, validateMeetingEditor } from "./validation";
+import {
+  createSubmissionFingerprint,
+  formatSydneyDateTimeDisplay,
+  formatSydneyDateTimeInput,
+  validateMeetingEditor,
+} from "./validation";
+import { MEETING_SUMMARY_MAX_LENGTH, MEETING_TITLE_MAX_LENGTH } from "../schemas";
 
 const ATTENDEE_ID = "11111111-1111-4111-8111-111111111111";
 const OPTIONS = [{ id: ATTENDEE_ID, label: "Alex Example" }] as const;
@@ -37,6 +43,22 @@ describe("meeting editor validation", () => {
 
   it("formats persisted timestamps using Sydney wall-clock time", () => {
     expect(formatSydneyDateTimeInput("2026-08-18T08:30:00.000Z")).toBe("2026-08-18T18:30");
+    expect(formatSydneyDateTimeDisplay("2026-08-18T08:30:00.000Z")).toContain("18 Aug 2026");
+    expect(formatSydneyDateTimeDisplay("2026-08-18T08:30:00.000Z")).toContain("6:30 pm");
+  });
+
+  it("rejects values beyond the shared meeting character limits", () => {
+    const errors = validateMeetingEditor({
+      attendeeIds: [ATTENDEE_ID],
+      startsAt: "2026-08-18T18:30",
+      summary: "S".repeat(MEETING_SUMMARY_MAX_LENGTH + 1),
+      title: "T".repeat(MEETING_TITLE_MAX_LENGTH + 1),
+    });
+
+    expect(errors).toEqual([
+      { field: "title", label: "Meeting title", message: "Use no more than 200 characters." },
+      { field: "summary", label: "Summary", message: "Use no more than 10,000 characters." },
+    ]);
   });
 });
 
@@ -52,13 +74,30 @@ describe("meeting editor presentation", () => {
     expect(attendees).toBeGreaterThan(startsAt);
     expect(summary).toBeGreaterThan(attendees);
     expect(html).toContain("Alex Example");
+    expect(html).toContain("Meeting creation progress");
+    expect(html).toContain("Create and add agenda");
+    expect(html).toContain('maxLength="200"');
+    expect(html).toContain('maxLength="10000"');
+    expect(html).toContain("AEST or AEDT is applied automatically");
   });
 
-  it("renders a safe detail view, agenda slot, and reserved future area", () => {
-    const html = renderToStaticMarkup(<MeetingEditor agendaSlot={<section>Meeting agenda</section>} attendeeOptions={OPTIONS} initialRecord={MEETING} mode="update" port={PORT} />);
+  it("blocks creation and explains recovery when no committee profiles exist", () => {
+    const html = renderToStaticMarkup(<MeetingEditor attendeeOptions={[]} mode="create" port={PORT} />);
+
+    expect(html).toContain("Ask an administrator to add a profile");
+    expect(html).toContain('disabled=""');
+  });
+
+  it("renders a readable detail view without future-work implementation notes", () => {
+    const html = renderToStaticMarkup(<MeetingEditor agendaSlot={<section>Meeting agenda</section>} attendeeOptions={OPTIONS} initialRecord={MEETING} justCreated mode="update" port={PORT} />);
     expect(html).toContain("Weekly committee meeting");
     expect(html).toContain("Meeting agenda");
-    expect(html).toContain("Future extension");
+    expect(html).toContain("Meeting created");
+    expect(html).toContain("1 participant");
+    expect(html).toContain("Alex Example");
+    expect(html).toContain("Summary");
+    expect(html).not.toContain("Future extension");
+    expect(html).not.toContain("Issue #56");
     expect(html).not.toContain("Create task");
   });
 

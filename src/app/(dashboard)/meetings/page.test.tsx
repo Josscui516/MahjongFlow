@@ -9,7 +9,13 @@ const mocks = vi.hoisted(() => ({
   }),
 }));
 
-vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
+vi.mock("next/navigation", () => ({
+  redirect: mocks.redirect,
+  useRouter: () => ({ refresh: vi.fn(), replace: vi.fn() }),
+}));
+vi.mock("@/features/meetings/editor/actions", () => ({
+  deleteMeetingAction: vi.fn(),
+}));
 vi.mock("@/app/(auth)/backoffice/logout-form", () => ({
   LogoutForm: () => <button type="button">Sign out</button>,
 }));
@@ -141,6 +147,25 @@ describe("meetings history page", () => {
     });
     expect(html).toContain('value="planning"');
     expect(html).toContain("Sorted by date · oldest first");
+  });
+
+  it("renders deletion confirmation from the safe URL state", async () => {
+    mocks.getMeetingHistoryAccess.mockResolvedValue({
+      context: {
+        canManageAccounts: false,
+        role: "committee",
+        userId: "00000000-0000-4000-8000-000000000024",
+      },
+      ok: true,
+    });
+    mocks.queryMeetingHistory.mockResolvedValue({ ok: true, result: pageResult() });
+
+    const html = renderToStaticMarkup(
+      await MeetingsPage({ searchParams: Promise.resolve({ deleted: "1" }) }),
+    );
+
+    expect(html).toContain("Meeting deleted");
+    expect(html).toContain("permanently deleted");
   });
 
   it("redirects an out-of-range page while preserving active filters", async () => {

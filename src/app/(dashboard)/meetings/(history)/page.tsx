@@ -21,7 +21,8 @@ export default async function MeetingsPage({
 }: Readonly<{
   searchParams?: Promise<MeetingHistorySearchParams>;
 }> = {}) {
-  const criteria = parseMeetingHistorySearchParams(await searchParams);
+  const rawSearchParams = await searchParams;
+  const criteria = parseMeetingHistorySearchParams(rawSearchParams);
   const state = await resolveMeetingHistoryScreen({
     criteria,
     getAccess: getMeetingHistoryAccess,
@@ -41,7 +42,11 @@ export default async function MeetingsPage({
       }
 
       return (
-        <MeetingHistoryPageView criteria={criteria} result={state.result} />
+        <MeetingHistoryPageView
+          criteria={criteria}
+          meetingDeleted={rawSearchParams.deleted === "1"}
+          result={state.result}
+        />
       );
     }
   }

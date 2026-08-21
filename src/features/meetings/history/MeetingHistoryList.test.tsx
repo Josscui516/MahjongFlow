@@ -1,5 +1,13 @@
 import { renderToStaticMarkup } from "react-dom/server";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn(), replace: vi.fn() }),
+}));
+
+vi.mock("@/features/meetings/editor/actions", () => ({
+  deleteMeetingAction: vi.fn(),
+}));
 
 import { createMeetingHistoryFixture } from "./meeting-history.fixture";
 import {
@@ -44,7 +52,7 @@ describe("MeetingHistoryList", () => {
     expect(html).toContain('dateTime="2026-08-12T10:30:00.000Z"');
     expect(html).toContain("Open meeting");
     expect(html).toContain("Sorted by date · newest first");
-    expect([...html.matchAll(/href="([^"]+)"/g)].map((match) => match[1])).toEqual([
+    expect([...new Set([...html.matchAll(/href="([^"]+)"/g)].map((match) => match[1]))]).toEqual([
       "/meetings/00000000-0000-4000-8000-000000000003",
       "/meetings/00000000-0000-4000-8000-000000000001",
       "/meetings/00000000-0000-4000-8000-000000000002",
@@ -106,7 +114,7 @@ describe("MeetingHistoryList", () => {
     );
   });
 
-  it("does not expose destructive controls", () => {
+  it("provides explicit delete controls and confirmation copy", () => {
     const html = renderToStaticMarkup(
       <MeetingHistoryPageView
         criteria={DEFAULT_CRITERIA}
@@ -114,9 +122,24 @@ describe("MeetingHistoryList", () => {
       />,
     );
 
-    expect(html).not.toMatch(/>\s*(delete|archive)\b/i);
-    expect(html).not.toMatch(/aria-label="[^"]*(delete|archive)/i);
+    expect(html).toContain("Delete");
+    expect(html).toContain("Delete meeting?");
+    expect(html).toContain("This action cannot be undone.");
+    expect(html).toContain("participants, discussion points, and key decisions");
     expect(html).not.toContain('data-method="delete"');
+  });
+
+  it("shows a deletion success state returned through the history URL", () => {
+    const html = renderToStaticMarkup(
+      <MeetingHistoryPageView
+        criteria={DEFAULT_CRITERIA}
+        meetingDeleted
+        result={result()}
+      />,
+    );
+
+    expect(html).toContain("Meeting deleted");
+    expect(html).toContain("permanently deleted");
   });
 
   it("uses fixed denial and system-error views without protected content", () => {

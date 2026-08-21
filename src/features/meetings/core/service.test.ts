@@ -23,6 +23,7 @@ const record: MeetingRecordDTO = {
 function repository(overrides: Partial<MeetingRepository> = {}): MeetingRepository {
   return {
     create: vi.fn(async () => record),
+    delete: vi.fn(async () => "deleted" as const),
     get: vi.fn(async () => record),
     listHistory: vi.fn(async () => [{ id: record.id, startsAt: record.startsAt, summary: record.summary, title: record.title }]),
     update: vi.fn(async () => ({ ...record, attendeeIds: [otherAttendeeId] })),
@@ -84,6 +85,40 @@ describe("meeting core service", () => {
     const result = await service.updateMeeting(meetingId, { ...validInput, attendeeIds: [otherAttendeeId] });
     expect(result).toMatchObject({ ok: true, record: { attendeeIds: [otherAttendeeId] } });
     expect(persistence.update).toHaveBeenCalledOnce();
+  });
+
+  test("deletes a valid meeting after backend authorisation", async () => {
+    const persistence = repository();
+    const service = createMeetingService({
+      authorise: async () => ({ canManageAccounts: false, role: "committee", userId: actorId }),
+      repository: persistence,
+    });
+
+    await expect(service.deleteMeeting(meetingId)).resolves.toEqual({ ok: true });
+    expect(persistence.delete).toHaveBeenCalledWith(meetingId);
+  });
+
+  test("preserves meetings that have linked tasks", async () => {
+    const service = createMeetingService({
+      authorise: async () => ({ canManageAccounts: false, role: "authorised", userId: actorId }),
+      repository: repository({ delete: async () => "linked_tasks" }),
+    });
+
+    await expect(service.deleteMeeting(meetingId)).resolves.toEqual({
+      code: "LINKED_TASKS",
+      ok: false,
+    });
+  });
+
+  test("rejects malformed delete identifiers before persistence", async () => {
+    const persistence = repository();
+    const service = createMeetingService({
+      authorise: async () => ({ canManageAccounts: false, role: "committee", userId: actorId }),
+      repository: persistence,
+    });
+
+    await expect(service.deleteMeeting("not-a-uuid")).resolves.toEqual({ code: "NOT_FOUND", ok: false });
+    expect(persistence.delete).not.toHaveBeenCalled();
   });
 
   test("returns NOT_FOUND when an update targets a missing meeting", async () => {

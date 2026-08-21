@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { EmptyFeedback } from "@/components/feedback";
+import { MeetingDeleteButton } from "@/features/meetings/MeetingDeleteButton";
 
 import type {
   MeetingHistoryCriteria,
@@ -146,6 +147,8 @@ export function MeetingHistoryList({
   const orderedItems = sortMeetingHistoryItems(result.items, criteria.sort);
   const rangeStart = (result.page - 1) * result.pageSize + 1;
   const rangeEnd = Math.min(result.page * result.pageSize, result.totalCount);
+  const currentHistoryHref = buildMeetingHistoryHref(criteria);
+  const deleteSuccessHref = `${currentHistoryHref}${currentHistoryHref.includes("?") ? "&" : "?"}deleted=1`;
 
   return (
     <div className="space-y-5" data-history-state="success">
@@ -188,33 +191,41 @@ export function MeetingHistoryList({
 
               return (
                 <li key={item.id}>
-                  <article aria-labelledby={headingId}>
+                  <article
+                    aria-labelledby={headingId}
+                    className="grid min-h-28 gap-4 p-5 transition-colors hover:bg-emerald-50/50 sm:grid-cols-[minmax(0,1fr)_11rem_auto] sm:items-center sm:px-6"
+                  >
                     <Link
-                      className="group grid min-h-28 gap-4 p-5 transition-colors hover:bg-emerald-50/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-600 sm:grid-cols-[minmax(0,1fr)_11rem_auto] sm:items-center sm:px-6"
+                      className="min-w-0 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-700"
                       href={getMeetingDetailsHref(item.id)}
                     >
-                      <div className="min-w-0">
-                        <h2
-                          className="text-lg font-semibold text-slate-950"
-                          id={headingId}
-                        >
-                          {item.title}
-                        </h2>
-                        <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-slate-600">
-                          {item.summary ?? "No summary has been recorded."}
-                        </p>
-                      </div>
-
-                      <p className="text-sm font-semibold text-emerald-800">
-                        <time dateTime={item.startsAt}>
-                          {formatMeetingStart(item.startsAt)}
-                        </time>
+                      <h2 className="text-lg font-semibold text-slate-950" id={headingId}>
+                        {item.title}
+                      </h2>
+                      <p className="mt-1.5 line-clamp-2 text-sm leading-6 text-slate-600">
+                        {item.summary ?? "No summary has been recorded."}
                       </p>
-
-                      <span className="inline-flex min-h-10 items-center gap-2 text-sm font-semibold text-emerald-900">
-                        Open meeting
-                      </span>
                     </Link>
+
+                    <p className="text-sm font-semibold text-emerald-800">
+                      <time dateTime={item.startsAt}>
+                        {formatMeetingStart(item.startsAt)}
+                      </time>
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-3 sm:justify-end">
+                      <Link
+                        className="inline-flex min-h-10 items-center justify-center rounded-lg px-2 py-2 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+                        href={getMeetingDetailsHref(item.id)}
+                      >
+                        Open meeting
+                      </Link>
+                      <MeetingDeleteButton
+                        meetingId={item.id}
+                        meetingTitle={item.title}
+                        successHref={deleteSuccessHref}
+                      />
+                    </div>
                   </article>
                 </li>
               );

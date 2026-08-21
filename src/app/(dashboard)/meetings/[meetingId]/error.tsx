@@ -3,8 +3,12 @@
 import Link from "next/link";
 import { useEffect } from "react";
 
+import {
+  PRIMARY_ROUTE_ACTION_CLASS,
+  RouteErrorFeedback,
+  SECONDARY_ROUTE_ACTION_CLASS,
+} from "@/components/feedback";
 import { MeetingPageHeader } from "@/features/meetings/editor/MeetingPageHeader";
-import { MeetingRouteErrorPanel } from "@/features/meetings/editor/MeetingStatePanel";
 
 export default function MeetingDetailError({
   error,
@@ -25,18 +29,18 @@ export default function MeetingDetailError({
         description="Review the recorded committee-safe summary and update the meeting when needed."
         title="Meeting details"
       />
-      <MeetingRouteErrorPanel
-        action={
+      <RouteErrorFeedback
+        actions={
           <>
           <button
-            className="inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-950 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2"
+            className={PRIMARY_ROUTE_ACTION_CLASS}
             onClick={retry}
             type="button"
           >
             Try again
           </button>
           <Link
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 transition-colors hover:bg-slate-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2"
+            className={SECONDARY_ROUTE_ACTION_CLASS}
             href="/meetings"
           >
             Back to meetings
@@ -44,6 +48,11 @@ export default function MeetingDetailError({
           </>
         }
         description="The meeting record could not be loaded. Try again, or return to meeting history and choose another record."
+        note="No meeting changes were made."
+        recoveryItems={[
+          "Retry loading this meeting record",
+          "Return to meeting history and choose another record",
+        ]}
         title="Meeting details are unavailable"
       />
     </div>

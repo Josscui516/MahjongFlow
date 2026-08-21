@@ -2,6 +2,7 @@ import Link from "next/link";
 
 import {
   PermissionDeniedFeedback,
+  SuccessFeedback,
   SystemErrorFeedback,
 } from "@/components/feedback";
 import { PageFrame } from "@/components/layout";
@@ -52,14 +53,22 @@ export function MeetingHistoryPageHeader() {
 
 export function MeetingHistoryPageView({
   criteria,
+  meetingDeleted = false,
   result,
 }: Readonly<{
   criteria: MeetingHistoryCriteria;
+  meetingDeleted?: boolean;
   result: MeetingHistoryPageResult;
 }>) {
   return (
     <div className="space-y-6">
       <MeetingHistoryPageHeader />
+      {meetingDeleted ? (
+        <SuccessFeedback
+          message="The meeting and its agenda were permanently deleted."
+          title="Meeting deleted"
+        />
+      ) : null}
       <section aria-label="Meeting history content" className="min-w-0">
         <MeetingHistoryList criteria={criteria} result={result} />
       </section>

@@ -6,6 +6,9 @@ export type MeetingValidationResult =
   | Readonly<{ ok: true; value: NormalisedMeetingInput }>
   | Readonly<{ errors: readonly MeetingValidationError[]; ok: false }>;
 
+export const MEETING_TITLE_MAX_LENGTH = 200;
+export const MEETING_SUMMARY_MAX_LENGTH = 10_000;
+
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const LOCAL_DATE_TIME = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?$/;
 const OFFSET_DATE_TIME = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2})(?:\.(\d{1,3}))?)?(Z|[+-](\d{2}):(\d{2}))$/i;
@@ -130,12 +133,12 @@ export function validateMeetingInput(input: MeetingInput): MeetingValidationResu
   const startsAt = normaliseStartsAt(input.startsAt);
   const attendeeIds = input.attendeeIds.map((id) => id.trim());
   const uniqueAttendeeIds = [...new Set(attendeeIds)];
-  if (!title || title.length > 200) errors.push({ field: "title", message: "Enter a meeting title of no more than 200 characters." });
+  if (!title || title.length > MEETING_TITLE_MAX_LENGTH) errors.push({ field: "title", message: "Enter a meeting title of no more than 200 characters." });
   if (!startsAt) errors.push({ field: "startsAt", message: "Choose a valid Sydney meeting date and time." });
   if (!attendeeIds.length || uniqueAttendeeIds.length !== attendeeIds.length || attendeeIds.some((id) => !isUuid(id))) {
     errors.push({ field: "attendeeIds", message: "Select at least one unique committee attendee." });
   }
-  if (!summary || summary.length > 10_000) errors.push({ field: "summary", message: "Enter a meeting summary of no more than 10,000 characters." });
+  if (!summary || summary.length > MEETING_SUMMARY_MAX_LENGTH) errors.push({ field: "summary", message: "Enter a meeting summary of no more than 10,000 characters." });
   if (errors.length || !startsAt) return { errors, ok: false };
   return { ok: true, value: { attendeeIds: uniqueAttendeeIds, startsAt, summary, title } };
 }

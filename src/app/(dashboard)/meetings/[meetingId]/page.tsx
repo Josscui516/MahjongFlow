@@ -15,8 +15,15 @@ import {
 
 export default async function MeetingDetailPage({
   params,
-}: Readonly<{ params: Promise<{ meetingId: string }> }>) {
-  const { meetingId } = await params;
+  searchParams,
+}: Readonly<{
+  params: Promise<{ meetingId: string }>;
+  searchParams?: Promise<{ created?: string }>;
+}>) {
+  const [{ meetingId }, query] = await Promise.all([
+    params,
+    searchParams ?? Promise.resolve<{ created?: string }>({}),
+  ]);
 
   try {
     await requireBackendUser();
@@ -74,13 +81,14 @@ export default async function MeetingDetailPage({
   return (
     <>
       <MeetingPageHeader
-        description="Review the recorded committee-safe summary and update the meeting when needed."
+        description="Review the meeting record, capture discussion points, and save key decisions."
         title="Meeting details"
       />
       <MeetingEditorFlow
         agenda={agenda}
         attendeeOptions={attendeeResult.options}
         initialRecord={meetingResult.record}
+        justCreated={query.created === "1"}
         mode="update"
       />
     </>

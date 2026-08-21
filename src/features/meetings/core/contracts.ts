@@ -14,6 +14,9 @@ export type MeetingReadResult =
 export type MeetingHistoryResult =
   | Readonly<{ items: readonly MeetingHistoryItem[]; ok: true }>
   | Readonly<{ code: "PERMISSION_DENIED" | "SYSTEM_ERROR"; ok: false }>;
+export type MeetingDeleteResult =
+  | Readonly<{ ok: true }>
+  | Readonly<{ code: "LINKED_TASKS" | "NOT_FOUND" | "PERMISSION_DENIED" | "SYSTEM_ERROR"; ok: false }>;
 export type MeetingEditorPort = Readonly<{
   createMeeting: (input: MeetingInput) => Promise<MeetingMutationResult>;
   getMeeting: (meetingId: string) => Promise<MeetingReadResult>;

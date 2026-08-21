@@ -1,7 +1,7 @@
 import "server-only";
 import { isMeetingId, validateMeetingInput, type MeetingInput } from "@/features/meetings/schemas";
 import { AuthorizationError, requireBackendUser, type AccessContext } from "@/lib/auth/authorization";
-import type { MeetingEditorPort, MeetingHistoryResult, MeetingMutationResult, MeetingReadResult } from "./contracts";
+import type { MeetingDeleteResult, MeetingEditorPort, MeetingHistoryResult, MeetingMutationResult, MeetingReadResult } from "./contracts";
 import { createMeetingRepository, MeetingRepositoryError, type MeetingRepository } from "./repository";
 
 type Dependencies = Readonly<{ authorise: () => Promise<AccessContext>; repository: MeetingRepository }>;
@@ -18,7 +18,10 @@ function mapMutationFailure(error: unknown): MeetingMutationResult {
   }
   return { code: mapFailure(error), ok: false };
 }
-export function createMeetingService({ authorise, repository }: Dependencies): MeetingEditorPort & Readonly<{ listMeetingHistory: () => Promise<MeetingHistoryResult> }> {
+export function createMeetingService({ authorise, repository }: Dependencies): MeetingEditorPort & Readonly<{
+  deleteMeeting: (meetingId: string) => Promise<MeetingDeleteResult>;
+  listMeetingHistory: () => Promise<MeetingHistoryResult>;
+}> {
   async function check(input: MeetingInput) {
     const context = await authorise();
     const validation = validateMeetingInput(input);
@@ -30,6 +33,17 @@ export function createMeetingService({ authorise, repository }: Dependencies): M
       try { const checked = await check(input); if (!checked.ok) return { code: "VALIDATION", errors: checked.errors, ok: false };
         return { ok: true, record: await repository.create(checked.context.userId, checked.value) }; }
       catch (error) { return mapMutationFailure(error); }
+    },
+    async deleteMeeting(meetingId): Promise<MeetingDeleteResult> {
+      try {
+        await authorise();
+        if (!isMeetingId(meetingId)) return { code: "NOT_FOUND", ok: false };
+        const result = await repository.delete(meetingId);
+        if (result === "deleted") return { ok: true };
+        return { code: result === "linked_tasks" ? "LINKED_TASKS" : "NOT_FOUND", ok: false };
+      } catch (error) {
+        return { code: mapFailure(error), ok: false };
+      }
     },
     async getMeeting(meetingId): Promise<MeetingReadResult> {
       try { await authorise(); if (!isMeetingId(meetingId)) return { code: "NOT_FOUND", ok: false };
@@ -50,6 +64,7 @@ export function createMeetingService({ authorise, repository }: Dependencies): M
 }
 const service = createMeetingService({ authorise: requireBackendUser, repository: createMeetingRepository() });
 export const createMeeting = service.createMeeting;
+export const deleteMeeting = service.deleteMeeting;
 export const getMeeting = service.getMeeting;
 export const listMeetingHistory = service.listMeetingHistory;
 export const updateMeeting = service.updateMeeting;

@@ -82,3 +82,16 @@ Reference: [Supabase GitHub integration](https://supabase.com/docs/guides/deploy
 确认没有新账号、角色／状态变更或审计依赖，且已备份相关表后，才能通过另一个经审查
 的 migration 删除结构。账号停用不删除 profile 或历史外键记录，恢复时同时解除 Auth
 ban 并把 `profiles.is_active` 恢复为 true。
+
+## 7. 会议删除 migration 部署与回退
+
+`20260821060847_add_meeting_delete_boundary.sql` 增加仅后台用户可执行的窄函数
+`delete_meeting_record(uuid)`。函数删除会议主记录，并依赖既有外键级联删除参会关系、
+讨论点和关键决策；如果已有任务引用该会议，则返回 `linked_tasks` 并保留全部记录。
+应用代码必须在 migration 应用并重新生成数据库类型后发布。该 migration 不转换或
+删除已有数据，也不向 `authenticated` 授予会议表的直接 `DELETE` 权限。
+
+回退时先撤下应用中的删除入口，再通过新的前向 migration 撤销
+`delete_meeting_record(uuid)` 的执行权限并删除该函数，同时恢复上一版
+`prevent_last_meeting_attendee_delete()`。已经通过该功能删除的会议无法通过 schema
+回退恢复；上线前必须确认数据库备份和恢复流程可用，发生误删时只能从删除前备份恢复。

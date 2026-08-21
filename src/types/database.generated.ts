@@ -621,6 +621,10 @@ export type Database = {
         }
         Returns: string
       }
+      delete_meeting_record: {
+        Args: { target_meeting_id: string }
+        Returns: string
+      }
       get_check_in_context: {
         Args: { check_in_token: string }
         Returns: {

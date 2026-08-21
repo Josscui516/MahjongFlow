@@ -84,7 +84,7 @@ describe("meeting editor route layout", () => {
     );
 
     expect(html).toContain("Desktop navigation");
-    expect(html).toContain('data-meeting-route-state="system"');
+    expect(html).toContain('data-feedback-state="error"');
     expect(html).toContain("The meeting editor is unavailable");
   });
 

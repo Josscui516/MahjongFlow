@@ -1,3 +1,4 @@
+import { RouteLoadingStatus } from "@/components/feedback";
 import { MeetingHistoryPageHeader } from "@/features/meetings/history";
 
 const HISTORY_PLACEHOLDERS = ["newest", "earlier"] as const;
@@ -28,23 +29,10 @@ export default function MeetingHistoryLoading() {
         data-loading-pattern="meeting-timeline"
         role="status"
       >
-        <div className="flex items-center gap-3 text-sm text-slate-600">
-          <span
-            aria-hidden="true"
-            className="relative grid size-3 place-items-center"
-          >
-            <span className="absolute size-3 rounded-full bg-emerald-300 motion-safe:animate-ping" />
-            <span className="relative size-2 rounded-full bg-emerald-700" />
-          </span>
-          <p>
-            <span className="font-semibold text-slate-800">
-              Loading meetings
-            </span>
-            <span className="hidden sm:inline">
-              {" "}— applying your current search and filters.
-            </span>
-          </p>
-        </div>
+        <RouteLoadingStatus
+          description="applying your current search and filters."
+          title="Loading meetings"
+        />
 
         <ol
           aria-hidden="true"

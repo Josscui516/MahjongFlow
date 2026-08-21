@@ -1,5 +1,7 @@
 import type { ReactNode } from "react";
 
+import { RouteLoadingStatus } from "@/components/feedback";
+
 const STATE_STYLES = {
   duplicate: "bg-amber-50 text-amber-800 ring-amber-200",
   loading: "bg-sky-50 text-sky-800 ring-sky-200",
@@ -84,26 +86,7 @@ export function MeetingLoadingStatus({
   description,
   title,
 }: Readonly<{ description: string; title: string }>) {
-  return (
-    <div
-      aria-live="polite"
-      className="flex items-start gap-3 text-sm text-slate-600"
-      data-meeting-loading-status="true"
-      role="status"
-    >
-      <span
-        aria-hidden="true"
-        className="relative mt-1 grid size-3 shrink-0 place-items-center"
-      >
-        <span className="absolute size-3 rounded-full bg-emerald-300 motion-safe:animate-ping" />
-        <span className="relative size-2 rounded-full bg-emerald-700" />
-      </span>
-      <p>
-        <span className="font-semibold text-slate-800">{title}</span>
-        <span className="hidden sm:inline"> — {description}</span>
-      </p>
-    </div>
-  );
+  return <RouteLoadingStatus description={description} title={title} />;
 }
 
 function SkeletonLine({ className }: Readonly<{ className: string }>) {

@@ -57,6 +57,7 @@ export async function MeetingEditorRouteLayout({
     <MeetingRouteShell
       canManageAccounts={context.canManageAccounts}
       currentPath={currentPath}
+      displayName={context.displayName}
       role={context.role}
     >
       {children}

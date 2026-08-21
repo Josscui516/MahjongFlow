@@ -1,6 +1,11 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 
+vi.mock("server-only", () => ({}));
+vi.mock("@/features/meetings/editor/actions", () => ({
+  deleteMeetingAction: vi.fn(),
+}));
+
 import MeetingHistoryError from "./(history)/error";
 import MeetingHistoryLoading from "./(history)/loading";
 import MeetingDetailError from "./[meetingId]/error";
@@ -55,7 +60,7 @@ describe("meeting editor route states", () => {
     const html = renderToStaticMarkup(view);
 
     expect(html).toContain('data-feedback-state="loading"');
-    expect(html).toContain('data-meeting-loading-status="true"');
+    expect(html).toContain('data-route-loading-status="true"');
     expect(html).toContain(copy);
     expect(html).toContain("motion-safe:animate-pulse");
     expect(html).not.toContain('data-meeting-state="loading"');
@@ -75,7 +80,8 @@ describe("meeting editor route states", () => {
       />,
     );
 
-    expect(html).toContain('data-meeting-route-state="system"');
+    expect(html).toContain('data-feedback-state="error"');
+    expect(html).toContain("Recovery options");
     expect(html).toContain(copy);
     expect(html).toContain("Try again");
     expect(html).toContain('href="/meetings"');

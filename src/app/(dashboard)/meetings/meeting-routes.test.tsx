@@ -30,6 +30,7 @@ vi.mock("@/features/meetings/editor/server", () => meetingMocks);
 
 vi.mock("@/features/meetings/editor/actions", () => ({
   createMeetingAction: vi.fn(),
+  deleteMeetingAction: vi.fn(),
   getMeetingAction: vi.fn(),
   saveMeetingAgendaAction: vi.fn(),
   updateMeetingAction: vi.fn(),
@@ -82,7 +83,7 @@ describe("meeting editor routes", () => {
     expect(html).toContain('id="meeting-title"');
   });
 
-  it("renders the persisted meeting and agenda without task controls", async () => {
+  it("renders the persisted meeting and agenda without future-work placeholders", async () => {
     authMocks.requireBackendUser.mockResolvedValue({
       role: "authorised",
       userId: "fictional-user",
@@ -96,7 +97,26 @@ describe("meeting editor routes", () => {
 
     expect(html).toContain("Weekly committee meeting");
     expect(html).toContain("Meeting agenda");
+    expect(html).toContain("Alex Example");
+    expect(html).not.toContain("Future extension");
+    expect(html).not.toContain("Issue #56");
     expect(html).not.toContain("Create task");
+  });
+
+  it("confirms creation when the create flow returns to the detail route", async () => {
+    authMocks.requireBackendUser.mockResolvedValue({
+      role: "authorised",
+      userId: "fictional-user",
+    });
+
+    const html = renderToStaticMarkup(
+      await MeetingDetailPage({
+        params: Promise.resolve({ meetingId: "22222222-2222-4222-8222-222222222222" }),
+        searchParams: Promise.resolve({ created: "1" }),
+      }),
+    );
+
+    expect(html).toContain("Meeting created");
   });
 
   it("redirects an anonymous direct request before rendering the editor", async () => {

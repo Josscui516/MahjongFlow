@@ -1,4 +1,8 @@
-import type { MeetingValidationError } from "@/features/meetings/schemas";
+import {
+  MEETING_SUMMARY_MAX_LENGTH,
+  MEETING_TITLE_MAX_LENGTH,
+  type MeetingValidationError,
+} from "@/features/meetings/schemas";
 
 import type { MeetingEditorError, MeetingEditorField, MeetingEditorValues } from "./contracts";
 
@@ -12,10 +16,14 @@ const FIELD_LABELS: Record<MeetingEditorField, string> = {
 
 export function validateMeetingEditor(values: MeetingEditorValues): readonly MeetingEditorError[] {
   const errors: MeetingEditorError[] = [];
-  if (!values.title.trim()) errors.push({ field: "title", label: FIELD_LABELS.title, message: "Enter a meeting title." });
+  const title = values.title.trim();
+  const summary = values.summary.trim();
+  if (!title) errors.push({ field: "title", label: FIELD_LABELS.title, message: "Enter a meeting title." });
+  else if (title.length > MEETING_TITLE_MAX_LENGTH) errors.push({ field: "title", label: FIELD_LABELS.title, message: "Use no more than 200 characters." });
   if (!SYDNEY_LOCAL_DATE_TIME.test(values.startsAt)) errors.push({ field: "startsAt", label: FIELD_LABELS.startsAt, message: "Choose a valid date and time." });
   if (values.attendeeIds.length === 0) errors.push({ field: "attendeeIds", label: FIELD_LABELS.attendeeIds, message: "Select at least one committee participant." });
-  if (!values.summary.trim()) errors.push({ field: "summary", label: FIELD_LABELS.summary, message: "Add a concise meeting summary." });
+  if (!summary) errors.push({ field: "summary", label: FIELD_LABELS.summary, message: "Add a concise meeting summary." });
+  else if (summary.length > MEETING_SUMMARY_MAX_LENGTH) errors.push({ field: "summary", label: FIELD_LABELS.summary, message: "Use no more than 10,000 characters." });
   return errors;
 }
 
@@ -35,4 +43,18 @@ export function formatSydneyDateTimeInput(value: string): string {
     }).formatToParts(new Date(value)).filter(({ type }) => type !== "literal").map(({ type, value: part }) => [type, part]),
   );
   return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+}
+
+export function formatSydneyDateTimeDisplay(value: string): string {
+  return new Intl.DateTimeFormat("en-AU", {
+    day: "numeric",
+    hour: "numeric",
+    hour12: true,
+    minute: "2-digit",
+    month: "short",
+    timeZone: "Australia/Sydney",
+    timeZoneName: "short",
+    weekday: "short",
+    year: "numeric",
+  }).format(new Date(value)).replace(/, (?=\d{1,2}:)/, " · ");
 }
