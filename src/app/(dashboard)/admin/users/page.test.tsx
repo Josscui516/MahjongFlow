@@ -15,11 +15,15 @@ vi.mock("@/features/account-management", () => ({
   InviteAccountForm: () => <form>Invite form</form>,
 }));
 
-import AccountManagementPage from "./page";
+import AccountManagementPage, { dynamic } from "./page";
 
 describe("account-management page", () => {
   beforeEach(() => {
     mocks.listAccounts.mockReset();
+  });
+
+  it("renders only at request time because the Auth Admin client needs server secrets", () => {
+    expect(dynamic).toBe("force-dynamic");
   });
 
   it("renders the account workflow after its protected layout resolves", async () => {

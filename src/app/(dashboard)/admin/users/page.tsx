@@ -4,6 +4,8 @@ import {
   InviteAccountForm,
 } from "@/features/account-management";
 
+export const dynamic = "force-dynamic";
+
 export default async function AccountManagementPage() {
   const service = await getAccountManagementService();
   const accounts = await service.listAccounts();
