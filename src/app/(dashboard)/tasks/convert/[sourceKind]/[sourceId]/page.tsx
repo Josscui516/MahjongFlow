@@ -3,6 +3,8 @@ import { notFound, redirect } from "next/navigation";
 
 import { createTaskSourceReader } from "@/features/tasks/conversion/source/persistence";
 import { resolveTaskSource, type TaskSourceKind } from "@/features/tasks/conversion/source";
+import { TaskConversionForm } from "@/features/tasks/conversion/source/TaskConversionForm";
+import { listAssigneeOptions } from "@/features/tasks/editor/server";
 import { AuthorizationError, requireBackendUser } from "@/lib/auth/authorization";
 
 function isSourceKind(value: string): value is TaskSourceKind {
@@ -26,6 +28,7 @@ export default async function TaskConversionPage({ params }: Readonly<{
 
   const source = await resolveTaskSource(sourceKind, sourceId, createTaskSourceReader());
   if (!source) notFound();
+  const assignees = await listAssigneeOptions();
 
   return (
     <main className="mx-auto max-w-2xl p-6">
@@ -36,7 +39,7 @@ export default async function TaskConversionPage({ params }: Readonly<{
         <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{source.sourceContent}</p>
         <p className="mt-3 text-xs text-slate-500">This source is verified on the server and cannot be edited here.</p>
       </section>
-      <p className="mt-6 rounded-xl bg-amber-50 p-4 text-sm text-amber-950" role="status">Task fields are supplied by the task conversion form work package.</p>
+      <TaskConversionForm assignees={assignees} sourceId={source.sourceId} sourceKind={source.sourceKind} />
     </main>
   );
 }

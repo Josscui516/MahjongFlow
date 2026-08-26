@@ -19,7 +19,8 @@ export type TaskConversionResult =
   | Readonly<{ ok: true; taskId: string; source: TaskSourceContext }>
   | Readonly<{
       ok: false;
-      code: "duplicate" | "forbidden" | "source_missing" | "system";
+      code: "duplicate" | "forbidden" | "source_missing" | "system" | "validation";
+      errors?: readonly Readonly<{ field: keyof TaskConversionCreateInput; message: string }>[];
       message: string;
       source?: TaskSourceContext;
     }>;
