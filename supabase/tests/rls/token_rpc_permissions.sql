@@ -2,6 +2,18 @@ begin;
 
 select plan(28);
 
+-- Keep the seeded fictional events inside a deterministic check-in window even
+-- when the local database has been running longer than the seed's initial
+-- two-hour window. The surrounding transaction rolls these values back.
+update public.events
+set
+  check_in_opens_at = statement_timestamp() - interval '1 hour',
+  check_in_closes_at = statement_timestamp() + interval '2 hours'
+where id in (
+  '40000000-0000-4000-8000-000000000001',
+  '40000000-0000-4000-8000-000000000002'
+);
+
 do $$
 begin
   perform set_config(
