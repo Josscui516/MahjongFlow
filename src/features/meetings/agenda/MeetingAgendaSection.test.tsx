@@ -31,7 +31,10 @@ describe("MeetingAgendaSection", () => {
     expect(markup).toContain("Saved");
     expect(markup).toContain("Save agenda");
     expect(markup).toContain('disabled=""');
-    expect(markup).not.toContain("Create task");
+    expect(markup).toContain('href="/tasks/convert/discussion/discussion-1"');
+    expect(markup).toContain("Create task from discussion point");
+    expect(markup).toContain('href="/tasks/convert/decision/decision-1"');
+    expect(markup).toContain("Create task from decision");
     expect(markup).not.toContain("Delete meeting");
   });
 
