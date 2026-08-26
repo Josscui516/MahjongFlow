@@ -12,6 +12,8 @@ import {
   AuthorizationError,
   requireBackendUser,
 } from "@/lib/auth/authorization";
+import { RelatedTasksPanel } from "@/features/tasks/source-navigation/RelatedTasksPanel";
+import { listRelatedTasks } from "@/features/tasks/source-navigation/service";
 
 export default async function MeetingDetailPage({
   params,
@@ -62,9 +64,10 @@ export default async function MeetingDetailPage({
     );
   }
 
-  const [agenda, attendeeResult] = await Promise.all([
+  const [agenda, attendeeResult, relatedTasksResult] = await Promise.all([
     readMeetingAgenda(meetingId),
     listMeetingAttendeeOptions(),
+    listRelatedTasks(meetingId),
   ]);
 
   if (!agenda || !attendeeResult.ok) {
@@ -91,6 +94,9 @@ export default async function MeetingDetailPage({
         justCreated={query.created === "1"}
         mode="update"
       />
+      <div className="mt-6">
+        <RelatedTasksPanel result={relatedTasksResult} />
+      </div>
     </>
   );
 }
