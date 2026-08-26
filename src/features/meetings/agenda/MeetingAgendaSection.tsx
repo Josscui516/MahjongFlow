@@ -9,6 +9,7 @@ import type {
   MeetingAgendaDTO,
 } from "./contracts";
 import { saveAgendaSafely } from "./client-submission";
+import { TaskConversionEntry } from "./TaskConversionEntry";
 
 type Props = Readonly<{
   agenda: MeetingAgendaDTO;
@@ -213,6 +214,12 @@ export function MeetingAgendaSection({ agenda, focusOnMount = false, onSave }: P
                             <button aria-label={`Move ${content.label.toLowerCase()} ${index + 1} up`} className={COMPACT_BUTTON_CLASS} disabled={index === 0} onClick={() => reorderItem(section, index, index - 1)} type="button">Move up</button>
                             <button aria-label={`Move ${content.label.toLowerCase()} ${index + 1} down`} className={COMPACT_BUTTON_CLASS} disabled={index === draft[section].length - 1} onClick={() => reorderItem(section, index, index + 1)} type="button">Move down</button>
                             <button aria-label={`Remove ${content.label.toLowerCase()} ${index + 1}`} className={`${COMPACT_BUTTON_CLASS} border-rose-200 text-rose-800 hover:border-rose-300 hover:bg-rose-50`} onClick={() => removeItem(section, index)} type="button">Remove item</button>
+                            {item.id ? (
+                              <TaskConversionEntry
+                                sourceId={item.id}
+                                sourceKind={section === "decisions" ? "decision" : "discussion"}
+                              />
+                            ) : null}
                           </div>
                         </div>
                         <textarea
