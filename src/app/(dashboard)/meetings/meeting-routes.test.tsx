@@ -21,12 +21,18 @@ const meetingMocks = vi.hoisted(() => ({
   readMeetingAgenda: vi.fn(),
 }));
 
+const sourceNavigationMocks = vi.hoisted(() => ({
+  listRelatedTasks: vi.fn(),
+}));
+
 vi.mock("@/lib/auth/authorization", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/lib/auth/authorization")>();
   return { ...actual, requireBackendUser: authMocks.requireBackendUser };
 });
 
 vi.mock("@/features/meetings/editor/server", () => meetingMocks);
+
+vi.mock("@/features/tasks/source-navigation/service", () => sourceNavigationMocks);
 
 vi.mock("@/features/meetings/editor/actions", () => ({
   createMeetingAction: vi.fn(),
@@ -69,6 +75,16 @@ describe("meeting editor routes", () => {
       discussionPoints: [],
       decisions: [],
     });
+    sourceNavigationMocks.listRelatedTasks.mockResolvedValue({
+      items: [
+        {
+          id: "33333333-3333-4333-8333-333333333333",
+          sourceKind: "decision",
+          title: "Confirm fictional venue booking",
+        },
+      ],
+      ok: true,
+    });
   });
 
   it("allows a committee user to open the create route", async () => {
@@ -98,6 +114,8 @@ describe("meeting editor routes", () => {
     expect(html).toContain("Weekly committee meeting");
     expect(html).toContain("Meeting agenda");
     expect(html).toContain("Alex Example");
+    expect(html).toContain("Confirm fictional venue booking");
+    expect(html).toContain('href="/tasks/33333333-3333-4333-8333-333333333333"');
     expect(html).not.toContain("Future extension");
     expect(html).not.toContain("Issue #56");
     expect(html).not.toContain("Create task");
