@@ -29,6 +29,10 @@ vi.mock("@/features/tasks/conversion/source/actions", () => ({
   convertTaskSourceAction: vi.fn(),
 }));
 
+vi.mock("@/features/tasks/conversion/validation/actions", () => ({
+  submitTaskConversionAction: vi.fn(),
+}));
+
 vi.mock("@/features/tasks/editor/server", () => ({
   listAssigneeOptions: assigneeMocks.listAssigneeOptions,
 }));
@@ -62,8 +66,8 @@ describe("task conversion route", () => {
 
     expect(html).toContain("Approve the fictional venue booking.");
     expect(html).toContain("Task details");
-    expect(html).toContain('id="conversion-title"');
-    expect(html).toContain("Create linked task");
+    expect(html).toContain('id="task-conversion-title"');
+    expect(html).toContain("Create task");
     expect(html).toContain("Alex Example");
     expect(html).not.toContain("Task fields are supplied");
   });

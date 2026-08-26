@@ -1,0 +1,112 @@
+import type {
+  TaskConversionFormState,
+  TaskConversionPort,
+  TaskConversionRawValues,
+  TaskConversionValidationOptions,
+  TaskSourceContext,
+} from "./contracts";
+import {
+  isValidTaskSourceContext,
+  readTaskConversionFormData,
+  validateTaskConversion,
+} from "./validation";
+
+export type TaskConversionSubmissionDependencies = Readonly<{
+  port: TaskConversionPort;
+  sourceContext: TaskSourceContext;
+  validationOptions: TaskConversionValidationOptions;
+}>;
+
+export function createInitialTaskConversionState(
+  sourceContext: TaskSourceContext,
+  values: TaskConversionFormState["values"],
+): TaskConversionFormState {
+  return { errors: [], sourceContext, status: "idle", values };
+}
+
+export async function submitTaskConversion(
+  dependencies: TaskConversionSubmissionDependencies,
+  rawValues: TaskConversionRawValues,
+): Promise<TaskConversionFormState> {
+  const validation = validateTaskConversion(
+    rawValues,
+    dependencies.sourceContext,
+    dependencies.validationOptions,
+  );
+
+  if (!validation.ok) {
+    return {
+      errors: validation.errors,
+      sourceContext: validation.sourceContext,
+      status: "validation",
+      values: validation.values,
+    };
+  }
+
+  if (!isValidTaskSourceContext(dependencies.sourceContext)) {
+    return {
+      errors: [],
+      sourceContext: validation.sourceContext,
+      status: "system-error",
+      values: validation.values,
+    };
+  }
+
+  try {
+    const result = await dependencies.port.createFromSource(
+      validation.draft.sourceContext,
+      {
+        assigneeId: validation.draft.assigneeId,
+        description: validation.draft.description,
+        dueDate: validation.draft.dueDate,
+        status: validation.draft.status,
+        title: validation.draft.title,
+      },
+    );
+
+    if (result.ok) {
+      return {
+        errors: [],
+        sourceContext: validation.sourceContext,
+        status: "success",
+        taskId: result.taskId,
+        values: validation.values,
+      };
+    }
+
+    const status =
+      result.code === "duplicate"
+        ? "duplicate"
+        : result.code === "forbidden"
+          ? "permission"
+          : "system-error";
+
+    return {
+      errors: [],
+      sourceContext: validation.sourceContext,
+      status,
+      values: validation.values,
+    };
+  } catch {
+    return {
+      errors: [],
+      sourceContext: validation.sourceContext,
+      status: "system-error",
+      values: validation.values,
+    };
+  }
+}
+
+/**
+ * Server actions should bind trusted source context and allowed assignees, then
+ * delegate here. The browser only supplies editable task fields.
+ */
+export async function submitTaskConversionForm(
+  dependencies: TaskConversionSubmissionDependencies,
+  formData: FormData,
+): Promise<TaskConversionFormState> {
+  return submitTaskConversion(
+    dependencies,
+    readTaskConversionFormData(formData),
+  );
+}

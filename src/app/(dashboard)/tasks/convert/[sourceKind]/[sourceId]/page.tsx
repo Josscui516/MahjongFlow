@@ -3,7 +3,10 @@ import { notFound, redirect } from "next/navigation";
 
 import { createTaskSourceReader } from "@/features/tasks/conversion/source/persistence";
 import { resolveTaskSource, type TaskSourceKind } from "@/features/tasks/conversion/source";
-import { TaskConversionForm } from "@/features/tasks/conversion/source/TaskConversionForm";
+import {
+  submitTaskConversionAction,
+  TaskConversionForm,
+} from "@/features/tasks/conversion/validation";
 import { listAssigneeOptions } from "@/features/tasks/editor/server";
 import { AuthorizationError, requireBackendUser } from "@/lib/auth/authorization";
 
@@ -29,17 +32,31 @@ export default async function TaskConversionPage({ params }: Readonly<{
   const source = await resolveTaskSource(sourceKind, sourceId, createTaskSourceReader());
   if (!source) notFound();
   const assignees = await listAssigneeOptions();
+  const conversionAction = submitTaskConversionAction.bind(
+    null,
+    sourceKind,
+    sourceId,
+  );
 
   return (
     <main className="mx-auto max-w-2xl p-6">
       <Link className="text-sm font-semibold text-emerald-900 underline" href={`/meetings/${source.meetingId}`}>Back to source meeting</Link>
       <h1 className="mt-5 text-3xl font-bold text-slate-950">Create task from {source.sourceKind === "decision" ? "decision" : "discussion point"}</h1>
-      <section className="mt-6 rounded-xl border border-slate-200 bg-slate-50 p-5" aria-labelledby="source-context-heading">
-        <h2 className="font-semibold text-slate-950" id="source-context-heading">Source context</h2>
-        <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-slate-700">{source.sourceContent}</p>
-        <p className="mt-3 text-xs text-slate-500">This source is verified on the server and cannot be edited here.</p>
-      </section>
-      <TaskConversionForm assignees={assignees} sourceId={source.sourceId} sourceKind={source.sourceKind} />
+      <div className="mt-6">
+        <TaskConversionForm
+          assigneeOptions={assignees}
+          conversionAction={conversionAction}
+          initialValues={{
+            assigneeId: assignees[0]?.id ?? "",
+            description: "",
+            dueDate: "",
+            status: "not_started",
+            title: "",
+          }}
+          sourceContext={source}
+          sourceLabel={`${source.sourceKind === "decision" ? "Decision" : "Discussion point"}: ${source.sourceContent}`}
+        />
+      </div>
     </main>
   );
 }
