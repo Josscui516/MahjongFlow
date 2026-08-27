@@ -110,6 +110,56 @@ describe("task conversion submission boundary", () => {
     }
   });
 
+  it("maps persistence validation failures back to stable field errors", async () => {
+    const result = await submitTaskConversion(
+      dependencies(
+        portWith(async () => ({
+          code: "validation",
+          errors: [
+            {
+              field: "dueDate",
+              message: "The due date conflicts with the source meeting.",
+            },
+          ],
+          message: "Review the rejected field.",
+          ok: false,
+          source: FIXTURE_SOURCE_CONTEXT,
+        })),
+      ),
+      FIXTURE_TASK_VALUES,
+    );
+
+    expect(result).toMatchObject({
+      errors: [
+        {
+          code: "FIELD_REJECTED",
+          field: "dueDate",
+          label: "Due date",
+          message: "The due date conflicts with the source meeting.",
+        },
+      ],
+      sourceContext: FIXTURE_SOURCE_CONTEXT,
+      status: "validation",
+      values: FIXTURE_TASK_VALUES,
+    });
+  });
+
+  it("uses a visible system state when persistence returns validation without field errors", async () => {
+    const result = await submitTaskConversion(
+      dependencies(
+        portWith(async () => ({
+          code: "validation",
+          message: "Validation failed without a field.",
+          ok: false,
+          source: FIXTURE_SOURCE_CONTEXT,
+        })),
+      ),
+      FIXTURE_TASK_VALUES,
+    );
+
+    expect(result).toMatchObject({ errors: [], status: "system-error" });
+  });
+
   it("maps thrown private errors and invalid trusted sources to safe system states", async () => {
     const rejectedPort = portWith(
       vi.fn().mockRejectedValue(new Error("private transport detail")),

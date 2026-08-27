@@ -118,7 +118,7 @@ export function TaskConversionForm({
         ?.querySelector<HTMLElement>("[tabindex='-1']")
         ?.focus();
     }
-  }, [state.status]);
+  }, [state]);
 
   const summaryErrors = state.errors.map((item) => ({
     fieldId: FIELD_IDS[item.field],

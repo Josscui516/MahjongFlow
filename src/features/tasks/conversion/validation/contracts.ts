@@ -23,6 +23,7 @@ export type TaskConversionField =
   | "status";
 
 export type TaskConversionErrorCode =
+  | "FIELD_REJECTED"
   | "TITLE_REQUIRED"
   | "TITLE_TOO_LONG"
   | "DESCRIPTION_REQUIRED"

@@ -1,4 +1,6 @@
 import type {
+  TaskConversionField,
+  TaskConversionFieldError,
   TaskConversionFormState,
   TaskConversionPort,
   TaskConversionRawValues,
@@ -10,6 +12,39 @@ import {
   readTaskConversionFormData,
   validateTaskConversion,
 } from "./validation";
+
+const FIELD_LABELS: Record<TaskConversionField, string> = {
+  assigneeId: "Primary assignee",
+  description: "Description",
+  dueDate: "Due date",
+  status: "Status",
+  title: "Task title",
+};
+
+function mapPortValidationErrors(
+  errors:
+    | readonly Readonly<{ field: TaskConversionField; message: string }>[]
+    | undefined,
+): readonly TaskConversionFieldError[] {
+  if (!errors) return [];
+
+  const mappedErrors: TaskConversionFieldError[] = [];
+  const seenFields = new Set<TaskConversionField>();
+
+  for (const error of errors) {
+    if (seenFields.has(error.field)) continue;
+
+    seenFields.add(error.field);
+    mappedErrors.push({
+      code: "FIELD_REJECTED",
+      field: error.field,
+      label: FIELD_LABELS[error.field],
+      message: error.message.trim() || "Review this field and try again.",
+    });
+  }
+
+  return mappedErrors;
+}
 
 export type TaskConversionSubmissionDependencies = Readonly<{
   port: TaskConversionPort;
@@ -74,12 +109,22 @@ export async function submitTaskConversion(
       };
     }
 
-    const status =
-      result.code === "duplicate"
-        ? "duplicate"
-        : result.code === "forbidden"
-          ? "permission"
-          : "system-error";
+    if (result.code === "validation") {
+      const errors = mapPortValidationErrors(result.errors);
+
+      return {
+        errors,
+        sourceContext: validation.sourceContext,
+        status: errors.length > 0 ? "validation" : "system-error",
+        values: validation.values,
+      };
+    }
+
+    const status = result.code === "duplicate"
+      ? "duplicate"
+      : result.code === "forbidden"
+        ? "permission"
+        : "system-error";
 
     return {
       errors: [],
