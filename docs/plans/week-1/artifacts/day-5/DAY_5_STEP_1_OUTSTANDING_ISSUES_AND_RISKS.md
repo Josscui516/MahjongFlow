@@ -39,7 +39,7 @@
 
 | ID | 去重后的问题 | 来源证据 | 影响 | 工作量 | 负责人 | 期限 | 处理与完成证据 |
 |---|---|---|---|---:|---|---|---|
-| D5-OI-04 | GitHub `main` 保护当前未配置 | Day 1 Git 协作约定；Day 4 步骤 7、10；Day 5 步骤 6 | 保护曾补齐四项 strict checks、required review、管理员执行及 force push／删除限制，后由用户临时删除；当前直接推送不会被远程规则阻止 | S | Joshua Xingjian Cui | 用户的问题处理完毕后、任何 Week 2 PR 进入 Testing 前 | 按用户明确要求暂不重新设置；恢复时重新启用 Pull Request、至少 1 名非作者批准、四项 strict checks、对话解决、管理员执行，并禁止 force push／删除 |
+| D5-OI-04 | GitHub `main` 保护曾未配置 | Day 1 Git 协作约定；2026-08-27 远程只读复核 | 已关闭：当前要求 Pull Request、至少 1 名批准、Lint／Typecheck／Test／Build strict checks、对话解决，并禁止 force push／删除；管理员执行仍未启用，作为已知治理差异保留 | S | Joshua Xingjian Cui | 2026-08-27 关闭 | 远程 ruleset／branch protection 只读证据已核对；若需管理员同样受限，由 Joshua 单独调整 |
 | D5-OI-05 | 固定虚构 Auth UUID fixture 的本地创建方式尚未完成可重复验证 | Day 3 步骤 8；Week 2 #39 开始条件 | #39 无法可靠建立 profiles seed，随后 #40 的 RLS 正反向测试没有稳定身份输入 | S | Li Zhang | 已于 Day 5 步骤 9 补充验证关闭 | Supabase CLI `2.111.0` 本地事务 fixture 已验证：`auth.users` 与 email `auth.identities` 使用固定虚构 UUID，reset 后可同 UUID 重建；token 字符串使用非 NULL 空字符串，测试记录已清理，未写入凭据或真实资料 |
 | D5-OI-06 | Sprint 2 六项仍为 `Backlog`，首批五个工作包尚未达到 `Ready` | Day 2 步骤 8；`BACKLOG_AND_SPRINT_MANAGEMENT.md`；Week 2 周计划 | 五名负责人不能按协作规则直接开始；若提前开始会绕过依赖、接口、文件所有权和验收门禁 | M | Joshua Xingjian Cui | 已于 Day 5 步骤 9 关闭 | #9、#11、#39、#40、#41 五个个人工作包及 #10 协调 Enabler 均为 `Ready`；#10 已明确协调负责人但不占第六个工作包；详见步骤 9 记录 |
 
@@ -50,7 +50,7 @@
 | D5-OI-07 | npm `allowScripts` lifecycle-script 审批策略未统一 | `npm ci`、lint、typecheck、dev、build 当前均通过；不同机器可能形成不一致的本地批准结果 | S | Yubo Cai | Day 5 结束前形成决定；若延后则在 #41 完成前关闭 | 纳入 #41／WP-E；记录允许、拒绝或无需配置的理由，并在干净安装复验 |
 | D5-OI-08 | Vercel Preview 与 Production 暂时共用 Supabase 项目 | 已由用户接受，且仅允许虚构数据和非破坏性检查；Preview 仍不是隔离沙箱 | M | Joshua Xingjian Cui | 首次远程 schema／RLS Preview 验证前；2026-08-10 合同冻结时复核 | 记录独立 Preview 项目、升级方案或继续共享的正式风险接受；未隔离前禁止 destructive migration、reset 和真实数据 |
 | D5-OI-09 | 生产参与者、报名、签到、token 元数据和安全日志保留期限未获 Stakeholder 批准 | 当前不承诺永久保存，只使用虚构数据；不阻塞本地设计，但阻断最终上线和真实数据处理 | L | Joshua Xingjian Cui | 最终上线或接收任何真实参与者数据前 | 既有 Enabler #29／PRIV-04；取得 Stakeholder 决定后同步隐私、清理、备份和恢复文档 |
-| D5-OI-10 | 尚未对运行中的业务页面执行真实 UX／无障碍审查 | Day 2 只有线框文档评审，当前尚无业务页面可测；不影响骨架验收 | M | Shiying Liao | 每个相关 UI Issue 进入 `Testing` 前；共享 UI 先在 #11 中验证 | 在 #11 及后续页面 Issue 的验收中记录键盘、焦点、对比度、触控目标、窄屏和辅助技术结果；新增增强不得扩大 P0 |
+| D5-OI-10 | 运行中业务页面的真实 UX／无障碍审查 | 2026-08-27 已对登录态后台、会议、任务列表／创建／详情执行 Chrome 桌面和 390×844 窄屏复核，修复任务页崩溃、壳层不一致、暗色对比、无效导航和 UUID 展示；无横向溢出 | M | Shiying Liao | 2026-08-27 关闭当前已实现页面范围 | 后续新增 Events、报名／签到等页面仍须在各自 Issue 的 Testing 阶段重复键盘、焦点、对比度、触控目标和窄屏检查 |
 
 ## 6. 去重与排除说明
 

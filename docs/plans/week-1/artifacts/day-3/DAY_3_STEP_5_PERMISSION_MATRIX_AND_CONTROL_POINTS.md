@@ -70,6 +70,7 @@
 | `C` | 创建资源 |
 | `U` | 更新资源 |
 | `D*` | 仅为完成已批准更新所需的受控关系／子项删除；不是业务永久删除 |
+| `D†` | 通过单用途受保护 RPC 执行、UI 二次确认的已批准永久删除；不授予表级直接 DELETE |
 | `A` | 敏感或特权操作 |
 | `Aggregate` | 只能读取固定结构的聚合数字，不能读取组成行 |
 | `Own submit` | 只提交当前 token 操作所需的本人输入，不获得表行访问 |
@@ -86,17 +87,17 @@
 | 修改账号资料、角色或状态 | — | 仅 `can_manage_accounts` | 仅 `can_manage_accounts` | 窄 `SECURITY DEFINER` RPC 再验证账号管理员；直接表写入保持拒绝 |
 | 邀请／停用／恢复 Auth 用户 | — | 仅 `can_manage_accounts` | 仅 `can_manage_accounts` | 先验证用户会话与 profile 能力，再由 server-only Auth Admin 适配器执行 |
 | 查看账号管理审计 | — | 仅 `can_manage_accounts` | 仅 `can_manage_accounts` | audit 表仅 SELECT policy；写入只来自受保护 RPC |
-| `meetings` | — | C/R/U | C/R/U | backend policy；`created_by = auth.uid()`；无永久删除 |
+| `meetings` | — | C/R/U/D† | C/R/U/D† | backend policy；`created_by = auth.uid()`；永久删除走 `delete_meeting_record`，来源任务会阻断 |
 | `meeting_attendees` | — | C/R/D* | C/R/D* | backend policy；复合键；不得删除最后一名参会人 |
 | `discussion_points` | — | C/R/U；未被任务引用时 D* | 同左 | backend policy + source FK `RESTRICT` |
 | `meeting_decisions` | — | C/R/U；未被任务引用时 D* | 同左 | backend policy + source FK `RESTRICT` |
-| `tasks` | — | C/R/U | C/R/U | backend policy；单一负责人／来源／活动约束；无 delete |
+| `tasks` | — | C/R/U/D† | C/R/U/D† | backend policy；单一负责人／来源／活动约束；永久删除走 `delete_task_record`，来源记录保留 |
 | `events` 基础字段 | 仅 token 页经服务端得到最小片段 | C/R/U | C/R/U | backend policy；匿名无 table select |
 | Dashboard／任务／活动派生数据 | — | R | R | 从可读协调表派生；不含个人参与数据 |
 
 `profiles` 对普通后台成员保持直接只读，是为了让负责人选择和角色提示可用；
 账号管理员的变更只能通过窄 RPC 完成并记录审计，不能获得直接表写权限。会议子项的 `D*` 仅用于更新会议内容，服务端必须
-在同一事务中检查至少一名参会人和来源引用，不能扩展成会议永久删除。
+在同一事务中检查至少一名参会人和来源引用。会议与任务的 `D†` 是单独批准的永久删除边界，不扩展为通用表级删除权限。
 
 ### 5.2 敏感活动资源
 
@@ -154,7 +155,7 @@
 | SELECT | `(select private.is_backend_user())` | N/A | 只向 `authenticated` 授权 |
 | INSERT | N/A | backend 且 `created_by = (select auth.uid())`（有该列时） | 服务端字段白名单；审计列不能客户端覆盖 |
 | UPDATE | backend | backend；创建者和来源字段保持不可变 | before trigger／受限 RPC 防止改审计／来源列 |
-| DELETE | 默认无 policy | 默认无 policy | 仅必要关系／子项 D* 通过窄函数或专门 policy |
+| DELETE | 默认无 policy | 默认无 policy | 仅必要关系／子项 D* 或已批准永久删除 D† 通过窄函数；不授予表级直接 DELETE |
 
 `profiles` 不创建 app INSERT／UPDATE／DELETE policy。`meeting_attendees` 没有
 `created_by`，服务端先验证目标会议可访问；`D*` 必须检查不会移除最后一名

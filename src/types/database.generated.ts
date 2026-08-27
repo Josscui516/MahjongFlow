@@ -625,6 +625,7 @@ export type Database = {
         Args: { target_meeting_id: string }
         Returns: string
       }
+      delete_task_record: { Args: { target_task_id: string }; Returns: string }
       get_check_in_context: {
         Args: { check_in_token: string }
         Returns: {

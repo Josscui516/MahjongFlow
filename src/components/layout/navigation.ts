@@ -11,16 +11,10 @@ export type NavigationSection = Readonly<{
 }>;
 
 const SHARED_NAVIGATION_ITEMS = [
-  { href: "/dashboard", label: "Dashboard" },
+  { href: "/backoffice", label: "Dashboard" },
   { href: "/meetings", label: "Meetings" },
   { href: "/tasks", label: "Tasks" },
-  { href: "/events", label: "Events" },
 ] as const satisfies readonly NavigationItem[];
-
-const SENSITIVE_NAVIGATION_SECTION = {
-  label: "Sensitive operations",
-  items: [{ href: "/registrations", label: "Registrations" }],
-} as const satisfies NavigationSection;
 
 const SHARED_NAVIGATION_SECTION = {
   items: SHARED_NAVIGATION_ITEMS,
@@ -37,14 +31,10 @@ const ACCOUNT_ADMINISTRATION_SECTION = {
  * boundary and must be paired with route checks and RLS.
  */
 export function getNavigationSections(
-  role: BackofficeRole,
+  _role: BackofficeRole,
   canManageAccounts = false,
 ): readonly NavigationSection[] {
   const sections: NavigationSection[] = [SHARED_NAVIGATION_SECTION];
-
-  if (role === "authorised") {
-    sections.push(SENSITIVE_NAVIGATION_SECTION);
-  }
 
   if (canManageAccounts) {
     sections.push(ACCOUNT_ADMINISTRATION_SECTION);

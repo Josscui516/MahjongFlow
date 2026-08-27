@@ -12,28 +12,22 @@ describe("role-aware navigation", () => {
     expect(getNavigationSections("committee")).toEqual([
       {
         items: [
-          { href: "/dashboard", label: "Dashboard" },
+          { href: "/backoffice", label: "Dashboard" },
           { href: "/meetings", label: "Meetings" },
           { href: "/tasks", label: "Tasks" },
-          { href: "/events", label: "Events" },
         ],
       },
     ]);
   });
 
-  it("adds only the registrations group for authorised members", () => {
+  it("keeps unfinished registration workflows out of authorised navigation", () => {
     expect(getNavigationSections("authorised")).toEqual([
       {
         items: [
-          { href: "/dashboard", label: "Dashboard" },
+          { href: "/backoffice", label: "Dashboard" },
           { href: "/meetings", label: "Meetings" },
           { href: "/tasks", label: "Tasks" },
-          { href: "/events", label: "Events" },
         ],
-      },
-      {
-        label: "Sensitive operations",
-        items: [{ href: "/registrations", label: "Registrations" }],
       },
     ]);
   });
@@ -80,24 +74,24 @@ describe("role-aware navigation", () => {
     expect(html).toMatch(
       /<a(?=[^>]*aria-current="page")(?=[^>]*href="\/tasks")[^>]*>Tasks<\/a>/,
     );
-    expect(html).toContain("Sensitive operations");
-    expect(html).toContain('href="/registrations"');
+    expect(html).not.toContain("Sensitive operations");
+    expect(html).not.toContain('href="/registrations"');
 
     const ids = [...html.matchAll(/ id="([^"]+)"/g)].map((match) => match[1]);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids.every((id) => !/\s/.test(id))).toBe(true);
   });
 
-  it("does not render sensitive navigation for committee members", () => {
+  it("does not render unfinished navigation for committee members", () => {
     const html = renderToStaticMarkup(
       <AppNavigation role="committee" />,
     );
 
     expect(html).not.toContain("Sensitive operations");
     expect(html).not.toContain('href="/registrations"');
-    expect(html).toContain('href="/dashboard"');
+    expect(html).toContain('href="/backoffice"');
     expect(html).toContain('href="/meetings"');
     expect(html).toContain('href="/tasks"');
-    expect(html).toContain('href="/events"');
+    expect(html).not.toContain('href="/events"');
   });
 });

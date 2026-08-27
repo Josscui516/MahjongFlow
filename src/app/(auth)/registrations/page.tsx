@@ -15,7 +15,7 @@ import {
 
 const BACK_ACTION = (
   <Link
-    className="inline-flex rounded-lg border border-current px-3 py-2 text-sm font-semibold"
+    className="inline-flex min-h-11 items-center rounded-lg border border-current px-3 py-2 text-sm font-semibold"
     href="/backoffice"
   >
     Return to back office

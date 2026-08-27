@@ -4,7 +4,7 @@
 
 - **Course:** FIT3162 Computer Science Project
 - **Team:** S1_CS_01
-- **Stage:** Sprint 2 is merged to `main`; Sprint 3 meeting management is integrated and awaiting Sprint acceptance
+- **Stage:** Sprint 3 is merged to `main`; Sprint 4 decision-to-task is integrated with delivery gates pending
 - **Project board:** [MahjongFlow MVP GitHub Project](https://github.com/users/Josscui516/projects/5)
 
 ## Overview
@@ -57,20 +57,22 @@ the `committee` and `authorised` role model, protected route and service boundar
 schema and RLS policies, shared loading/error/form states, repeatable local migrations, and the
 integrated quality pipeline.
 
-Sprint 3 meeting-management work packages #12, #13, #56, and #14 have been merged into
-`sprint/3-meeting-management` through PRs #61, #59, #58, and #57. The integration branch supports
+Sprint 3 meeting-management work packages #12, #13, #56, and #14 were merged to `main` through
+Sprint PR #60. The delivered baseline supports
 meeting creation, refresh-safe detail and update flows, ordered discussion points and decisions,
 deterministic meeting history, anonymous denial, and a non-destructive meeting boundary. Atomic
 meeting and agenda writes are delivered through timestamped Supabase migrations and authenticated
 security-invoker RPCs.
 
-The current local integration passes lint, typecheck, 206 application tests, 120 acceptance tests,
-222 database assertions, database concurrency checks, database lint and drift checks, a production
-build, and an authenticated Chrome create/edit/agenda/history flow using fictional data. Sprint 3 is
-not yet complete: Epic #2 and child Issues #12, #13, #14, and #56 remain open, the Sprint-level US-01
-acceptance record is still pending, and the Sprint integration branch has not been merged to `main`.
+Sprint 4 work packages #15, #23, #24, and #25 are present on
+`sprint/4-decision-to-task`. The branch provides protected task CRUD, constrained status and one
+assignee, decision/discussion conversion with trusted source retention, and bidirectional meeting/task
+navigation. Its C-01–C-07 and T-01/T-02/T-08 technical acceptance passes, but Sprint delivery remains
+blocked on missing non-author review evidence, unsynchronised Project/Acceptance Gate fields, the
+Stakeholder stage review, and a non-empty local database drift result. See the
+[Sprint 4 acceptance record](docs/plans/week-4/US_02_ACCEPTANCE_RECORD.md).
 
-Production (current `main` / Sprint 2 baseline):
+Production (current `main` / Sprint 3 baseline):
 [mahjong-flow.vercel.app](https://mahjong-flow.vercel.app)
 
 ## Technology
