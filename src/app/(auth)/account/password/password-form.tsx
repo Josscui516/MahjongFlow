@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { createBrowserSupabaseClient } from "@/lib/supabase/browser";
@@ -137,10 +138,21 @@ export function PasswordSetupForm() {
 
   if (linkState === "unavailable") {
     return (
-      <p className="rounded-xl bg-rose-50 p-3 text-sm text-rose-900" role="alert">
-        This invitation or recovery link is unavailable or has expired. Ask an account
-        administrator to send a new email.
-      </p>
+      <div className="space-y-4">
+        <p
+          className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-sm leading-6 text-rose-900"
+          role="alert"
+        >
+          This invitation or recovery link is unavailable or has expired. Ask an
+          account administrator to send a new email.
+        </p>
+        <Link
+          className="inline-flex min-h-11 items-center text-sm font-semibold text-emerald-900 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-700"
+          href="/login"
+        >
+          Return to sign in
+        </Link>
+      </div>
     );
   }
 

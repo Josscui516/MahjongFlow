@@ -21,7 +21,7 @@ export function LogoutForm() {
         </p>
       ) : null}
       <button
-        className="rounded border border-current px-4 py-2 disabled:opacity-60"
+        className="min-h-11 rounded border border-current px-4 py-2 disabled:opacity-60"
         disabled={pending}
         type="submit"
       >

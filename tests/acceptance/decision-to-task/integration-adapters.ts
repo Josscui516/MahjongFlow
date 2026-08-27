@@ -168,6 +168,10 @@ export function createDecisionToTaskIntegrationAdapters(): DecisionToTaskAdapter
             repositoryCalls += 1;
             throw new Error("unexpected persistence");
           },
+          async delete() {
+            repositoryCalls += 1;
+            return "not_found";
+          },
           async get() {
             repositoryCalls += 1;
             return null;

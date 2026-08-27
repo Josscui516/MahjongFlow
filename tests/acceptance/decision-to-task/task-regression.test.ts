@@ -29,6 +29,9 @@ function createMemoryRepository() {
       records.set(record.id, record);
       return record;
     },
+    async delete(taskId) {
+      return records.delete(taskId) ? "deleted" : "not_found";
+    },
     async get(taskId) {
       return records.get(taskId) ?? null;
     },
@@ -97,6 +100,7 @@ describe("Sprint 4 task regression acceptance", () => {
     const memory = createMemoryRepository();
     const repository = {
       create: vi.fn(memory.repository.create),
+      delete: vi.fn(memory.repository.delete),
       get: vi.fn(memory.repository.get),
       list: vi.fn(memory.repository.list),
       update: vi.fn(memory.repository.update),

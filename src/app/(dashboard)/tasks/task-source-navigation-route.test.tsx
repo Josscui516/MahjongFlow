@@ -2,11 +2,14 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn(), replace: vi.fn() }) }));
 
 const taskMocks = vi.hoisted(() => ({ getTask: vi.fn() }));
+const editorMocks = vi.hoisted(() => ({ listAssigneeOptions: vi.fn() }));
 const sourceNavigationMocks = vi.hoisted(() => ({ readTaskSource: vi.fn() }));
 
 vi.mock("@/features/tasks/core/service", () => taskMocks);
+vi.mock("@/features/tasks/editor/server", () => editorMocks);
 vi.mock("@/features/tasks/source-navigation/service", () => sourceNavigationMocks);
 
 import TaskPage from "@/app/(dashboard)/tasks/[taskId]/page";
@@ -31,8 +34,10 @@ const task = {
 describe("task source navigation route", () => {
   beforeEach(() => {
     taskMocks.getTask.mockReset();
+    editorMocks.listAssigneeOptions.mockReset();
     sourceNavigationMocks.readTaskSource.mockReset();
     taskMocks.getTask.mockResolvedValue({ ok: true, record: task });
+    editorMocks.listAssigneeOptions.mockResolvedValue([{ id: task.assigneeId, label: "Fictional Owner" }]);
     sourceNavigationMocks.readTaskSource.mockResolvedValue({
       ok: true,
       source: {
@@ -55,6 +60,7 @@ describe("task source navigation route", () => {
     expect(sourceNavigationMocks.readTaskSource).toHaveBeenCalledWith(task);
     expect(html).toContain("Fictional planning meeting");
     expect(html).toContain("Approve the fictional venue booking.");
+    expect(html).toContain("Fictional Owner");
     expect(html).toContain('href="/meetings/33333333-3333-4333-8333-333333333333"');
     expect(html).toContain("Return to source meeting Fictional planning meeting");
   });
@@ -87,8 +93,9 @@ describe("task source navigation route", () => {
       }),
     );
 
-    expect(html).toContain("This task is unavailable.");
+    expect(html).toContain("Something went wrong");
     expect(html).not.toContain("Confirm fictional booking");
     expect(sourceNavigationMocks.readTaskSource).not.toHaveBeenCalled();
+    expect(editorMocks.listAssigneeOptions).not.toHaveBeenCalled();
   });
 });

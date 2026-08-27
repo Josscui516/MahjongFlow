@@ -4,7 +4,7 @@
 >
 > Sprint：Sprint 2
 >
-> 当前结论：技术验收通过，六个 Sprint Issue 均为 `Testing`／Acceptance Gate `Passed`；#54 已按仓库所有者明确批准的审查例外合并。剩余交付门禁为 Sprint 总 PR #52 的最新集成检查、独立审查与另行授权合并。
+> 当前结论（2026-08-27 复核）：技术验收继续通过，Sprint 总 PR #52 已合并，相关 Sprint 2 Project 项已为 `Done`／`Passed`。历史上 #52 未留下可核对的非作者 review，Epic Acceptance Gate 仍为 `Not checked`；这些历史流程证据不能事后伪造，只能由 Joshua 明确接受偏差并手动补充 Epic 门禁。
 
 ## 1. 验收矩阵
 
@@ -63,8 +63,8 @@ X-01 至 X-07 已通过。数据库测试入口会把 `Files=0`、`Tests=0` 或 
 
 | 阻塞 | 影响 | 负责人／所需动作 | 下次检查 |
 |---|---|---|---|
-| 登录页最终共享 UI 接线尚待合入 Sprint 分支 | Sprint 总 PR 尚未包含实际 `LoginShell`／表单／反馈集成 | 集成负责人合入本次 #41 修复并等待最新 CI | 修复 PR 创建后立即 |
-| Sprint 总 PR #52 尚未完成最新正文、检查和独立审查 | 无法请求最终 `main` 合并授权 | Yubo 更新 #52，复核六个 Sprint Issue 与完整证据并请求审查 | UI 接线合入 Sprint 分支后立即 |
+| Sprint 总 PR #52 无可核对的非作者 review | 历史交付未满足当前审查证据标准，且无法事后重建真实审批 | Joshua 记录接受该历史流程偏差，后续 Sprint 严格执行非作者 review | Sprint 4 总 PR 前复核流程 |
+| Sprint 2 Epic Acceptance Gate 为 `Not checked` | 项目级验收字段与已完成的技术证据不一致 | Joshua 核对本记录后手动更新 Project 字段 | 下一次 Project 整理窗口 |
 
 ## 5. 最终结论规则
 

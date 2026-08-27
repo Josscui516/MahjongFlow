@@ -62,15 +62,15 @@ describe("BackofficeShell", () => {
     expect(html).not.toContain("Registrations");
   });
 
-  it("passes only the authorised role through the test adapter", () => {
+  it("passes only the authorised role without exposing unfinished modules", () => {
     const html = renderFromTrustedTestContext(
       AUTHORISED_CONTEXT,
       <p>Protected fictional content</p>,
     );
 
     expect(html).toContain("Role: Authorised");
-    expect(html).toContain("Sensitive operations");
-    expect(html).toContain("Registrations");
+    expect(html).not.toContain("Sensitive operations");
+    expect(html).not.toContain("Registrations");
     expect(html).toContain("Protected fictional content");
     expect(html).not.toContain(AUTHORISED_CONTEXT.userId);
   });

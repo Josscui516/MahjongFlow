@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
+import { PageFrame } from "@/components/layout";
 import { createTaskSourceReader } from "@/features/tasks/conversion/source/persistence";
 import { resolveTaskSource, type TaskSourceKind } from "@/features/tasks/conversion/source";
 import {
@@ -26,7 +27,7 @@ export default async function TaskConversionPage({ params }: Readonly<{
     if (error instanceof AuthorizationError && error.code === "UNAUTHENTICATED") {
       redirect(`/login?next=${encodeURIComponent(`/tasks/convert/${sourceKind}/${sourceId}`)}`);
     }
-    return <main className="mx-auto max-w-2xl p-6"><p role="alert">Access denied.</p></main>;
+    return <p role="alert">Access denied.</p>;
   }
 
   const source = await resolveTaskSource(sourceKind, sourceId, createTaskSourceReader());
@@ -39,10 +40,12 @@ export default async function TaskConversionPage({ params }: Readonly<{
   );
 
   return (
-    <main className="mx-auto max-w-2xl p-6">
-      <Link className="text-sm font-semibold text-emerald-900 underline" href={`/meetings/${source.meetingId}`}>Back to source meeting</Link>
-      <h1 className="mt-5 text-3xl font-bold text-slate-950">Create task from {source.sourceKind === "decision" ? "decision" : "discussion point"}</h1>
-      <div className="mt-6">
+    <PageFrame
+      description="Keep the original meeting context attached while assigning ownership and a due date."
+      title={`Create task from ${source.sourceKind === "decision" ? "decision" : "discussion point"}`}
+    >
+      <div className="mb-5"><Link className="inline-flex min-h-11 items-center text-sm font-semibold text-emerald-900 underline underline-offset-4" href={`/meetings/${source.meetingId}`}>Back to source meeting</Link></div>
+      <div className="max-w-3xl">
         <TaskConversionForm
           assigneeOptions={assignees}
           conversionAction={conversionAction}
@@ -57,6 +60,6 @@ export default async function TaskConversionPage({ params }: Readonly<{
           sourceLabel={`${source.sourceKind === "decision" ? "Decision" : "Discussion point"}: ${source.sourceContent}`}
         />
       </div>
-    </main>
+    </PageFrame>
   );
 }

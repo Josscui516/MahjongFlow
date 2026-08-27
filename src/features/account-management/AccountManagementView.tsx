@@ -36,8 +36,8 @@ function ActionFeedback({ state }: Readonly<{ state: AccountActionState }>) {
   );
 }
 
-function FieldError({ message }: Readonly<{ message?: string }>) {
-  return message ? <p className="mt-1 text-sm text-rose-700">{message}</p> : null;
+function FieldError({ id, message }: Readonly<{ id?: string; message?: string }>) {
+  return message ? <p className="mt-1 text-sm text-rose-700" id={id}>{message}</p> : null;
 }
 
 export function InviteAccountForm() {
@@ -52,18 +52,20 @@ export function InviteAccountForm() {
         <label className="text-sm font-semibold text-slate-800">
           Display name
           <input
+            aria-describedby={state.fieldErrors?.displayName ? "invite-display-name-error" : undefined}
             aria-invalid={Boolean(state.fieldErrors?.displayName) || undefined}
             className="mt-2 block min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-normal shadow-sm outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
             maxLength={120}
             name="displayName"
             required
           />
-          <FieldError message={state.fieldErrors?.displayName} />
+          <FieldError id="invite-display-name-error" message={state.fieldErrors?.displayName} />
         </label>
 
         <label className="text-sm font-semibold text-slate-800">
           Login email
           <input
+            aria-describedby={state.fieldErrors?.email ? "invite-email-error" : undefined}
             aria-invalid={Boolean(state.fieldErrors?.email) || undefined}
             autoComplete="email"
             className="mt-2 block min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-normal shadow-sm outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
@@ -72,24 +74,27 @@ export function InviteAccountForm() {
             required
             type="email"
           />
-          <FieldError message={state.fieldErrors?.email} />
+          <FieldError id="invite-email-error" message={state.fieldErrors?.email} />
         </label>
 
         <label className="text-sm font-semibold text-slate-800">
           Committee position
           <input
+            aria-describedby={state.fieldErrors?.committeePosition ? "invite-position-error" : undefined}
             aria-invalid={Boolean(state.fieldErrors?.committeePosition) || undefined}
             className="mt-2 block min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-normal shadow-sm outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
             maxLength={80}
             name="committeePosition"
             placeholder="Optional, e.g. Secretary"
           />
-          <FieldError message={state.fieldErrors?.committeePosition} />
+          <FieldError id="invite-position-error" message={state.fieldErrors?.committeePosition} />
         </label>
 
         <label className="text-sm font-semibold text-slate-800">
           Data access role
           <select
+            aria-describedby={state.fieldErrors?.role ? "invite-role-error" : undefined}
+            aria-invalid={Boolean(state.fieldErrors?.role) || undefined}
             className="mt-2 block min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-normal shadow-sm outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
             defaultValue="committee"
             name="role"
@@ -97,7 +102,7 @@ export function InviteAccountForm() {
             <option value="committee">Committee</option>
             <option value="authorised">Authorised</option>
           </select>
-          <FieldError message={state.fieldErrors?.role} />
+          <FieldError id="invite-role-error" message={state.fieldErrors?.role} />
         </label>
       </div>
 
@@ -159,7 +164,7 @@ function AccountCard({ account }: Readonly<{ account: ManagedAccount }>) {
       </div>
 
       <details className="mt-5 rounded-xl border border-slate-200 bg-slate-50">
-        <summary className="cursor-pointer px-4 py-3 text-sm font-semibold text-slate-900">
+        <summary className="flex min-h-11 cursor-pointer items-center px-4 py-3 text-sm font-semibold text-slate-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700">
           Edit account details
         </summary>
         <form action={updateAction} className="space-y-4 border-t border-slate-200 p-4">
@@ -168,32 +173,38 @@ function AccountCard({ account }: Readonly<{ account: ManagedAccount }>) {
             <label className="text-sm font-semibold text-slate-800" htmlFor={`${fieldPrefix}-name`}>
               Display name
               <input
-                className="mt-2 block min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-normal"
+                aria-describedby={updateState.fieldErrors?.displayName ? `${fieldPrefix}-name-error` : undefined}
+                aria-invalid={Boolean(updateState.fieldErrors?.displayName) || undefined}
+                className="mt-2 block min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-normal shadow-sm outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
                 defaultValue={account.displayName}
                 id={`${fieldPrefix}-name`}
                 maxLength={120}
                 name="displayName"
                 required
               />
-              <FieldError message={updateState.fieldErrors?.displayName} />
+              <FieldError id={`${fieldPrefix}-name-error`} message={updateState.fieldErrors?.displayName} />
             </label>
 
             <label className="text-sm font-semibold text-slate-800" htmlFor={`${fieldPrefix}-position`}>
               Committee position
               <input
-                className="mt-2 block min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-normal"
+                aria-describedby={updateState.fieldErrors?.committeePosition ? `${fieldPrefix}-position-error` : undefined}
+                aria-invalid={Boolean(updateState.fieldErrors?.committeePosition) || undefined}
+                className="mt-2 block min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-normal shadow-sm outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
                 defaultValue={account.committeePosition ?? ""}
                 id={`${fieldPrefix}-position`}
                 maxLength={80}
                 name="committeePosition"
               />
-              <FieldError message={updateState.fieldErrors?.committeePosition} />
+              <FieldError id={`${fieldPrefix}-position-error`} message={updateState.fieldErrors?.committeePosition} />
             </label>
 
             <label className="text-sm font-semibold text-slate-800" htmlFor={`${fieldPrefix}-role`}>
               Data access role
               <select
-                className="mt-2 block min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-normal"
+                aria-describedby={updateState.fieldErrors?.role ? `${fieldPrefix}-role-error` : undefined}
+                aria-invalid={Boolean(updateState.fieldErrors?.role) || undefined}
+                className="mt-2 block min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-normal shadow-sm outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
                 defaultValue={account.role}
                 id={`${fieldPrefix}-role`}
                 name="role"
@@ -201,6 +212,7 @@ function AccountCard({ account }: Readonly<{ account: ManagedAccount }>) {
                 <option value="committee">Committee</option>
                 <option value="authorised">Authorised</option>
               </select>
+              <FieldError id={`${fieldPrefix}-role-error`} message={updateState.fieldErrors?.role} />
             </label>
           </div>
 
@@ -234,7 +246,7 @@ function AccountCard({ account }: Readonly<{ account: ManagedAccount }>) {
         <form action={recoveryAction} className="space-y-2">
           <input name="id" type="hidden" value={account.id} />
           <SubmitButton
-            className="inline-flex min-h-10 items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
             disabled={account.status === "disabled"}
             pending={recoveryPending}
             pendingLabel="Sending…"
@@ -254,8 +266,8 @@ function AccountCard({ account }: Readonly<{ account: ManagedAccount }>) {
           <SubmitButton
             className={
               account.status === "disabled"
-                ? "inline-flex min-h-10 items-center justify-center rounded-xl bg-emerald-950 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-60"
-                : "inline-flex min-h-10 items-center justify-center rounded-xl border border-rose-300 bg-white px-3 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
+                ? "inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-950 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-60"
+                : "inline-flex min-h-11 items-center justify-center rounded-xl border border-rose-300 bg-white px-3 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
             }
             disabled={account.isCurrentUser}
             pending={statusPending}

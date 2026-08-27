@@ -4,7 +4,7 @@
 
 ## 1. 本周目标
 
-完成可演示的会议记录流程：委员会与 authorised 用户可以创建、查看、更新和浏览会议，保存有序讨论点与关键决策；匿名／参与者访问在路由、服务端和 RLS 层均被拒绝；会议不提供永久删除；M-01 至 M-06 形成可复验的集成证据。
+完成可演示的会议记录流程：委员会与 authorised 用户可以创建、查看、更新、删除和浏览会议，保存有序讨论点与关键决策；匿名／参与者访问在路由、服务端和 RLS 层均被拒绝；删除必须二次确认，存在来源追踪任务时必须拒绝；M-01 至 M-06 形成可复验的集成证据。
 
 ### Sprint 交付路线
 
@@ -63,7 +63,7 @@
 ### 3.3 明确不做
 
 - 不实现 #23–#25 的决策转任务、来源链接或任务页面；
-- 不实现会议永久删除；没有单独批准时也不增加归档能力；
+- 会议永久删除已获范围批准：只能通过受保护的 `delete_meeting_record(uuid)` 服务端边界执行，UI 必须二次确认，关联任务存在时必须阻断；不额外增加归档能力；
 - 不修改参与者、报名、签到、晚餐资格或公开 token 流程；
 - 不重写 Week 2 migration；schema 修正只能使用新的 timestamped migration；
 - 不把 Joshua 的共享验收工具包替代为各功能 Issue 本应提供的最小测试；
@@ -132,7 +132,7 @@
 - 前四个功能包均进入 `Testing` 后，Joshua 才开始 #2 和共享验收；
 - 核对 Project 中 `Sprint 3` 的 Issue 完整集合与总 PR 声明完全一致；
 - 运行 lint、typecheck、应用测试、数据库测试、build 和 M-01 至 M-06；
-- 复核 route／server／RLS 拒绝、migration 顺序与回滚、虚构数据和无永久删除；
+- 复核 route／server／RLS 拒绝、删除确认与关联任务阻断、migration 顺序与回滚及虚构数据；
 - 创建 #2 为主要 Issue 的 Sprint 总 PR；取得非作者 review 和全部 checks 后，合并仍需用户另行明确授权。
 
 ## 7. 本周交付物
@@ -152,7 +152,7 @@
 - [ ] committee／authorised 正向路径与 anonymous／participant 路由、服务端、RLS 拒绝均通过；
 - [ ] loading、empty、success、validation error、permission denied 和 system error 状态按适用范围覆盖；
 - [ ] 会议、参会人、讨论点和决策使用现有 schema；任何增量 migration 均可重放、有回滚说明且类型已重新生成；
-- [ ] 页面、服务端和数据库均未暴露会议永久删除；
+- [x] 页面只提供带二次确认的删除入口，服务端与数据库通过受保护 RPC 执行，并在会议存在来源追踪任务时拒绝删除；
 - [ ] 功能自身测试与共享验收平台责任未混淆；
 - [ ] 每个成员 PR 完成一次集中非作者审查并合并到 Sprint 分支，Issue 保持 `Testing`；
 - [ ] Joshua 最后执行 Sprint 收尾，未提前占用第二个主要 `In Progress` Issue；

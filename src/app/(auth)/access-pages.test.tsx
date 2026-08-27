@@ -39,6 +39,8 @@ describe("integrated role-aware pages", () => {
     "renders the trusted %s role in the back-office shell",
     async (role) => {
       authMocks.requireBackendUser.mockResolvedValue({
+        canManageAccounts: false,
+        displayName: "Fictional committee member",
         role,
         userId: "fictional-user-id",
       });
@@ -46,8 +48,9 @@ describe("integrated role-aware pages", () => {
       const html = renderToStaticMarkup(await BackofficePage());
 
       expect(html).toContain(`Role: ${role === "authorised" ? "Authorised" : "Committee"}`);
-      expect(html).toContain("Foundation ready");
-      expect(html.includes('href="/registrations"')).toBe(role === "authorised");
+      expect(html).toContain("Committee dashboard");
+      expect(html).toContain("Fictional committee member");
+      expect(html).not.toContain('href="/registrations"');
     },
   );
 

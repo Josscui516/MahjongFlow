@@ -194,7 +194,7 @@ export function MeetingEditor({ agendaSlot, attendeeOptions, initialRecord, just
                 <h2 className="text-xl font-bold text-slate-950" id="recorded-meeting-heading">{values.title}</h2>
                 <p className="mt-2 text-sm text-slate-600">{formatSydneyDateTimeDisplay(record?.startsAt ?? initialRecord.startsAt)} · {participantLabel}</p>
               </div>
-              <button className="rounded-xl bg-emerald-950 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700" onClick={() => setEditing(true)} type="button">Edit meeting</button>
+              <button className="min-h-11 rounded-xl bg-emerald-950 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700" onClick={() => setEditing(true)} type="button">Edit meeting</button>
             </div>
             <div className="mt-5 border-t border-slate-200 pt-5">
               <h3 className="text-sm font-semibold text-slate-900">Participants</h3>

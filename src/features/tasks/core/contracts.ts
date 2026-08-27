@@ -30,6 +30,9 @@ export type TaskReadResult =
 export type TaskListResult =
   | Readonly<{ items: readonly TaskRecordDTO[]; ok: true }>
   | Readonly<{ code: "PERMISSION_DENIED" | "SYSTEM_ERROR"; ok: false }>;
+export type TaskDeleteResult =
+  | Readonly<{ ok: true }>
+  | Readonly<{ code: "NOT_FOUND" | "PERMISSION_DENIED" | "SYSTEM_ERROR"; ok: false }>;
 export type TaskEditorPort = Readonly<{
   createTask: (input: TaskInput) => Promise<TaskMutationResult>;
   getTask: (taskId: string) => Promise<TaskReadResult>;

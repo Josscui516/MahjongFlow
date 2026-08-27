@@ -59,8 +59,8 @@ function NavigationLinks({
                     aria-current={isCurrent ? "page" : undefined}
                     className={
                       isCurrent
-                        ? "block rounded-xl bg-emerald-950 px-3 py-2.5 text-sm font-semibold text-white shadow-sm"
-                        : "block rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-emerald-50 hover:text-emerald-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+                        ? "flex min-h-11 items-center rounded-xl bg-emerald-950 px-3 py-2.5 text-sm font-semibold text-white shadow-sm"
+                        : "flex min-h-11 items-center rounded-xl px-3 py-2.5 text-sm font-medium text-slate-700 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
                     }
                     href={item.href}
                   >
@@ -86,7 +86,7 @@ export function AppNavigation({
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-72 border-r border-slate-200 bg-white px-5 py-7 md:block">
         <Link
           className="mb-10 block rounded-lg px-3 py-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
-          href="/dashboard"
+          href="/backoffice"
         >
           <span className="block text-xl font-bold tracking-tight text-emerald-950">
             MahjongFlow
@@ -109,13 +109,13 @@ export function AppNavigation({
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <Link
             className="rounded-lg font-bold tracking-tight text-emerald-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
-            href="/dashboard"
+            href="/backoffice"
           >
             MahjongFlow
           </Link>
 
           <details className="group relative">
-            <summary className="cursor-pointer list-none rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700">
+            <summary className="inline-flex min-h-11 cursor-pointer list-none items-center rounded-lg border border-slate-300 px-3 py-2 text-sm font-semibold text-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700">
               Menu
             </summary>
             <div className="absolute right-0 z-30 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-slate-200 bg-white p-4 shadow-xl">

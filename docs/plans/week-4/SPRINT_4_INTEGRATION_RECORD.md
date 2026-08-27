@@ -7,7 +7,7 @@
 
 ## 1. 集成结论
 
-四个功能工作包的代码均已出现在 Sprint 集成分支，C-01 至 C-07 与 T-01、T-02、T-08 的共享自动化验收通过。当前技术集成可供阶段评审使用，但 Sprint 交付门禁仍为**阻塞**：GitHub 上缺少可核对的非作者 review，Project 状态与 Acceptance Gate 未同步，Stakeholder 阶段评审尚未发生，数据库 drift 检查也不是空结果。
+四个功能工作包的代码均已出现在 Sprint 集成分支，C-01 至 C-07 与 T-01、T-02、T-08 的共享自动化验收通过。2026-08-27 的 UI 修复与本地数据库重放已关闭任务页崩溃、后台布局不一致、无效导航、负责人 UUID 暴露式展示和 schema drift。当前技术集成可供阶段评审使用，但 Sprint 交付门禁仍为**阻塞**：GitHub 上缺少可核对的非作者 review，Project 状态与 Acceptance Gate 未同步，Stakeholder 阶段评审尚未发生。
 
 本记录不把已合入分支等同于已进入 `Testing`，也不把自动化测试等同于团队 review 或 Stakeholder 确认。
 
@@ -49,6 +49,5 @@ Sprint 成员集合与统一周计划一致，但状态未反映实际代码集�
 | #66–#68 无非作者 review | 工作包不能按规则声明进入 Testing | 由非作者完成 review，并记录复验结论 | Joshua／指定审查人 | 阶段评审前 |
 | Project 状态与 Acceptance Gate 未同步 | Sprint 交付状态不真实 | 证据核对后由 Joshua 手动更新；不得自动化推导 | Joshua | review 完成后 |
 | Stakeholder 阶段评审未执行 | Sprint 4 Definition of Done 未满足 | 使用评审记录中的虚构数据流程完成评审并取得签字／确认 | Joshua | 约定评审窗口 |
-| `npm run db:diff` 非空 | 不能声明 migration 无漂移 | 在保留本地数据或经授权重置后，核对既有账号管理／会议函数与 migrations | 对应既有功能所有者／Joshua | Sprint 总 PR 前 |
 
 在以上门禁满足前，不创建 Sprint 总 PR、不合并到 `main`、不关闭 Issues，也不标记 `Done`。

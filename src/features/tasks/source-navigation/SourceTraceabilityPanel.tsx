@@ -47,12 +47,12 @@ export function SourceTraceabilityPanel({ result }: SourceTraceabilityPanelProps
       <p className="mt-1 break-words text-sm font-semibold text-slate-800">
         {source.meetingTitle}
       </p>
-      <blockquote className="mt-4 break-words border-l-4 border-emerald-200 pl-4 text-sm leading-6 text-slate-600">
+      <blockquote className="mt-4 break-words rounded-xl bg-emerald-50 p-4 text-sm leading-6 text-emerald-950/80 ring-1 ring-inset ring-emerald-100">
         {source.sourceContent}
       </blockquote>
       <Link
         aria-label={`Return to source meeting ${source.meetingTitle}`}
-        className="mt-5 inline-flex min-h-10 items-center justify-center rounded-lg border border-emerald-800 px-3 py-2 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+        className="mt-5 inline-flex min-h-11 items-center justify-center rounded-lg border border-emerald-800 px-3 py-2 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
         href={getMeetingHref(source.meetingId)}
       >
         Return to source meeting

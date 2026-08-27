@@ -1,10 +1,69 @@
 import Link from "next/link";
-import { redirect } from "next/navigation";
+
+import { SuccessFeedback, SystemErrorFeedback } from "@/components/feedback";
 import { listTasks } from "@/features/tasks/core/service";
-export default async function TasksPage() {
+import { listAssigneeOptions } from "@/features/tasks/editor/server";
+import { TaskList } from "@/features/tasks/list/TaskList";
+import { parseTaskListCriteria } from "@/features/tasks/list/search-params";
+
+export default async function TasksPage({ searchParams }: Readonly<{ searchParams: Promise<{ deleted?: string; q?: string | string[]; sort?: string | string[]; status?: string | string[] }> }>) {
+  const query = await searchParams;
+  const criteria = parseTaskListCriteria(query);
   const result = await listTasks();
-  if (!result.ok && result.code === "PERMISSION_DENIED") redirect("/login?next=%2Ftasks");
-  return <main className="mx-auto max-w-5xl space-y-6 p-6"><div className="flex items-center justify-between"><div><h1 className="text-3xl font-bold">Tasks</h1><p className="text-slate-600">Committee action items and their persisted status.</p></div><Link className="rounded-xl bg-emerald-950 px-4 py-3 font-semibold text-white" href="/tasks/new">Create task</Link></div>
-    {!result.ok ? <p role="alert">Tasks could not be loaded.</p> : result.items.length === 0 ? <p className="rounded-2xl border bg-white p-6">No tasks yet.</p> : <ul className="space-y-3">{result.items.map((task) => <li className="rounded-2xl border bg-white p-5" key={task.id}><Link className="font-bold underline" href={`/tasks/${task.id}`}>{task.title}</Link><p className="mt-1 text-sm text-slate-600">Due {task.dueDate} · {task.status.replaceAll("_", " ")}</p></li>)}</ul>}
-  </main>;
+  const assignees = result.ok ? await listAssigneeOptions() : [];
+  return (
+    <div className="space-y-6">
+      <header className="flex flex-col gap-6 border-b border-slate-200 pb-7 sm:flex-row sm:items-end sm:justify-between">
+        <div className="min-w-0">
+          <h1 className="text-3xl font-bold tracking-tight text-slate-950">
+            Tasks
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
+            Turn committee decisions into owned, dated action items and keep their delivery status visible.
+          </p>
+        </div>
+
+        <Link
+          className="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 self-start rounded-xl bg-emerald-950 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:ring-offset-2 sm:self-auto"
+          href="/tasks/new"
+        >
+          <svg
+            aria-hidden="true"
+            className="size-4"
+            fill="none"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M12 5v14M5 12h14"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeWidth="2"
+            />
+          </svg>
+          Create task
+        </Link>
+      </header>
+
+      {query.deleted === "1" ? (
+        <SuccessFeedback
+          message="The task was permanently removed. Its source meeting record, if any, remains available."
+          title="Task deleted"
+        />
+      ) : null}
+
+      <section aria-label="Task list content" className="min-w-0">
+        {!result.ok ? (
+          <SystemErrorFeedback />
+        ) : (
+          <TaskList
+            assigneeLabels={new Map(
+              assignees.map((assignee) => [assignee.id, assignee.label]),
+            )}
+            criteria={criteria}
+            items={result.items}
+          />
+        )}
+      </section>
+    </div>
+  );
 }

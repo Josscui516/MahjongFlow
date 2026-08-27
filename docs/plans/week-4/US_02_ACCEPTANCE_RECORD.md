@@ -8,7 +8,7 @@
 ## 1. 验收结论
 
 - **技术验收：通过。** C-01 至 C-07、T-01、T-02、T-08、应用测试、权限／RLS 数据库断言、业务 schema lint 和生产构建均通过。
-- **Sprint 交付验收：阻塞。** 非作者 review、Project 状态／Acceptance Gate、Stakeholder 阶段评审和空数据库 drift 证据尚未满足。
+- **Sprint 交付验收：阻塞。** 非作者 review、Project 状态／Acceptance Gate 和 Stakeholder 阶段评审尚未满足；数据库 drift 与真实浏览器 UI 门禁已于本次复核关闭。
 - 本记录只证明当前集成分支的可重复技术结果，不替代人工 review、Stakeholder 决定或合并授权。
 
 ## 2. C-01 至 C-07 证据
@@ -45,8 +45,8 @@
 | `npm run db:test` | 通过 | 7 个 SQL 文件、261 项断言；含 task source、单一负责人和 RLS |
 | `npm run db:test:concurrency` | 通过 | 18 项 registration 并发断言和 9 项 RLS／状态交换断言 |
 | `npx supabase db lint --local --schema public,private --fail-on error` | 通过 | 业务 schema 无错误 |
-| `npm run db:lint` | 失败 | 未限定 schema，Supabase CLI 2.111.0 扫描 pgTAP `extensions` 并报告扩展内部错误；业务 schema 的窄检查通过 |
-| `npm run db:diff` | 非空 | 账号管理和会议函数存在既有本地 drift；没有 Sprint 4 migration，未在本工作包越权修复 |
+| `npm run db:lint` | 通过 | local database reset 后全 schema 无错误 |
+| `npm run db:diff` | 通过 | local database reset 后输出 `No schema changes found`，确认 migrations 与本地 schema 一致 |
 | `npm run build` | 通过 | Next.js 16.3.0 production build 完成，task conversion 动态路由已生成 |
 
 ## 5. 权限、隐私与数据完整性
@@ -62,13 +62,13 @@
 
 现有功能测试和完整应用测试覆盖转换页面的可信来源上下文、字段校验、单选负责人、pending、duplicate、permission、system error、missing source、success，以及会议／任务导航的 loading、empty、unavailable、system error 和 success。生产 build 证明相关 App Router 路由可编译。
 
-窄屏、完整键盘顺序和真实浏览器错误摘要焦点属于条件允许项，本次没有生成可核对的浏览器录屏或截图，因此不把该项列为已完成的人工证据。
+2026-08-27 使用已登录 Chrome 复核桌面任务列表、创建页、任务详情、会议列表与 Dashboard：任务页统一使用后台壳层；`/tasks/new` 不再出现 Server／Client 函数传递错误；负责人显示成员姓名而不是 UUID；Dashboard 指向可用的 `/backoffice`，未实现的 Events 不再出现在导航；会议删除仍显示不可撤销提示和二次确认。390×844 视口的 `innerWidth=390`、页面 `scrollWidth=375`，无横向溢出。DOM 快照确认标题层级、表单标签、按钮名称、来源返回链接与当前导航语义有效。
 
 ## 7. Migration、回滚与部署影响
 
 Sprint 4 复用 Week 2 已存在的 `tasks` schema、约束、索引、RLS 和生成类型，没有新增 migration。应用层回退可通过回退 Sprint 4 功能提交完成；已创建的任务使用既有 schema，可保留为向后兼容数据。
 
-`db:diff` 的非空输出涉及既有账号管理与会议函数，不属于 #3、#15、#23、#24、#25 的新增 schema。该 drift 在 Sprint 总 PR 前必须由正确所有者核对；不得通过重写历史 migration 或 Joshua 越界修改功能来隐藏。
+本次先执行 `npm run db:reset`，再运行 `npm run db:diff`，输出为空。既有账号管理与会议函数均可由 timestamped migrations 完整重放，之前的非空结果确定为本地数据库状态漂移，不再阻断 Sprint 总 PR。
 
 ## 8. 交付阻塞与判定
 
@@ -78,6 +78,4 @@ Sprint 4 复用 Week 2 已存在的 `tasks` schema、约束、索引、RLS 和�
 2. #66、#67、#68 的 reviews 为空，不能证明非作者批准；
 3. #3、#15、#23、#24、#25 虽属于 Sprint 4，但 Project 状态均为 `Backlog`，Acceptance Gate 为 `Not checked` 或 `Incomplete`；
 4. [Stakeholder 阶段评审](SPRINT_4_STAKEHOLDER_STAGE_REVIEW.md)尚未由真实参与者执行和确认；
-5. `npm run db:diff` 不是空结果。
-
-因此当前结论是：**代码可演示，技术验收通过，Sprint 4 尚不能声明 Done。**
+因此当前结论是：**代码可演示，技术验收与 UI／数据库门禁通过；Sprint 4 仍需真实非作者 review、Project 手动门禁和 Stakeholder 阶段评审，尚不能声明 Done。**

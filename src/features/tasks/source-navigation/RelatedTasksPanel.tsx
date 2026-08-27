@@ -59,7 +59,7 @@ export function RelatedTasksPanel({ result }: RelatedTasksPanelProps) {
             </div>
             <Link
               aria-label={`Open task ${task.title} from this ${task.sourceKind === "decision" ? "decision" : "discussion point"}`}
-              className="mt-3 inline-flex min-h-10 shrink-0 items-center justify-center rounded-lg border border-emerald-800 px-3 py-2 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 sm:mt-0"
+              className="mt-3 inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-emerald-800 px-3 py-2 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 sm:mt-0"
               href={getTaskHref(task.id)}
             >
               Open task

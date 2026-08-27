@@ -1,1 +1,5 @@
-export default function LoadingTasks() { return <main className="mx-auto max-w-5xl p-6"><p role="status">Loading tasks…</p></main>; }
+import { LoadingFeedback } from "@/components/feedback";
+
+export default function LoadingTasks() {
+  return <LoadingFeedback description="Loading committee action items and their latest status." title="Loading tasks" />;
+}

@@ -1,6 +1,21 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
+
+import { EmptyFeedback, SystemErrorFeedback } from "@/components/feedback";
+import { PageFrame } from "@/components/layout";
 import { getTask } from "@/features/tasks/core/service";
-import { TaskEditor } from "@/features/tasks/editor/TaskEditor";
 import { createTaskAction, updateTaskAction } from "@/features/tasks/editor/actions";
 import { listAssigneeOptions } from "@/features/tasks/editor/server";
-export default async function EditTaskPage({ params }: Readonly<{ params: Promise<{ taskId: string }> }>) { const { taskId } = await params; const [result, assignees] = await Promise.all([getTask(taskId), listAssigneeOptions()]); if (!result.ok) { if (result.code === "NOT_FOUND") notFound(); return <p role="alert">This task is unavailable.</p>; } return <main className="mx-auto max-w-4xl space-y-6 p-6"><h1 className="text-3xl font-bold">Edit task</h1><TaskEditor assignees={assignees} initialRecord={result.record} port={{ createTask: createTaskAction, getTask, updateTask: updateTaskAction }}/></main>; }
+import { TaskEditor } from "@/features/tasks/editor/TaskEditor";
+
+export default async function EditTaskPage({ params }: Readonly<{ params: Promise<{ taskId: string }> }>) {
+  const { taskId } = await params;
+  const [result, assignees] = await Promise.all([getTask(taskId), listAssigneeOptions()]);
+  if (!result.ok) { if (result.code === "NOT_FOUND") notFound(); return <SystemErrorFeedback />; }
+  return (
+    <PageFrame description="Update the owner, due date, content, or progress of this action item." title="Edit task">
+      <div className="mb-5"><Link className="inline-flex min-h-11 items-center text-sm font-semibold text-emerald-900 underline underline-offset-4" href={`/tasks/${taskId}`}>Back to task</Link></div>
+      {assignees.length ? <TaskEditor assignees={assignees} createTaskAction={createTaskAction} initialRecord={result.record} updateTaskAction={updateTaskAction} /> : <EmptyFeedback description="Activate a committee member before editing task ownership." title="No active assignees" />}
+    </PageFrame>
+  );
+}

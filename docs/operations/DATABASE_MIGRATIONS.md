@@ -95,3 +95,15 @@ ban 并把 `profiles.is_active` 恢复为 true。
 `delete_meeting_record(uuid)` 的执行权限并删除该函数，同时恢复上一版
 `prevent_last_meeting_attendee_delete()`。已经通过该功能删除的会议无法通过 schema
 回退恢复；上线前必须确认数据库备份和恢复流程可用，发生误删时只能从删除前备份恢复。
+
+## 8. 任务删除 migration 部署与回退
+
+`20260827003049_add_task_delete_boundary.sql` 增加仅后台用户可执行的窄函数
+`delete_task_record(uuid)`。函数只删除目标任务；若任务来自会议决策或讨论点，来源会议
+和议程记录继续保留。应用代码必须在 migration 应用并重新生成数据库类型后发布。
+该 migration 不转换或删除已有数据，也不向 `authenticated` 授予 `tasks` 表的直接
+`DELETE` 权限。
+
+回退时先撤下应用中的任务删除入口，再通过新的前向 migration 撤销
+`delete_task_record(uuid)` 的执行权限并删除该函数。已经删除的任务无法通过 schema
+回退恢复；上线前必须确认备份和恢复流程可用，误删只能从删除前备份恢复。

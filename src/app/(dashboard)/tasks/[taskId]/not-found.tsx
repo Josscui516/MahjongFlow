@@ -1,2 +1,7 @@
 import Link from "next/link";
-export default function TaskNotFound() { return <main className="mx-auto max-w-3xl p-6"><h1 className="text-2xl font-bold">Task not found</h1><Link className="mt-4 inline-block underline" href="/tasks">Return to tasks</Link></main>; }
+
+import { EmptyFeedback } from "@/components/feedback";
+
+export default function TaskNotFound() {
+  return <EmptyFeedback action={<Link className="inline-flex min-h-11 items-center font-semibold underline underline-offset-4" href="/tasks">Return to tasks</Link>} description="The task may have been removed, or the link may be incorrect." title="Task not found" />;
+}

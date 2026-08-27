@@ -9,6 +9,7 @@ export class TaskRepositoryError extends Error {
 }
 export type TaskRepository = Readonly<{
   create: (actorId: string, input: TaskInput) => Promise<TaskRecordDTO>;
+  delete: (taskId: string) => Promise<"deleted" | "not_found">;
   get: (taskId: string) => Promise<TaskRecordDTO | null>;
   list: () => Promise<readonly TaskRecordDTO[]>;
   update: (taskId: string, input: TaskInput) => Promise<TaskRecordDTO | null>;
@@ -21,6 +22,7 @@ function payload(input: TaskInput) { return { assignee_id: input.assigneeId, des
 export function createTaskRepository(getClient: () => Promise<SupabaseClient<Database>> = createServerSupabaseClient): TaskRepository {
   return {
     async create(actorId, input) { const result = await (await getClient()).from("tasks").insert({ ...payload(input), created_by: actorId }).select(select).single(); if (result.error) fail(result.error); return map(result.data as TaskRow); },
+    async delete(taskId) { const result = await (await getClient()).rpc("delete_task_record", { target_task_id: taskId }); if (result.error) fail(result.error); return result.data === "deleted" ? "deleted" : "not_found"; },
     async get(taskId) { const result = await (await getClient()).from("tasks").select(select).eq("id", taskId).maybeSingle(); if (result.error) fail(result.error); return result.data ? map(result.data as TaskRow) : null; },
     async list() { const result = await (await getClient()).from("tasks").select(select).order("due_date").order("id"); if (result.error) fail(result.error); return (result.data ?? []).map((row) => map(row as TaskRow)); },
     async update(taskId, input) { const result = await (await getClient()).from("tasks").update(payload(input)).eq("id", taskId).select(select).maybeSingle(); if (result.error) fail(result.error); return result.data ? map(result.data as TaskRow) : null; },

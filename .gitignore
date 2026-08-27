@@ -4,8 +4,14 @@
 !.env.example
 .env.local
 .env.*.local
+.envrc
+.direnv/
 *.pem
 *.key
+*.p12
+*.pfx
+*.jks
+*.keystore
 
 # Operating system files
 .DS_Store
@@ -15,6 +21,8 @@ Desktop.ini
 # Editors and IDEs
 .idea/
 .vscode/
+.fleet/
+.history/
 *.code-workspace
 *.suo
 *.user
@@ -33,6 +41,8 @@ tmp/
 temp/
 *.tmp
 *.bak
+*.orig
+*.rej
 
 # Test coverage and reports
 coverage/
@@ -40,12 +50,22 @@ coverage/
 htmlcov/
 test-results/
 playwright-report/
+blob-report/
+.nyc_output/
+.vitest/
+junit*.xml
+*.lcov
 
 # JavaScript and TypeScript
 node_modules/
 .npm/
 .yarn/
 .pnpm-store/
+.cache/
+.eslintcache
+.turbo/
+.swc/
+.parcel-cache/
 .next/
 .nuxt/
 .svelte-kit/
@@ -83,6 +103,11 @@ supabase/.env
 supabase/.env.*
 !supabase/.env.example
 
+# Local agent and browser tooling state
+.codex/
+.playwright/
+.playwright-cli/
+
 # Deployment platform local state
 .vercel/
 
@@ -90,4 +115,5 @@ supabase/.env.*
 *.zip
 *.tar
 *.tar.gz
+*.tgz
 
