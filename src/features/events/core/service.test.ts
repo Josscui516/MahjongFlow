@@ -1,0 +1,13 @@
+import { describe, expect, it, vi } from "vitest";
+import { AuthorizationError } from "@/lib/auth/authorization";
+import type { EventInput } from "./contracts";
+import type { EventRepository } from "./repository";
+import { createEventService } from "./service";
+const input: EventInput = { description: "Fictional event", eventType: "weekly_session", location: "Fictional room", name: "Fictional session", requiresStudentId: false, startsAt: "2026-09-12T08:00:00.000Z", status: "scheduled" };
+const record = { ...input, createdAt: "2026-09-01T00:00:00Z", createdBy: "11111111-1111-4111-8111-111111111111", id: "22222222-2222-4222-8222-222222222222", updatedAt: "2026-09-01T00:00:00Z" };
+const repository = (): EventRepository => ({ create: vi.fn(async () => record), get: vi.fn(async () => record), list: vi.fn(async () => [record]), update: vi.fn(async () => record) });
+describe("event service", () => {
+  it("creates and updates without replacing the event identity", async () => { const repo = repository(); const service = createEventService({ authorise: async () => ({ canManageAccounts: false, role: "committee", userId: record.createdBy }), repository: repo }); expect(await service.createEvent(input)).toEqual({ ok: true, record }); expect(await service.updateEvent(record.id, { ...input, name: "Updated fictional session" })).toMatchObject({ ok: true, record: { id: record.id } }); expect(repo.update).toHaveBeenCalledWith(record.id, expect.objectContaining({ name: "Updated fictional session" })); });
+  it("denies anonymous reads and writes before repository access", async () => { const repo = repository(); const service = createEventService({ authorise: async () => { throw new AuthorizationError("UNAUTHENTICATED"); }, repository: repo }); await expect(service.listEvents()).resolves.toEqual({ code: "PERMISSION_DENIED", ok: false }); await expect(service.createEvent(input)).resolves.toEqual({ code: "PERMISSION_DENIED", ok: false }); expect(repo.list).not.toHaveBeenCalled(); expect(repo.create).not.toHaveBeenCalled(); });
+  it("rejects invalid identifiers and inputs without persistence", async () => { const repo = repository(); const service = createEventService({ authorise: async () => ({ canManageAccounts: false, role: "authorised", userId: record.createdBy }), repository: repo }); await expect(service.getEvent("invalid")).resolves.toEqual({ code: "NOT_FOUND", ok: false }); const result = await service.createEvent({ ...input, eventType: "invalid" as never }); expect(result).toMatchObject({ code: "VALIDATION", ok: false }); expect(repo.create).not.toHaveBeenCalled(); });
+});
