@@ -28,7 +28,7 @@ export type TaskReadResult =
   | Readonly<{ ok: true; record: TaskRecordDTO }>
   | Readonly<{ code: "NOT_FOUND" | "PERMISSION_DENIED" | "SYSTEM_ERROR"; ok: false }>;
 export type TaskListResult =
-  | Readonly<{ items: readonly TaskRecordDTO[]; ok: true }>
+  | Readonly<{ items: readonly TaskRecordDTO[]; ok: true; total: number }>
   | Readonly<{ code: "PERMISSION_DENIED" | "SYSTEM_ERROR"; ok: false }>;
 export type TaskDeleteResult =
   | Readonly<{ ok: true }>
