@@ -1,0 +1,158 @@
+set search_path = public, extensions;
+
+delete from public.participants
+where id in (
+  'c6600000-0000-4000-8000-000000000001',
+  'c6600000-0000-4000-8000-000000000002'
+)
+or email = 'issue-26-concurrent@example.test';
+
+create temporary table participant_identity_concurrency_observations (
+  second_writer_waited boolean not null
+);
+
+create or replace function pg_temp.wait_for_transaction_lock(
+  target_pid integer
+)
+returns boolean
+language plpgsql
+as $$
+begin
+  for attempt in 1..200 loop
+    if exists (
+      select 1
+      from pg_catalog.pg_locks
+      where pid = target_pid
+        and locktype = 'transactionid'
+        and not granted
+    ) then
+      return true;
+    end if;
+
+    perform pg_catalog.pg_sleep(0.01);
+  end loop;
+
+  return false;
+end;
+$$;
+
+select plan(6);
+
+select extensions.dblink_connect_u(
+  'participant_identity_first',
+  'dbname=postgres user=postgres'
+);
+select extensions.dblink_connect_u(
+  'participant_identity_second',
+  'dbname=postgres user=postgres'
+);
+
+select extensions.dblink_exec('participant_identity_first', 'begin');
+
+select extensions.dblink_send_query(
+  'participant_identity_first',
+  $query$insert into public.participants (
+      id, full_name, email, student_id
+    ) values (
+      'c6600000-0000-4000-8000-000000000001',
+      'Concurrent Identity Winner',
+      'issue-26-concurrent@example.test',
+      null
+    ) returning id::text$query$
+);
+
+select is(
+  (
+    select id
+    from extensions.dblink_get_result('participant_identity_first')
+      as result(id text)
+  ),
+  'c6600000-0000-4000-8000-000000000001',
+  'the first participant writer creates the candidate identity'
+);
+do $$
+begin
+  perform *
+  from extensions.dblink_get_result('participant_identity_first')
+    as result(id text);
+end;
+$$;
+
+do $$
+declare
+  second_pid integer;
+begin
+  select pid into second_pid
+  from extensions.dblink(
+    'participant_identity_second',
+    'select pg_catalog.pg_backend_pid()'
+  ) as connection(pid integer);
+
+  perform extensions.dblink_send_query(
+    'participant_identity_second',
+    $query$insert into public.participants (
+        id, full_name, email, student_id
+      ) values (
+        'c6600000-0000-4000-8000-000000000002',
+        'Concurrent Identity Loser',
+        'issue-26-concurrent@example.test',
+        null
+      ) returning id::text$query$
+  );
+
+  insert into participant_identity_concurrency_observations
+  values (pg_temp.wait_for_transaction_lock(second_pid));
+end;
+$$;
+
+select ok(
+  (select second_writer_waited
+   from participant_identity_concurrency_observations),
+  'the second same-email writer waits for the first transaction'
+);
+
+select is(
+  extensions.dblink_exec('participant_identity_first', 'commit'),
+  'COMMIT',
+  'the winning participant transaction commits'
+);
+
+select throws_ok(
+  $$select *
+    from extensions.dblink_get_result('participant_identity_second')
+      as result(id text)$$,
+  '23505', null,
+  'the waiting same-email writer receives the unique conflict after commit'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from public.participants
+    where email = 'issue-26-concurrent@example.test'
+  ),
+  1,
+  'concurrent same-email writes leave exactly one participant row'
+);
+
+select is(
+  (
+    select id::text
+    from public.participants
+    where email = 'issue-26-concurrent@example.test'
+  ),
+  'c6600000-0000-4000-8000-000000000001',
+  'a post-conflict re-read resolves to the committed participant ID'
+);
+
+select extensions.dblink_disconnect('participant_identity_first');
+select extensions.dblink_disconnect('participant_identity_second');
+
+delete from public.participants
+where id in (
+  'c6600000-0000-4000-8000-000000000001',
+  'c6600000-0000-4000-8000-000000000002'
+)
+or email = 'issue-26-concurrent@example.test';
+
+select * from finish();
