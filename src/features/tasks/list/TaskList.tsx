@@ -40,6 +40,11 @@ export function TaskList({ assigneeLabels, criteria, items, total }: Readonly<{ 
           <div className="flex flex-wrap items-center gap-2 sm:justify-end"><Link className="inline-flex min-h-11 items-center justify-center rounded-lg px-2 py-2 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700" href={`/tasks/${encodeURIComponent(task.id)}`}>Open task</Link><TaskDeleteButton hasSource={Boolean(task.sourceMeetingId)} successHref={successHref} taskId={task.id} taskTitle={task.title} /></div>
         </article></li>; })}
       </ol>
+      <nav aria-label="Task list pages" className="flex items-center justify-between gap-3">
+        {criteria.page > 1 ? <Link className="font-semibold text-emerald-900 underline underline-offset-4" href={buildTaskListHref(criteria, criteria.page - 1)}>Previous page</Link> : <span />}
+        <span className="text-sm text-slate-600">Page {criteria.page}</span>
+        {criteria.page * criteria.pageSize < total ? <Link className="font-semibold text-emerald-900 underline underline-offset-4" href={buildTaskListHref(criteria, criteria.page + 1)}>Next page</Link> : <span />}
+      </nav>
     </>}
   </div>;
 }
