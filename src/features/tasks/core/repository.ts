@@ -43,6 +43,6 @@ export function createTaskRepository(getClient: () => Promise<SupabaseClient<Dat
       if (result.error) fail(result.error);
       return { items: (result.data ?? []).map((row) => map(row as TaskRow)), total: result.count ?? 0 };
     },
-    async update(taskId, input) { const result = await (await getClient()).from("tasks").update(payload(input)).eq("id", taskId).select(select).maybeSingle(); if (result.error) fail(result.error); return result.data ? map(result.data as TaskRow) : null; },
+    async update(taskId, input) { const result = await (await getClient()).from("tasks").update({ assignee_id: input.assigneeId, description: input.description, due_date: input.dueDate, event_id: input.eventId ?? null, status: input.status, title: input.title }).eq("id", taskId).select(select).maybeSingle(); if (result.error) fail(result.error); return result.data ? map(result.data as TaskRow) : null; },
   };
 }

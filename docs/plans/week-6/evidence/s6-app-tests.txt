@@ -1,0 +1,57 @@
+
+> mahjongflow@0.1.0 test
+> vitest run && npm run test:scripts
+
+
+ RUN  v4.1.10 E:/lessons/FIT3161(3162)/tmp/sprint6-acceptance
+
+
+ Test Files  97 passed (97)
+      Tests  567 passed (567)
+   Start at  23:29:07
+   Duration  2.75s (transform 26.95s, setup 0ms, import 46.12s, tests 1.64s, environment 12ms)
+
+
+> mahjongflow@0.1.0 test:scripts
+> node --test .github/scripts/run-database-tests.test.mjs
+
+TAP version 13
+# Subtest: accepts a passing database run with executable assertions
+ok 1 - accepts a passing database run with executable assertions
+  ---
+  duration_ms: 0.583
+  type: 'test'
+  ...
+# Subtest: rejects Supabase NOTESTS despite its successful process exit
+ok 2 - rejects Supabase NOTESTS despite its successful process exit
+  ---
+  duration_ms: 0.1224
+  type: 'test'
+  ...
+# Subtest: rejects a test file that contains no assertions
+ok 3 - rejects a test file that contains no assertions
+  ---
+  duration_ms: 0.1214
+  type: 'test'
+  ...
+# Subtest: rejects output without a prove-compatible summary
+ok 4 - rejects output without a prove-compatible summary
+  ---
+  duration_ms: 0.0557
+  type: 'test'
+  ...
+# Subtest: discovers database test files recursively in deterministic order
+ok 5 - discovers database test files recursively in deterministic order
+  ---
+  duration_ms: 15.8057
+  type: 'test'
+  ...
+1..5
+# tests 5
+# suites 0
+# pass 5
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 86.3813

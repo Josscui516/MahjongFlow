@@ -1,0 +1,4 @@
+events=8
+tasks=13
+registrations=8
+attendance=6

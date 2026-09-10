@@ -51,7 +51,7 @@ describe("integrated role-aware pages", () => {
       expect(html).toContain(`Role: ${role === "authorised" ? "Authorised" : "Committee"}`);
       expect(html).toContain("Committee dashboard");
       expect(html).toContain("Fictional committee member");
-      expect(html).not.toContain('href="/registrations"');
+      expect(html.includes('href="/registrations"')).toBe(role === "authorised");
     },
   );
 

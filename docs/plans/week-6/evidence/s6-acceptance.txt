@@ -1,0 +1,13 @@
+
+> mahjongflow@0.1.0 test:acceptance
+> vitest run tests/acceptance tests/integration/auth tests/unit/auth tests/unit/authorization.test.ts "src/app/(auth)" src/components
+
+
+ RUN  v4.1.10 E:/lessons/FIT3161(3162)/tmp/sprint6-acceptance
+
+
+ Test Files  21 passed (21)
+      Tests  148 passed (148)
+   Start at  23:29:11
+   Duration  780ms (transform 2.05s, setup 0ms, import 4.45s, tests 365ms, environment 3ms)
+

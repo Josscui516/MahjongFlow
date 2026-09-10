@@ -26,7 +26,7 @@ export function validateEventInput(input: EventInput) {
   const errors: EventValidationError[] = []; const name = input.name.trim(); const location = input.location.trim(); const description = input.description.trim();
   if (!name || name.length > 200) errors.push({ field: "name", message: "Name must contain 1 to 200 characters." });
   if (!location || location.length > 300) errors.push({ field: "location", message: "Location must contain 1 to 300 characters." });
-  if (description.length > 10_000) errors.push({ field: "description", message: "Description cannot exceed 10000 characters." });
+  if (!description || description.length > 10_000) errors.push({ field: "description", message: "Description must contain 1 to 10000 characters." });
   if (!EVENT_TYPES.includes(input.eventType)) errors.push({ field: "eventType", message: "Select a valid event type." });
   if (!EVENT_STATUSES.includes(input.status)) errors.push({ field: "status", message: "Select a valid event status." });
   const instant = sydneyInstant(input.startsAt); if (!instant) errors.push({ field: "startsAt", message: "Enter a valid event date and time." });

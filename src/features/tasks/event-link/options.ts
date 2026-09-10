@@ -7,5 +7,5 @@ export type TaskEventOptionsResult = Readonly<{ items: readonly TaskEventOption[
 
 export async function listTaskEventOptions(list = listEvents): Promise<TaskEventOptionsResult> {
   const result = await list();
-  return result.ok ? { items: result.items.map(({ id, name, startsAt }) => ({ id, label: `${name} — ${startsAt.slice(0, 10)}` })), ok: true } : result;
+  return result.ok ? { items: result.items.map(({ id, name, startsAt }) => ({ id, label: `${name} — ${new Intl.DateTimeFormat("en-CA", { timeZone: "Australia/Sydney", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(startsAt))}` })), ok: true } : result;
 }

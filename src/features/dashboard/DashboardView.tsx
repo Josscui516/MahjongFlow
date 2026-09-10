@@ -1,3 +1,5 @@
+import { classifyTaskDueRisk } from "@/features/tasks/due-risk";
+import { DueRiskReminder } from "@/features/tasks/reminders";
 import Link from "next/link";
 
 import type {
@@ -14,7 +16,7 @@ const SECTION_COPY: Record<DashboardTaskSectionKey, Readonly<{ empty: string; ti
   overdue: { empty: "No tasks are overdue.", title: "Overdue" },
 };
 
-function TaskSection({ result }: Readonly<{ result: DashboardTaskSectionResult }>) {
+function TaskSection({ result, now }: Readonly<{ result: DashboardTaskSectionResult; now: Date }>) {
   const copy = SECTION_COPY[result.ok ? result.section.key : result.key];
   return (
     <section aria-labelledby={`dashboard-${result.ok ? result.section.key : result.key}`} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -34,6 +36,7 @@ function TaskSection({ result }: Readonly<{ result: DashboardTaskSectionResult }
             <li className="rounded-xl bg-slate-50 p-4" key={task.id}>
               <Link className="font-semibold text-emerald-900 underline underline-offset-2" href={`/tasks/${encodeURIComponent(task.id)}`}>{task.title}</Link>
               <p className="mt-1 text-sm text-slate-600">Due {task.dueDate}</p>
+              <DueRiskReminder risk={classifyTaskDueRisk({ ...task, now })} taskTitle={task.title} />
             </li>
           ))}
         </ul>
@@ -54,7 +57,7 @@ export function DashboardView({ snapshot, upcomingEvents }: Readonly<{
         <p className="mt-2 max-w-3xl text-slate-600">Review personal responsibility, team backlog, and due-date risk from one consistent snapshot.</p>
       </header>
       <div className="mt-8 grid gap-5 md:grid-cols-2">
-        {snapshot.sections.map((section) => <TaskSection key={section.ok ? section.section.key : section.key} result={section} />)}
+        {snapshot.sections.map((section) => <TaskSection key={section.ok ? section.section.key : section.key} result={section} now={new Date(snapshot.capturedAt)} />)}
       </div>
       <div className="mt-5"><UpcomingEventsPanel result={upcomingEvents} /></div>
     </main>

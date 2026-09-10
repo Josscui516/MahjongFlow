@@ -15,20 +15,23 @@ describe("role-aware navigation", () => {
           { href: "/dashboard", label: "Dashboard" },
           { href: "/meetings", label: "Meetings" },
           { href: "/tasks", label: "Tasks" },
+          { href: "/events", label: "Events" },
         ],
       },
     ]);
   });
 
-  it("keeps unfinished registration workflows out of authorised navigation", () => {
+  it("exposes registration workflows only to authorised members", () => {
     expect(getNavigationSections("authorised")).toEqual([
       {
         items: [
           { href: "/dashboard", label: "Dashboard" },
           { href: "/meetings", label: "Meetings" },
           { href: "/tasks", label: "Tasks" },
+          { href: "/events", label: "Events" },
         ],
       },
+      { items: [{ href: "/registrations", label: "Registrations" }] },
     ]);
   });
 
@@ -75,7 +78,7 @@ describe("role-aware navigation", () => {
       /<a(?=[^>]*aria-current="page")(?=[^>]*href="\/tasks")[^>]*>Tasks<\/a>/,
     );
     expect(html).not.toContain("Sensitive operations");
-    expect(html).not.toContain('href="/registrations"');
+    expect(html).toContain('href="/registrations"');
 
     const ids = [...html.matchAll(/ id="([^"]+)"/g)].map((match) => match[1]);
     expect(new Set(ids).size).toBe(ids.length);
@@ -92,6 +95,6 @@ describe("role-aware navigation", () => {
     expect(html).toContain('href="/backoffice"');
     expect(html).toContain('href="/meetings"');
     expect(html).toContain('href="/tasks"');
-    expect(html).not.toContain('href="/events"');
+    expect(html).toContain('href="/events"');
   });
 });
