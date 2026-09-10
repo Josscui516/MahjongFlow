@@ -7,6 +7,7 @@ export type RegistrationItem = Readonly<{
   participantEmail: string;
   status: RegistrationStatus;
   updatedAt: string;
+  privacyNoticeAcknowledgedAt: string | null;
 }>;
 export type RegistrationFailureCode =
   | "UNAUTHENTICATED" | "PERMISSION_DENIED" | "VALIDATION"

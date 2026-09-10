@@ -25,7 +25,7 @@ describe("registration repository using the real Supabase SDK at a simulated HTT
   it("sends only allowed columns; database supplies status and audit fields", async () => {
     const { repository, requests } = setup([{ body: row }]);
     expect(await repository.create({ eventId, participantId })).toEqual({ created: true, status: "registered" });
-    expect(requests[0].body).toEqual({ event_id: eventId, participant_id: participantId });
+    expect(requests[0].body).toEqual({ event_id: eventId, participant_id: participantId, privacy_notice_acknowledged_at: null });
     expect(requests[0].method).toBe("POST");
   });
   it("reads the exact unique pair after conflict without restoring a cancelled row", async () => {
@@ -62,8 +62,8 @@ describe("registration repository using the real Supabase SDK at a simulated HTT
     expect(requests).toHaveLength(1);
   });
   it("projects only list fields and preserves the total beyond this page", async () => {
-    const { repository, requests } = setup([{ body: [{ id: eventId }] }, { count: "25-25/51", body: [{ ...row, participants: { full_name: "Fictional Participant", email: "person@example.test", student_id: "SHOULD-NOT-LEAK" }, recorded_by: "SHOULD-NOT-LEAK" }] }]);
-    expect(await repository.list(eventId, 2)).toEqual({ items: [{ id, status: "registered", updatedAt: updated_at, participantName: "Fictional Participant", participantEmail: "person@example.test" }], total: 51 });
+    const { repository, requests } = setup([{ body: [{ id: eventId }] }, { count: "25-25/51", body: [{ ...row, privacy_notice_acknowledged_at: null, participants: { full_name: "Fictional Participant", email: "person@example.test", student_id: "SHOULD-NOT-LEAK" }, recorded_by: "SHOULD-NOT-LEAK" }] }]);
+    expect(await repository.list(eventId, 2)).toEqual({ items: [{ id, status: "registered", updatedAt: updated_at, privacyNoticeAcknowledgedAt: null, participantName: "Fictional Participant", participantEmail: "person@example.test" }], total: 51 });
     expect(requests[1].url.searchParams.get("offset")).toBe("25");
     expect(requests[1].url.searchParams.get("limit")).toBe("25");
     expect(requests[1].url.searchParams.get("select")).not.toContain("student_id");
