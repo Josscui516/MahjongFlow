@@ -14,6 +14,7 @@ export function RegistrationList({ result, changeStatus }: Readonly<{
       {result.items.map((item) => <li key={item.id} className="min-w-0 space-y-3 rounded-xl border border-slate-200 bg-white p-4">
         <div className="[overflow-wrap:anywhere]"><h2 className="font-semibold">{item.participantName}</h2><p>{item.participantEmail}</p><p className="font-medium">{item.status === "registered" ? "Registered" : "Cancelled"}</p></div>
         <RegistrationStatusForm eventId={result.eventId} item={item} changeStatus={changeStatus} />
+        <p className="text-sm text-slate-600">Privacy acknowledgement: {item.privacyNoticeAcknowledgedAt ? <time dateTime={item.privacyNoticeAcknowledgedAt}>{new Intl.DateTimeFormat("en-AU", { dateStyle: "medium", timeStyle: "short", timeZone: "Australia/Sydney" }).format(new Date(item.privacyNoticeAcknowledgedAt))}</time> : "Not recorded (permitted for back-office entry)"}</p>
       </li>)}
     </ul>}
     <nav aria-label="Registration pages" className="flex gap-4">

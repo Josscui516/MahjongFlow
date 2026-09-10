@@ -10,8 +10,8 @@ const changeStatus = vi.fn();
 describe("registration UI projections", () => {
   it("renders independent registered/cancelled labels and the appropriate action", () => {
     const html = renderToStaticMarkup(<RegistrationList changeStatus={changeStatus} result={{ ok: true, eventId, page: 1, total: 30, items: [
-      { id: "1", participantName: "Fictional One", participantEmail: "one@example.test", status: "registered", updatedAt: "2026-09-08T00:00:00Z" },
-      { id: "2", participantName: "Fictional Two", participantEmail: "two@example.test", status: "cancelled", updatedAt: "2026-09-08T00:00:00Z" },
+      { id: "1", privacyNoticeAcknowledgedAt: null, participantName: "Fictional One", participantEmail: "one@example.test", status: "registered", updatedAt: "2026-09-08T00:00:00Z" },
+      { id: "2", privacyNoticeAcknowledgedAt: null, participantName: "Fictional Two", participantEmail: "two@example.test", status: "cancelled", updatedAt: "2026-09-08T00:00:00Z" },
     ] }} />);
     expect(html).toContain("Registered"); expect(html).toContain("Cancelled");
     expect(html).toContain("Cancel registration"); expect(html).toContain("Restore registration");

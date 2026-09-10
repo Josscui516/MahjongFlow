@@ -32,7 +32,7 @@ export function createRegistrationRepository(
       // Status, timestamps and recorder are set by existing database defaults/triggers.
       // Generated Insert marks recorded_by required, but this column is deliberately
       // not granted for insertion: the trusted trigger supplies it from auth.uid().
-      const payload = { event_id: input.eventId, participant_id: input.participantId };
+      const payload = { event_id: input.eventId, participant_id: input.participantId, privacy_notice_acknowledged_at: null };
       const { data, error } = await client.from("registrations")
         .insert(payload as Database["public"]["Tables"]["registrations"]["Insert"])
         .select(fields).single();
@@ -65,7 +65,7 @@ export function createRegistrationRepository(
       if (!event.data) return null;
       const offset = (page - 1) * REGISTRATION_PAGE_SIZE;
       const result = await client.from("registrations")
-        .select("id, registration_status, updated_at, participants!inner(full_name, email)", { count: "exact" })
+        .select("id, registration_status, updated_at, privacy_notice_acknowledged_at, participants!inner(full_name, email)", { count: "exact" })
         .eq("event_id", eventId).order("registered_at", { ascending: false }).order("id")
         .range(offset, offset + REGISTRATION_PAGE_SIZE - 1);
       if (result.error || result.count === null) fail(result.error ?? {});
@@ -74,6 +74,7 @@ export function createRegistrationRepository(
         items: (result.data ?? []).map((row) => ({
           id: row.id, status: row.registration_status, updatedAt: row.updated_at,
           participantName: row.participants.full_name, participantEmail: row.participants.email,
+          privacyNoticeAcknowledgedAt: row.privacy_notice_acknowledged_at,
         })),
       };
     },
