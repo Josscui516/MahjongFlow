@@ -20,7 +20,7 @@ export default async function MeetingsPage({
   searchParams = Promise.resolve({}),
 }: Readonly<{
   searchParams?: Promise<MeetingHistorySearchParams>;
-}> = {}) {
+}>) {
   const rawSearchParams = await searchParams;
   const criteria = parseMeetingHistorySearchParams(rawSearchParams);
   const state = await resolveMeetingHistoryScreen({
