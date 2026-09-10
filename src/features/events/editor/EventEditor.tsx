@@ -5,9 +5,9 @@ import { EVENT_STATUSES, EVENT_TYPES, type EventDTO, type EventInput, type Event
 import { validateEventInput } from "../core/validation";
 type Props = Readonly<{ createEventAction: (input: EventInput) => Promise<EventMutationResult>; initialRecord?: EventDTO; updateEventAction: (id: string, input: EventInput) => Promise<EventMutationResult> }>;
 const fieldClass = "mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-950 outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-200";
-function localDateTime(iso?: string) {
+export function localDateTime(iso?: string) {
   if (!iso) return "";
-  if (!iso.endsWith("Z")) return iso.slice(0, 16);
+  if (!/(?:Z|[+-]\d{2}:\d{2})$/i.test(iso)) return iso.slice(0, 16);
   const parts = Object.fromEntries(new Intl.DateTimeFormat("en-CA", { day: "2-digit", hour: "2-digit", hourCycle: "h23", minute: "2-digit", month: "2-digit", timeZone: "Australia/Sydney", year: "numeric" }).formatToParts(new Date(iso)).map((part) => [part.type, part.value]));
   return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
 }
