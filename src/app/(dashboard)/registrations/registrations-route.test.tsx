@@ -1,5 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+vi.mock("server-only", () => ({}));
+vi.mock("@/features/events/core/service", () => ({ getEvent: vi.fn() }));
 const mocks = vi.hoisted(() => ({ list: vi.fn(), count: vi.fn(), redirect: vi.fn((url: string) => { throw new Error(`redirect:${url}`); }) }));
 vi.mock("@/features/registrations/records/service", () => ({ registrationService: mocks }));
 vi.mock("@/features/registrations/records/actions", () => ({ changeRegistrationStatus: vi.fn() }));

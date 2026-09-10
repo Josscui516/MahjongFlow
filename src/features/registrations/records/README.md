@@ -75,3 +75,8 @@ SDK 契约测试使用真实 supabase-js 客户端、模拟 HTTP 响应；真实
 不提供删除、公开自助报名、额外个人字段、外部通知或签到操作。取消保留原记录；恢复复用原记录。回退功能提交即可撤下新增动态路由和操作，不需要数据库回滚；已经产生的报名记录仍按原 schema 保留。补齐 provider、入口组合、真实验收和非作者审查之前保持 Draft，不合并或关闭 Issue。
 
 实现参考：[Supabase update/filter/select](https://supabase.com/docs/reference/javascript/update)，以及当前安装版本 Next.js 的 Server Functions、Server/Client Components、revalidatePath 文档。会话未提供 Context7 工具，使用安装文档及官方主来源核对 API。
+# 2026-09-10 接入更新
+
+在用户接手 Sprint 6 测试与合并后，已接入 #17 的真实活动查询和 #26 的身份 port／字段组件。`/registrations` 选择活动后进入授权名单与登记表单；服务端重新获取活动的学生证要求，仅使用服务端解析的参与者 ID 登记。浏览器伪造 participantId 或 requiresStudentId 不参与决策。
+
+新增组合测试覆盖身份规范化、服务端活动要求、委员会拒绝、活动不存在及已取消重复报名。身份匹配成功但登记暂时失败时，保留可复用身份，重试仍受唯一约束保护；不会声称报名成功。以下历史独立交付记录中的“未接入”状态由本节替代，历史测试结果不代表本次接入测试。
