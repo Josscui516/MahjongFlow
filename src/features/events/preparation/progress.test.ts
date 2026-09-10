@@ -10,4 +10,3 @@ describe("event preparation progress", () => {
     expect(calculateEventPreparationProgress([])).toEqual({ completed: 0, total: 0 });
   });
 });
-

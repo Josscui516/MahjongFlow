@@ -7,4 +7,3 @@ export async function EventPreparationSection({ eventId }: Readonly<{ eventId: s
   const [preparation, candidates] = await Promise.all([getEventPreparation(eventId), listTasks()]);
   return <PreparationPanel candidates={candidates.ok ? candidates.items : []} eventId={eventId} linkAction={setTaskEventAction} result={preparation}/>;
 }
-

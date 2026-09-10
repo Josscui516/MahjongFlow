@@ -11,7 +11,6 @@ const COLUMNS = "id, title, description, assignee_id, due_date, status, source_m
 export class EventPreparationRepositoryError extends Error {
   constructor(readonly code?: string) { super("Event preparation persistence failed"); this.name = "EventPreparationRepositoryError"; }
 }
-
 export type EventPreparationRepository = Readonly<{ listByEvent(eventId: string): Promise<readonly TaskRecordDTO[]> }>;
 
 function map(row: TaskRow): TaskRecordDTO {
@@ -21,4 +20,3 @@ function map(row: TaskRow): TaskRecordDTO {
 export function createEventPreparationRepository(getClient: () => Promise<SupabaseClient<Database>> = createServerSupabaseClient): EventPreparationRepository {
   return { async listByEvent(eventId) { const result = await (await getClient()).from("tasks").select(COLUMNS).eq("event_id", eventId).order("due_date").order("id"); if (result.error) throw new EventPreparationRepositoryError(result.error.code); return (result.data ?? []).map((row) => map(row as TaskRow)); } };
 }
-

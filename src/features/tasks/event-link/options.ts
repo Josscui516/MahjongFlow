@@ -9,4 +9,3 @@ export async function listTaskEventOptions(list = listEvents): Promise<TaskEvent
   const result = await list();
   return result.ok ? { items: result.items.map(({ id, name, startsAt }) => ({ id, label: `${name} — ${startsAt.slice(0, 10)}` })), ok: true } : result;
 }
-

@@ -50,4 +50,3 @@ export function createEventPreparationService(dependencies: Dependencies) {
 const service = createEventPreparationService({ authorise: requireBackendUser, getEvent, getTask, repository: createEventPreparationRepository(), updateTask });
 export const getEventPreparation = service.getPreparation;
 export const setTaskEvent = service.setTaskEvent;
-

@@ -12,4 +12,3 @@ export type EventPreparationResult =
 export type TaskEventLinkResult =
   | Readonly<{ ok: true; task: TaskRecordDTO }>
   | Readonly<{ code: "NOT_FOUND" | "PERMISSION_DENIED" | "SYSTEM_ERROR" | "VALIDATION"; ok: false }>;
-

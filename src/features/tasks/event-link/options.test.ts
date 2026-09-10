@@ -12,4 +12,3 @@ describe("task event options", () => {
     await expect(listTaskEventOptions(async () => ({ code: "PERMISSION_DENIED", ok: false }))).resolves.toEqual({ code: "PERMISSION_DENIED", ok: false });
   });
 });
-
