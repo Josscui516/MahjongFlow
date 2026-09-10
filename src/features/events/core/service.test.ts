@@ -1,4 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
+
+vi.mock("server-only", () => ({}));
+
 import { AuthorizationError } from "@/lib/auth/authorization";
 import type { EventInput } from "./contracts";
 import type { EventRepository } from "./repository";
