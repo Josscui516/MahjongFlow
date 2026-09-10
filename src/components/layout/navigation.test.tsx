@@ -12,7 +12,7 @@ describe("role-aware navigation", () => {
     expect(getNavigationSections("committee")).toEqual([
       {
         items: [
-          { href: "/backoffice", label: "Dashboard" },
+          { href: "/dashboard", label: "Dashboard" },
           { href: "/meetings", label: "Meetings" },
           { href: "/tasks", label: "Tasks" },
         ],
@@ -24,7 +24,7 @@ describe("role-aware navigation", () => {
     expect(getNavigationSections("authorised")).toEqual([
       {
         items: [
-          { href: "/backoffice", label: "Dashboard" },
+          { href: "/dashboard", label: "Dashboard" },
           { href: "/meetings", label: "Meetings" },
           { href: "/tasks", label: "Tasks" },
         ],
