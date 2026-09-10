@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { LogoutForm } from "@/app/(auth)/backoffice/logout-form";
+import { listEvents } from "@/features/events/core/service";
 import {
   EmptyFeedback,
   PermissionDeniedFeedback,
@@ -56,6 +57,7 @@ export default async function RegistrationsPage() {
     return <RegistrationAccessFailure forbidden={false} />;
   }
 
+  const events = await listEvents();
   return (
     <BackofficeShell
       accountSlot={<span>Signed in</span>}
@@ -68,10 +70,7 @@ export default async function RegistrationsPage() {
         description="Participant registration details are restricted to authorised committee users."
         title="Registrations"
       >
-        <EmptyFeedback
-          description="No participant data is loaded in this foundation demo. Registration workflows will be added in a later Sprint."
-          title="Registration module not started"
-        />
+        {!events.ok ? <SystemErrorFeedback /> : events.items.length === 0 ? <EmptyFeedback title="No events available" description="Create an event before registering participants." /> : <ul className="space-y-3">{events.items.map((event) => <li key={event.id}><Link className="block rounded-lg border p-4 font-semibold underline" href={`/registrations/${event.id}`}>{event.name}</Link></li>)}</ul>}
       </PageFrame>
     </BackofficeShell>
   );
