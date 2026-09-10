@@ -4,7 +4,12 @@ const LOCAL_DATE_TIME = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/;
 export const isEventId = (value: string) => UUID.test(value);
 function sydneyInstant(value: string): Date | null {
   const match = LOCAL_DATE_TIME.exec(value);
-  if (!match) { const explicit = new Date(value); return Number.isFinite(explicit.getTime()) ? explicit : null; }
+  if (!match) {
+    if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/i.test(value)) return null;
+    const day = value.slice(0, 10); const parsedDay = new Date(`${day}T00:00:00Z`);
+    if (!Number.isFinite(parsedDay.getTime()) || parsedDay.toISOString().slice(0, 10) !== day) return null;
+    const explicit = new Date(value); return Number.isFinite(explicit.getTime()) ? explicit : null;
+  }
   const fields = match.slice(1).map(Number); const [year, month, day, hour, minute] = fields;
   const target = Date.UTC(year, month - 1, day, hour, minute);
   if (new Date(target).toISOString().slice(0, 16) !== `${value}:00.000Z`.slice(0, 16)) return null;
@@ -15,6 +20,9 @@ function sydneyInstant(value: string): Date | null {
   return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}` === value ? result : null;
 }
 export function validateEventInput(input: EventInput) {
+  if (!input || typeof input !== "object" || [input.name, input.location, input.description, input.startsAt].some((field) => typeof field !== "string") || typeof input.requiresStudentId !== "boolean") {
+    return { ok: false as const, errors: [{ field: "name" as const, message: "Provide valid event fields and a boolean student ID requirement." }] };
+  }
   const errors: EventValidationError[] = []; const name = input.name.trim(); const location = input.location.trim(); const description = input.description.trim();
   if (!name || name.length > 200) errors.push({ field: "name", message: "Name must contain 1 to 200 characters." });
   if (!location || location.length > 300) errors.push({ field: "location", message: "Location must contain 1 to 300 characters." });

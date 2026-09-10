@@ -12,10 +12,23 @@ export function localDateTime(iso?: string) {
   return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
 }
 export function EventEditor({ createEventAction, initialRecord, updateEventAction }: Props) {
-  const router = useRouter(); const [pending, setPending] = useState(false); const [message, setMessage] = useState(""); const last = useRef("");
+  const router = useRouter(); const [pending, setPending] = useState(false); const [message, setMessage] = useState(""); const last = useRef(""); const lock = useRef(false);
   const [values, setValues] = useState<EventInput>(initialRecord ? { description: initialRecord.description, eventType: initialRecord.eventType, location: initialRecord.location, name: initialRecord.name, requiresStudentId: initialRecord.requiresStudentId, startsAt: localDateTime(initialRecord.startsAt), status: initialRecord.status } : { description: "", eventType: "weekly_session", location: "", name: "", requiresStudentId: false, startsAt: "", status: "scheduled" });
   const set = <K extends keyof EventInput>(key: K, value: EventInput[K]) => setValues((current) => ({ ...current, [key]: value }));
-  async function submit(event: FormEvent<HTMLFormElement>) { event.preventDefault(); setMessage(""); const checked = validateEventInput(values); if (!checked.ok) { setMessage(checked.errors.map((item) => item.message).join(" ")); return; } const fingerprint = JSON.stringify(checked.value); if (fingerprint === last.current) { setMessage("This exact event was already submitted."); return; } setPending(true); const result = initialRecord ? await updateEventAction(initialRecord.id, checked.value) : await createEventAction(checked.value); setPending(false); if (!result.ok) { setMessage(result.code === "PERMISSION_DENIED" ? "You do not have permission to save events." : result.code === "VALIDATION" ? (result.errors ?? []).map((item) => item.message).join(" ") : "The event could not be saved. Try again."); return; } last.current = fingerprint; router.push(`/events/${result.record.id}?saved=1`); router.refresh(); }
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); if (lock.current) return; setMessage("");
+    const checked = validateEventInput(values);
+    if (!checked.ok) { setMessage(checked.errors.map((item) => item.message).join(" ")); return; }
+    const fingerprint = JSON.stringify(checked.value);
+    if (fingerprint === last.current) { setMessage("This exact event was already submitted."); return; }
+    lock.current = true; setPending(true);
+    try {
+      const result = initialRecord ? await updateEventAction(initialRecord.id, checked.value) : await createEventAction(checked.value);
+      if (!result.ok) { setMessage(result.code === "PERMISSION_DENIED" ? "You do not have permission to save events." : result.code === "VALIDATION" ? (result.errors ?? []).map((item) => item.message).join(" ") : "The event could not be saved. Try again."); return; }
+      last.current = fingerprint; router.push(`/events/${result.record.id}?saved=1`); router.refresh();
+    } catch { setMessage("The save could not be confirmed. Check the event list before retrying."); }
+    finally { lock.current = false; setPending(false); }
+  }
   return <form className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6" noValidate onSubmit={submit}>
     {message ? <p className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">{message}</p> : null}
     <label className="block text-sm font-semibold text-slate-800">Name<input className={fieldClass} disabled={pending} maxLength={200} onChange={(e) => set("name", e.target.value)} required value={values.name}/></label>
