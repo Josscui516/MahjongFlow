@@ -13,10 +13,23 @@ function sql(query) {
   return execFileSync('docker', ['exec', '-i', 'supabase_db_mahjongflow-sprint6-acceptance', 'psql', '-U', 'postgres', '-d', 'postgres', '-At', '-v', 'ON_ERROR_STOP=1'], { input: query, encoding: 'utf8' }).trim();
 }
 async function main() {
-  browser = await chromium.launch({ channel: 'chrome', headless: true });
+  browser = await chromium.launch({ channel: process.env.S6_BROWSER_CHANNEL || 'chrome', headless: true });
   page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const errors = [];
+  let checkingNotFound = false;
+  let expectedNotFoundErrors = 0;
   page.on('pageerror', error => errors.push(error.message));
+  page.on('console', message => {
+    if (!['error', 'warning'].includes(message.type())) return;
+    // This scenario intentionally requests one missing document. Do not exempt
+    // application errors, other URLs, or other HTTP failures.
+    if (checkingNotFound && message.location().url === base + '/events/not-a-uuid' &&
+        message.text() === 'Failed to load resource: the server responded with a status of 404 (Not Found)') {
+      expectedNotFoundErrors += 1;
+      return;
+    }
+    errors.push(message.text());
+  });
   await page.goto(base + '/login');
   await page.locator('[name=email]').fill(accounts.authorised.email);
   await page.locator('[name=password]').fill(accounts.authorised.password);
@@ -51,13 +64,15 @@ async function main() {
   await page.getByText('Tournament', { exact: true }).waitFor();
   await page.getByText('Required', { exact: true }).waitFor();
   console.log('PASS Tournament with student-ID requirement survives reload');
-  await page.goto(base + '/events/not-a-uuid');
+  checkingNotFound = true;
+  const notFoundResponse = await page.goto(base + '/events/not-a-uuid');
   await page.getByText(/could not be found|not found/i).first().waitFor();
+  if (expectedNotFoundErrors > 0) assert.equal(notFoundResponse.status(), 404);
   console.log('PASS Invalid event URL returns safe not-found state');
   assert.equal(errors.length, 0, errors.join('\n'));
 }
 main().catch(async error => {
   console.error(error.stack);
-  if (page) await page.screenshot({ path: runtimeDir + '/evidence/event-invariants-failure.png', fullPage: true });
+  if (page) await page.screenshot({ path: runtimeDir + '/evidence/event-invariants-failure.png', fullPage: true, caret: 'initial' });
   process.exitCode = 1;
 }).finally(async () => { if (browser) await browser.close(); });

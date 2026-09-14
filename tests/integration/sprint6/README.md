@@ -4,7 +4,11 @@
 
 准备隔离 workdir，将仓库 `supabase/config.toml` 复制并把 project_id 改为上述名称，连接当前 migrations/tests/seed.sql。执行带 seed 的本地 reset，启动 Auth、PostgREST、Kong 和数据库。将 `supabase status -o json` 输出保存到该隔离目录 `status.json`，不要提交。应用的忽略文件 `.env.local` 使用该本地 API URL 与匿名 key，生产构建后启动端口 4336。
 
-PowerShell 中设置 `S6_RUNTIME_DIR` 为隔离目录绝对路径；设置 `S6_PLAYWRIGHT_MODULE` 为已安装 Playwright 的模块路径，或安装 Playwright 后使用默认模块解析。Chrome 必须可用。
+PowerShell 中设置 `S6_RUNTIME_DIR` 为隔离目录绝对路径；设置 `S6_PLAYWRIGHT_MODULE` 为已安装 Playwright 的模块路径，或安装 Playwright 后使用默认模块解析。浏览器默认使用 Chrome；本机只有 Edge 时设置 `S6_BROWSER_CHANNEL=msedge`。
+
+生产构建与 `next dev --webpack` 应分别重放浏览器流程。两种模式均检查 `pageerror`、控制台 error/warning；开发模式用于补充 hydration、重复 key 等诊断。仅“不抛异常”不能作为浏览器无错误的证据。无效活动 URL 场景只允许该确切地址预期的资源 404，应用错误及其他地址的错误仍会失败。
+
+截图使用 `caret: 'initial'`，保留页面原有光标样式。默认隐藏光标会向输入框临时注入内联样式，在流式页面仍在 hydration 时可能制造测试工具自身的属性不匹配；不要通过关闭控制台检查规避此类问题。
 
 ```powershell
 node tests/integration/sprint6/provision.cjs

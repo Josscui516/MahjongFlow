@@ -8,9 +8,28 @@ import {
 } from "./navigation";
 
 describe("role-aware navigation", () => {
+  it("keeps section identities unique and stable across roles and capabilities", () => {
+    for (const role of ["committee", "authorised"] as const) {
+      for (const canManageAccounts of [false, true]) {
+        const sections = getNavigationSections(role, canManageAccounts);
+        const ids = sections.map((section) => section.id);
+        expect(ids.every((id) => typeof id === "string" && id.length > 0)).toBe(true);
+        expect(new Set(ids).size).toBe(ids.length);
+        expect(sections[0].id).toBe("primary");
+        if (role === "authorised") {
+          expect(sections.find((section) => section.items.some((item) => item.href === "/registrations"))?.id).toBe("registrations");
+        }
+        if (canManageAccounts) {
+          expect(sections.find((section) => section.items.some((item) => item.href === "/admin/users"))?.id).toBe("administration");
+        }
+      }
+    }
+  });
+
   it("returns only shared destinations for committee members", () => {
     expect(getNavigationSections("committee")).toEqual([
       {
+        id: "primary",
         items: [
           { href: "/dashboard", label: "Dashboard" },
           { href: "/meetings", label: "Meetings" },
@@ -24,6 +43,7 @@ describe("role-aware navigation", () => {
   it("exposes registration workflows only to authorised members", () => {
     expect(getNavigationSections("authorised")).toEqual([
       {
+        id: "primary",
         items: [
           { href: "/dashboard", label: "Dashboard" },
           { href: "/meetings", label: "Meetings" },
@@ -31,16 +51,18 @@ describe("role-aware navigation", () => {
           { href: "/events", label: "Events" },
         ],
       },
-      { items: [{ href: "/registrations", label: "Registrations" }] },
+      { id: "registrations", items: [{ href: "/registrations", label: "Registrations" }] },
     ]);
   });
 
   it("adds account administration independently from the data role", () => {
     expect(getNavigationSections("committee", true)).toContainEqual({
+      id: "administration",
       label: "Administration",
       items: [{ href: "/admin/users", label: "Accounts" }],
     });
     expect(getNavigationSections("authorised", false)).not.toContainEqual({
+      id: "administration",
       label: "Administration",
       items: [{ href: "/admin/users", label: "Accounts" }],
     });

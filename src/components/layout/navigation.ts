@@ -6,6 +6,7 @@ export type NavigationItem = Readonly<{
 }>;
 
 export type NavigationSection = Readonly<{
+  id: string;
   label?: string;
   items: readonly NavigationItem[];
 }>;
@@ -18,10 +19,12 @@ const SHARED_NAVIGATION_ITEMS = [
 ] as const satisfies readonly NavigationItem[];
 
 const SHARED_NAVIGATION_SECTION = {
+  id: "primary",
   items: SHARED_NAVIGATION_ITEMS,
 } as const satisfies NavigationSection;
 
 const ACCOUNT_ADMINISTRATION_SECTION = {
+  id: "administration",
   label: "Administration",
   items: [{ href: "/admin/users", label: "Accounts" }],
 } as const satisfies NavigationSection;
@@ -37,7 +40,12 @@ export function getNavigationSections(
 ): readonly NavigationSection[] {
   const sections: NavigationSection[] = [SHARED_NAVIGATION_SECTION];
 
-  if (role === "authorised") sections.push({ items: [{ href: "/registrations", label: "Registrations" }] });
+  if (role === "authorised") {
+    sections.push({
+      id: "registrations",
+      items: [{ href: "/registrations", label: "Registrations" }],
+    });
+  }
 
   if (canManageAccounts) {
     sections.push(ACCOUNT_ADMINISTRATION_SECTION);
