@@ -8,7 +8,7 @@ export function UpcomingEventsPanel({ result }: Readonly<{ result: UpcomingEvent
       <h2 className="text-lg font-bold text-slate-950" id="upcoming-events-heading">Upcoming events</h2>
       {result.state === "not_connected" ? (
         <p className="mt-3 rounded-xl bg-amber-50 p-4 text-sm text-amber-950" role="status">
-          Upcoming events are not connected yet. Sprint 6 will replace this provider with real event data.
+          Upcoming events are not connected yet. Event information will appear here when available.
         </p>
       ) : result.state === "permission_denied" ? (
         <p className="mt-3 text-sm text-rose-800" role="alert">You do not have permission to view upcoming events.</p>

@@ -69,12 +69,15 @@ export function createDashboardTaskQuery({ classifyDueRisk, listTasks }: Dashboa
       if (failed) return failed;
 
       const unfinished = stableMerge(results as readonly Extract<ProviderResult, { ok: true }>[]);
-      const items = key === "dueSoon" || key === "overdue"
-        ? unfinished.filter((task) => {
-            const risk = classifyDueRisk({ dueDate: task.dueDate, now, status: task.status });
-            return risk.ok && risk.value === key;
-          })
-        : unfinished;
+      let items = unfinished;
+      if (key === "dueSoon" || key === "overdue") {
+        items = [];
+        for (const task of unfinished) {
+          const risk = classifyDueRisk({ dueDate: task.dueDate, now, status: task.status });
+          if (!risk.ok) return { ok: false, code: "SYSTEM_ERROR", key };
+          if (risk.value === key) items.push(task);
+        }
+      }
 
       return { ok: true, section: { items, key, total: items.length } };
     },

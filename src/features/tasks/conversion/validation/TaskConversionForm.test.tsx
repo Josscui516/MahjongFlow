@@ -12,6 +12,11 @@ import { TaskConversionForm } from "./TaskConversionForm";
 const ACTION: TaskConversionAction = async (state) => state;
 
 describe("task conversion form", () => {
+  it("offers a direct task link after successful conversion", () => {
+    const html = renderToStaticMarkup(<TaskConversionForm assigneeOptions={FIXTURE_ASSIGNEES} conversionAction={ACTION} initialValues={FIXTURE_TASK_VALUES} sourceContext={FIXTURE_SOURCE_CONTEXT} sourceLabel="Fictional source" initialState={{ errors: [], sourceContext: FIXTURE_SOURCE_CONTEXT, status: "success", taskId: "fictional-task", values: FIXTURE_TASK_VALUES }} />);
+    expect(html).toContain('href="/tasks/fictional-task"');
+    expect(html).toContain("Open created task");
+  });
   it("renders all C-02 fields with a single-select assignee control", () => {
     const html = renderToStaticMarkup(
       <TaskConversionForm

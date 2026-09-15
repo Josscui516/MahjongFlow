@@ -1,6 +1,7 @@
 "use client";
 
 import { useActionState, useEffect, useRef } from "react";
+import Link from "next/link";
 
 import { FormErrorSummary } from "@/components/forms/FormErrorSummary";
 import { FormField } from "@/components/forms/FormField";
@@ -87,6 +88,9 @@ function SubmissionFeedback({ state }: Readonly<{ state: TaskConversionFormState
     >
       <h2 className="font-semibold">{feedback.title}</h2>
       <p className="mt-1 text-sm leading-5">{feedback.description}</p>
+      {state.status === "success" && state.taskId ? (
+        <Link className="mt-3 inline-flex min-h-11 items-center font-semibold text-emerald-900 underline underline-offset-4" href={`/tasks/${encodeURIComponent(state.taskId)}`}>Open created task</Link>
+      ) : null}
     </section>
   );
 }
@@ -188,6 +192,7 @@ export function TaskConversionForm({
           <FormField
             control={
               <select
+                key={state.values.assigneeId}
                 defaultValue={state.values.assigneeId}
                 disabled={pending || !hasAssignees}
                 name="assigneeId"
@@ -224,6 +229,7 @@ export function TaskConversionForm({
           <FormField
             control={
               <select
+                key={state.values.status}
                 defaultValue={state.values.status}
                 disabled={pending}
                 name="status"

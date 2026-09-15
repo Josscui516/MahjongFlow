@@ -20,12 +20,19 @@ export function TaskEditor({ assignees, createTaskAction, initialRecord, updateT
   const [message, setMessage] = useState(""); const [pending, setPending] = useState(false); const last = useRef("");
   const set = <K extends keyof TaskInput>(key: K, value: TaskInput[K]) => setValues((current) => ({ ...current, [key]: value }));
   async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault(); setMessage("");
+    event.preventDefault(); if (pending) return; setMessage("");
     const checked = validateTaskInput(values); if (!checked.ok) { setMessage(checked.errors.map((error) => error.message).join(" ")); return; }
     const fingerprint = JSON.stringify(checked.value); if (last.current === fingerprint) { setMessage("This exact task was already submitted."); return; }
     setPending(true);
-    const result = initialRecord ? await updateTaskAction(initialRecord.id, checked.value) : await createTaskAction(checked.value);
-    setPending(false);
+    let result: TaskMutationResult;
+    try {
+      result = initialRecord ? await updateTaskAction(initialRecord.id, checked.value) : await createTaskAction(checked.value);
+    } catch {
+      setMessage("The task could not be saved. Try again.");
+      return;
+    } finally {
+      setPending(false);
+    }
     if (!result.ok) { setMessage(result.code === "PERMISSION_DENIED" ? "You do not have permission to save tasks." : result.code === "VALIDATION" ? (result.errors ?? []).map((error) => error.message).join(" ") : "The task could not be saved. Try again."); return; }
     last.current = fingerprint; router.push(`/tasks/${result.record.id}?saved=1`); router.refresh();
   }

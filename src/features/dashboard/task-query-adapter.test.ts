@@ -65,4 +65,12 @@ describe("createDashboardTaskQuery", () => {
     });
     await expect(query.querySection({ key: "unfinished", now: new Date("2026-09-10T00:00:00Z"), userId: "fictional-user" })).resolves.toEqual({ code: "PERMISSION_DENIED", key: "unfinished", ok: false });
   });
+
+  it("reports invalid due-risk input instead of silently displaying zero", async () => {
+    const query = createDashboardTaskQuery({
+      classifyDueRisk: () => ({ ok: false, value: "invalid" }),
+      listTasks: async () => ({ ok: true, total: 1, items: [task("invalid", "not_started", "invalid")] }),
+    });
+    await expect(query.querySection({ key: "overdue", now: new Date("2026-09-10T00:00:00Z"), userId: "fictional-user" })).resolves.toEqual({ ok: false, code: "SYSTEM_ERROR", key: "overdue" });
+  });
 });

@@ -1,6 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { revalidatePath } from "next/cache";
 
 vi.mock("server-only", () => ({}));
+vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 
 const source = {
   meetingId: "22222222-2222-4222-8222-222222222222",
@@ -46,6 +48,7 @@ function formData(overrides: Partial<typeof values> = {}) {
 
 describe("integrated task conversion action", () => {
   beforeEach(() => {
+    vi.mocked(revalidatePath).mockClear();
     mocks.createFromSource.mockReset();
     mocks.listAssigneeOptions.mockReset();
     mocks.readSource.mockReset();
@@ -72,6 +75,9 @@ describe("integrated task conversion action", () => {
     expect(result).toMatchObject({ status: "success" });
     expect(mocks.readSource).toHaveBeenCalledWith("decision", source.sourceId);
     expect(mocks.createFromSource).toHaveBeenCalledWith(source, values);
+    expect(revalidatePath).toHaveBeenCalledWith("/tasks", "layout");
+    expect(revalidatePath).toHaveBeenCalledWith("/dashboard");
+    expect(revalidatePath).toHaveBeenCalledWith(`/meetings/${source.meetingId}`);
   });
 
   it("rejects missing required fields before persistence", async () => {
@@ -83,6 +89,7 @@ describe("integrated task conversion action", () => {
     );
 
     expect(result).toMatchObject({ status: "validation" });
+    expect(revalidatePath).not.toHaveBeenCalled();
     expect(result.errors).toContainEqual(
       expect.objectContaining({ code: "DUE_DATE_REQUIRED" }),
     );

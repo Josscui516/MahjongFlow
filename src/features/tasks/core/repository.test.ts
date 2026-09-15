@@ -35,6 +35,12 @@ function queryFixture() {
 }
 
 describe("task follow-up repository query", () => {
+  it("updates only mutable fields and preserves database-owned source columns", async () => {
+    const update = vi.fn(() => ({ eq: () => ({ select: () => ({ maybeSingle: async () => ({ data: row, error: null }) }) }) }));
+    const repository = createTaskRepository(async () => ({ from: () => ({ update }) }) as never);
+    await repository.update(row.id, { assigneeId: row.assignee_id, description: row.description, dueDate: row.due_date, eventId: row.event_id, status: "completed", title: row.title, sourceMeetingId: "immutable-source" });
+    expect(update).toHaveBeenCalledWith({ assignee_id: row.assignee_id, description: row.description, due_date: row.due_date, event_id: row.event_id, status: "completed", title: row.title });
+  });
   it("applies every filter with AND semantics before a bounded page and exact total", async () => {
     const fixture = queryFixture();
     const repository = createTaskRepository(async () => fixture.client as never);
