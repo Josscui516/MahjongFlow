@@ -185,7 +185,7 @@ export function MeetingHistoryList({
             </p>
           </div>
 
-          <ol className="divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <ol className="divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white shadow-sm">
             {orderedItems.map((item) => {
               const headingId = `meeting-history-item-${item.id}`;
 

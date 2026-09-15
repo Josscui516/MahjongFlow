@@ -89,6 +89,7 @@ export default async function MeetingDetailPage({
       />
       <MeetingEditorFlow
         agenda={agenda}
+        relatedTasks={relatedTasksResult}
         attendeeOptions={attendeeResult.options}
         initialRecord={meetingResult.record}
         justCreated={query.created === "1"}

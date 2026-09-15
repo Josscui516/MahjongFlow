@@ -1,4 +1,5 @@
 import Link from "next/link";
+import {TASK_STATUS_LABELS} from "../presentation";
 
 import type { RelatedTasksResult } from "./contracts";
 import {
@@ -55,7 +56,7 @@ export function RelatedTasksPanel({ result }: RelatedTasksPanelProps) {
           <li className="min-w-0 p-4 sm:flex sm:items-center sm:justify-between sm:gap-4" key={task.id}>
             <div className="min-w-0">
               <p className="break-words font-semibold text-slate-950">{task.title}</p>
-              <p className="mt-1 text-sm text-slate-600">{getSourceKindLabel(task.sourceKind)}</p>
+              <p className="mt-1 text-sm text-slate-600">{getSourceKindLabel(task.sourceKind)}{task.status ? ` · ${TASK_STATUS_LABELS[task.status]}` : ""}</p>
             </div>
             <Link
               aria-label={`Open task ${task.title} from this ${task.sourceKind === "decision" ? "decision" : "discussion point"}`}

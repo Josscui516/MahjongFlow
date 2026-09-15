@@ -70,7 +70,15 @@ Foundation 与共享支撑 Epic #1 以及 Enabler #9–#11、#39–#41 映射 `U
 
 ## 5. 当前 Sprint Backlog
 
-当前实施周期为 `Sprint 2`，目标是完成 M1：认证、角色、权限、共享状态与
+### 5.1 2026-09-08：Sprint 5 计划与分配
+
+本次按 Joshua 授权，手动将 #4、#16、#20、#21、#22 设为 Sprint 5，并分别指派 Joshua、Shiying、Li、Xuanwei、Yubo；状态保持原有 Backlog，Acceptance Gate 未提前更新。以[开发第 5 周统一计划及五份个人文档](../plans/week-5/WEEK_5_IMPLEMENTATION_PLAN.md)执行；实时成员与状态仍以 Project 为准。
+
+Dashboard 的活动占位与真实活动分阶段验收已由 Joshua 批准并同步相关 Issues。#20/#21 本周不再被后周 #17/#19 阻断；完整 T-05/T-06 由 Sprint 6 #18/#19 承接。下周文档见[开发第 6 周计划](../plans/week-6/WEEK_6_IMPLEMENTATION_PLAN.md)，其 Project 字段与分支尚未创建。
+
+### 5.2 历史 Sprint 2 快照
+
+以下记录当时的 `Sprint 2`，目标是完成 M1：认证、角色、权限、共享状态与
 数据基础，使 X-01–X-07 可以验收。当前 Sprint Backlog 只包含：
 
 | Issue | 作用 | Assignee | 当前状态 |

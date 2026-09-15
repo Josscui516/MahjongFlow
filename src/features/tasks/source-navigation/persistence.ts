@@ -39,7 +39,7 @@ export function createSourceNavigationRepository(
       const supabase = await getClient();
       const { data, error } = await supabase
         .from("tasks")
-        .select("id, title, source_decision_id, source_discussion_point_id")
+        .select("id, title, status, source_decision_id, source_discussion_point_id")
         .eq("source_meeting_id", meetingId)
         .order("title")
         .order("id");
@@ -54,7 +54,7 @@ export function createSourceNavigationRepository(
             : null;
 
         return sourceKind
-          ? [{ id: task.id, sourceKind, title: task.title }]
+          ? [{ id: task.id, sourceKind, title: task.title, sourceId: task.source_decision_id ?? task.source_discussion_point_id ?? undefined, status: task.status }]
           : [];
       });
     },

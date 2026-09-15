@@ -4,22 +4,22 @@ import { SuccessFeedback, SystemErrorFeedback } from "@/components/feedback";
 import { listTasks } from "@/features/tasks/core/service";
 import { listAssigneeOptions } from "@/features/tasks/editor/server";
 import { TaskList } from "@/features/tasks/list/TaskList";
-import { parseTaskListCriteria } from "@/features/tasks/list/search-params";
+import { parseTaskFilterCriteria, type RawTaskSearchParams } from "@/features/tasks/list/search-params";
 
-export default async function TasksPage({ searchParams }: Readonly<{ searchParams: Promise<{ deleted?: string; q?: string | string[]; sort?: string | string[]; status?: string | string[] }> }>) {
+export default async function TasksPage({ searchParams }: Readonly<{ searchParams: Promise<RawTaskSearchParams & { deleted?: string }> }>) {
   const query = await searchParams;
-  const criteria = parseTaskListCriteria(query);
-  const result = await listTasks();
-  const assignees = result.ok ? await listAssigneeOptions() : [];
+  const parsed = parseTaskFilterCriteria(query);
+  const result = parsed.ok ? await listTasks(parsed.criteria) : null;
+  const assignees = result?.ok ? await listAssigneeOptions() : [];
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-6 border-b border-slate-200 pb-7 sm:flex-row sm:items-end sm:justify-between">
+      <header className="flex items-start justify-between gap-3 border-b border-slate-200 pb-4 sm:items-end">
         <div className="min-w-0">
           <h1 className="text-3xl font-bold tracking-tight text-slate-950">
             Tasks
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-            Turn committee decisions into owned, dated action items and keep their delivery status visible.
+            Track ownership, deadlines and progress.
           </p>
         </div>
 
@@ -52,15 +52,18 @@ export default async function TasksPage({ searchParams }: Readonly<{ searchParam
       ) : null}
 
       <section aria-label="Task list content" className="min-w-0">
-        {!result.ok ? (
+        {!parsed.ok ? (
+          <section className="rounded-2xl border border-rose-200 bg-rose-50 p-5 text-rose-900" role="alert"><h2 className="font-semibold">Invalid task filters</h2><ul className="mt-2 list-disc pl-5 text-sm">{parsed.errors.map((error) => <li key={error}>{error}</li>)}</ul><Link className="mt-4 inline-block font-semibold underline underline-offset-4" href="/tasks">Clear filters</Link></section>
+        ) : !result?.ok ? (
           <SystemErrorFeedback />
         ) : (
           <TaskList
             assigneeLabels={new Map(
               assignees.map((assignee) => [assignee.id, assignee.label]),
             )}
-            criteria={criteria}
+            criteria={parsed.criteria}
             items={result.items}
+            total={result.total}
           />
         )}
       </section>
