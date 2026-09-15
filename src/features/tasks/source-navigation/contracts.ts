@@ -1,8 +1,12 @@
+import type {TaskStatus} from "../core/contracts";
+
 export type SourceKindView = "decision" | "discussion";
 
 export type RelatedTaskSummary = Readonly<{
   id: string;
   sourceKind: SourceKindView;
+  sourceId?: string;
+  status?: TaskStatus;
   title: string;
 }>;
 

@@ -64,3 +64,14 @@ describe("DueRiskReminder", () => {
     expect(html).toContain("LongFictionalTitle".repeat(30));
   });
 });
+
+it("keeps compact reminders contextual without repeating the task title", () => {
+ const html = renderToStaticMarkup(<DueRiskReminder compact now={new Date("2026-09-15T00:00:00Z")} dueDate="2026-09-14" risk={{ok:true,value:"overdue"}} taskTitle="Fictional task" />);
+ expect(html).toContain("Overdue 1 day");
+ expect(html).not.toContain("Task: Fictional task");
+ expect(html).not.toContain("Past its due date");
+});
+it("uses Sydney calendar days across midnight for compact copy", () => {
+ const html = renderToStaticMarkup(<DueRiskReminder compact now={new Date("2026-09-14T14:30:00Z")} dueDate="2026-09-15" risk={{ok:true,value:"dueSoon"}} taskTitle="Fictional task" />);
+ expect(html).toContain("Due today");
+});

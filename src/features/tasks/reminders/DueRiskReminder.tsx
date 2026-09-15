@@ -1,10 +1,14 @@
 import Link from "next/link";
+import { calendarDateAt, parseIsoCalendarDate, SYDNEY_TIME_ZONE } from "@/lib/dates";
 
 import type { DueRiskResult } from "../due-risk";
 
 export type DueRiskReminderProps = Readonly<{
   risk: DueRiskResult;
   taskTitle: string;
+  compact?: boolean;
+  dueDate?: string;
+  now?: Date;
   /** Pass the same protected task-detail link used by the host. */
   taskHref?: `/tasks/${string}`;
 }>;
@@ -28,13 +32,23 @@ const presentations = {
 } as const;
 
 /** Pure presentation: the host owns classification, authorisation and refresh. */
-export function DueRiskReminder({ risk, taskTitle, taskHref }: DueRiskReminderProps) {
+export function DueRiskReminder({ risk, taskTitle, taskHref, compact = false, dueDate, now }: DueRiskReminderProps) {
   const state = risk.ok ? risk.value : "invalid";
   if (state === "normal" || state === "completed") {
     return null;
   }
 
   const presentation = presentations[state];
+  let label: string = presentation.label;
+  if (compact && dueDate && now && risk.ok) {
+    const due = parseIsoCalendarDate(dueDate);
+    const today = calendarDateAt(now, SYDNEY_TIME_ZONE);
+    if (due.ok && today.ok) {
+      const days = due.value.ordinal - today.value.ordinal;
+      if (state === "overdue" && days < 0) label = `Overdue ${-days} ${days === -1 ? "day" : "days"}`;
+      if (state === "dueSoon" && days >= 0 && days <= 7) label = days === 0 ? "Due today" : `Due in ${days} ${days === 1 ? "day" : "days"}`;
+    }
+  }
   // Never turn a mistaken external/missing-source link into an active control.
   const safeHref = taskHref && /^\/tasks\/[^/?#\s\\]+$/.test(taskHref)
     ? taskHref
@@ -42,7 +56,7 @@ export function DueRiskReminder({ risk, taskTitle, taskHref }: DueRiskReminderPr
 
   return (
     <span
-      className={`flex min-w-0 max-w-full items-start gap-2 rounded-md border p-3 text-sm ${presentation.style}`}
+      className={`flex min-w-0 max-w-full items-start gap-1.5 rounded-md text-sm ${compact ? "mt-1.5 w-fit px-2 py-1" : "border p-3"} ${presentation.style}`}
       data-due-risk={state}
     >
       <svg
@@ -67,8 +81,8 @@ export function DueRiskReminder({ risk, taskTitle, taskHref }: DueRiskReminderPr
         )}
       </svg>
       <span className="min-w-0 [overflow-wrap:anywhere]">
-        <span className="block font-semibold">{presentation.label}</span>
-        <span className="block">{presentation.detail}</span>
+        <span className="block font-semibold">{label}</span>
+        {!compact ? <span className="block">{presentation.detail}</span> : null}
         {safeHref ? (
           <Link
             href={safeHref}
@@ -77,9 +91,9 @@ export function DueRiskReminder({ risk, taskTitle, taskHref }: DueRiskReminderPr
           >
             Open task: {taskTitle} — {presentation.label}
           </Link>
-        ) : (
+        ) : !compact ? (
           <span className="mt-1 block">Task: {taskTitle}</span>
-        )}
+        ) : null}
       </span>
     </span>
   );

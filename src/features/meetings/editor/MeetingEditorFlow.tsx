@@ -1,6 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import type {RelatedTasksResult} from "@/features/tasks/source-navigation/contracts";
 import { useMemo } from "react";
 
 import { MeetingAgendaSection } from "@/features/meetings/agenda/MeetingAgendaSection";
@@ -14,6 +15,7 @@ type Props = Readonly<
   | { attendeeOptions: readonly MeetingAttendeeOption[]; mode: "create" }
   | {
       agenda: MeetingAgendaDTO;
+      relatedTasks?: RelatedTasksResult;
       attendeeOptions: readonly MeetingAttendeeOption[];
       initialRecord: MeetingRecordDTO;
       justCreated?: boolean;
@@ -46,6 +48,8 @@ export function MeetingEditorFlow(props: Props) {
         <div className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
           <MeetingAgendaSection
             agenda={props.agenda}
+            startInReadMode
+            relatedTasks={props.relatedTasks}
             focusOnMount={props.justCreated}
             onSave={(draft) => saveMeetingAgendaAction(props.initialRecord.id, draft)}
           />

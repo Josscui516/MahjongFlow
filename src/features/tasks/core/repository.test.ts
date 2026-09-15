@@ -83,3 +83,10 @@ describe("task follow-up repository query", () => {
     ]);
   });
 });
+
+it("completes without resending mutable content or immutable source columns", async () => {
+ const update=vi.fn(()=>({eq:()=>({select:()=>({maybeSingle:async()=>({data:row,error:null})})})}));
+ const repository=createTaskRepository(async()=>({from:()=>({update})}) as never);
+ await repository.complete!(row.id);
+ expect(update).toHaveBeenCalledWith({status:"completed"});
+});

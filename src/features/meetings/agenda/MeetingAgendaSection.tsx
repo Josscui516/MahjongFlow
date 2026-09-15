@@ -1,5 +1,6 @@
 "use client";
 
+import type {RelatedTasksResult} from "@/features/tasks/source-navigation/contracts";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import type {
@@ -13,6 +14,8 @@ import { TaskConversionEntry } from "./TaskConversionEntry";
 
 type Props = Readonly<{
   agenda: MeetingAgendaDTO;
+  startInReadMode?: boolean;
+  relatedTasks?: RelatedTasksResult;
   focusOnMount?: boolean;
   onSave: (draft: AgendaDraft) => Promise<AgendaSaveResult>;
 }>;
@@ -90,13 +93,16 @@ function AgendaErrorSummary({ errors }: Readonly<{ errors: readonly AgendaFieldE
   );
 }
 
-export function MeetingAgendaSection({ agenda, focusOnMount = false, onSave }: Props) {
+export function MeetingAgendaSection({ agenda, focusOnMount = false, onSave, startInReadMode = false, relatedTasks }: Props) {
+  const [editing,setEditing]=useState(!startInReadMode || focusOnMount);
+  const [savedDraft,setSavedDraft]=useState(() => draftFromAgenda(agenda));
   const initialFingerprint = useMemo(() => createAgendaFingerprint(draftFromAgenda(agenda)), [agenda]);
   const [draft, setDraft] = useState<AgendaDraft>(() => draftFromAgenda(agenda));
   const [savedFingerprint, setSavedFingerprint] = useState(initialFingerprint);
   const [result, setResult] = useState<AgendaSaveResult | null>(null);
   const [pending, setPending] = useState(false);
   const agendaHeadingRef = useRef<HTMLHeadingElement>(null);
+  const previousEditing = useRef(editing);
   const errorSummaryRef = useRef<HTMLDivElement>(null);
   const pendingFocusId = useRef<string | null>(null);
   const currentFingerprint = createAgendaFingerprint(draft);
@@ -105,6 +111,13 @@ export function MeetingAgendaSection({ agenda, focusOnMount = false, onSave }: P
     () => result && !result.ok && result.code === "validation" ? result.fieldErrors : [],
     [result],
   );
+
+  useEffect(() => {
+    if (previousEditing.current !== editing) {
+      agendaHeadingRef.current?.focus({ preventScroll: true });
+      previousEditing.current = editing;
+    }
+  }, [editing]);
 
   useEffect(() => {
     if (!focusOnMount) return;
@@ -166,12 +179,20 @@ export function MeetingAgendaSection({ agenda, focusOnMount = false, onSave }: P
       if (nextResult.ok) {
         const nextDraft = draftFromAgenda(nextResult.agenda);
         setDraft(nextDraft);
+        setSavedDraft(nextDraft);
+        setEditing(false);
         setSavedFingerprint(createAgendaFingerprint(nextDraft));
       }
     } finally {
       setPending(false);
     }
   }
+
+  if (!editing) return <section aria-labelledby="meeting-agenda-heading">
+    <div className="flex items-center justify-between gap-3"><h2 id="meeting-agenda-heading" ref={agendaHeadingRef} tabIndex={-1} className="text-xl font-bold text-slate-950 focus:outline-none">Meeting agenda</h2><button type="button" className={SECONDARY_BUTTON_CLASS} onClick={() => setEditing(true)}>Edit agenda</button></div>
+    {result?.ok ? <p role="status" className="mt-3 text-sm text-emerald-800">Meeting agenda saved.</p> : null}
+    {SECTION_KEYS.map(section => <div key={section} className="mt-5 border-t border-slate-200 pt-4"><h3 className="font-semibold text-slate-900">{SECTION_CONTENT[section].label}</h3>{draft[section].length ? <ol className="mt-2 divide-y divide-slate-100">{draft[section].map((item,index) => <li key={item.id ?? index} className="py-3"><p className="whitespace-pre-wrap break-words text-sm leading-6 text-slate-800">{item.content}</p>{item.id ? <TaskConversionEntry sourceId={item.id} sourceKind={section === "decisions" ? "decision" : "discussion"} task={relatedTasks?.ok ? relatedTasks.items.find(task => task.sourceId === item.id) : undefined} unavailable={relatedTasks !== undefined && !relatedTasks.ok} /> : null}</li>)}</ol> : <p className="mt-2 text-sm text-slate-600">No {SECTION_CONTENT[section].label.toLowerCase()} recorded.</p>}</div>)}
+  </section>;
 
   return (
     <section aria-labelledby="meeting-agenda-heading">
@@ -185,6 +206,7 @@ export function MeetingAgendaSection({ agenda, focusOnMount = false, onSave }: P
         </p>
       </div>
 
+      <button type="button" className={`${SECONDARY_BUTTON_CLASS} mt-4`} disabled={pending} onClick={() => {setDraft(savedDraft); setResult(null); setEditing(false);}}>{hasChanges ? "Discard changes" : "Done editing"}</button>
       <div className="mt-5" ref={errorSummaryRef}><AgendaErrorSummary errors={validationErrors} /></div>
 
       <div className="mt-6 space-y-7">
@@ -216,6 +238,8 @@ export function MeetingAgendaSection({ agenda, focusOnMount = false, onSave }: P
                             <button aria-label={`Remove ${content.label.toLowerCase()} ${index + 1}`} className={`${COMPACT_BUTTON_CLASS} border-rose-200 text-rose-800 hover:border-rose-300 hover:bg-rose-50`} onClick={() => removeItem(section, index)} type="button">Remove item</button>
                             {item.id ? (
                               <TaskConversionEntry
+                                task={relatedTasks?.ok ? relatedTasks.items.find(task => task.sourceId === item.id) : undefined}
+                                unavailable={relatedTasks !== undefined && !relatedTasks.ok}
                                 sourceId={item.id}
                                 sourceKind={section === "decisions" ? "decision" : "discussion"}
                               />
