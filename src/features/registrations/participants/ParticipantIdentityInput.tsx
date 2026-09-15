@@ -150,18 +150,17 @@ export function ParticipantIdentityInput({
 
       <fieldset
         aria-busy={status === "pending" || undefined}
-        className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6"
+        className="min-w-0"
         disabled={isDisabled}
       >
-        <legend className="px-1 text-lg font-bold tracking-tight text-slate-950">
+        <legend className="sr-only">
           Participant identity
         </legend>
         <p className="mt-1 text-sm leading-5 text-slate-600">
-          Collect only the details needed to identify this participant for the
-          event.
+          Use the participant’s name and email for this event.
         </p>
 
-        <div className="mt-6 grid gap-5 lg:grid-cols-2">
+        <div className="mt-4 grid gap-4">
           <FormField
             control={
               <input
@@ -172,7 +171,7 @@ export function ParticipantIdentityInput({
                 name="fullName"
               />
             }
-            description="Use the participant's full name. Leading and trailing spaces are removed when checked."
+
             error={errorsByField.fullName}
             id={`${resolvedIdPrefix}-fullName`}
             label={FIELD_LABELS.fullName}

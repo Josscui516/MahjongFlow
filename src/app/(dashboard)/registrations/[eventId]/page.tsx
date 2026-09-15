@@ -1,3 +1,4 @@
+import { RegistrationWorkspace } from "@/features/registrations/records/RegistrationWorkspace";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { getEvent } from "@/features/events/core/service";
@@ -27,11 +28,13 @@ export default async function RegistrationsPage({ params, searchParams }: Readon
   }
   const summary = await participationSummaryService.get(eventId);
   const event = await getEvent(eventId);
-  return <div className="mx-auto w-full max-w-4xl space-y-6">
-    <h1 className="text-2xl font-bold">Event registrations</h1>
-    <Link className="underline" href="/registrations">Choose another event</Link>
-    {event.ok ? <><h2 className="text-lg font-semibold">{event.record.name}</h2><IdentityRegistrationForm eventId={eventId} requiresStudentId={event.record.requiresStudentId} /></> : <p role="alert">Event details are unavailable. Refresh before registering.</p>}
+  return <div className="w-full space-y-5">
+    <nav aria-label="Registration navigation" className="flex flex-wrap gap-x-5 text-sm font-semibold text-emerald-900">
+      <Link className="inline-flex min-h-11 items-center underline focus-visible:outline-2 focus-visible:outline-offset-2" href={`/events/${eventId}`}>Back to event</Link>
+      <Link className="inline-flex min-h-11 items-center underline focus-visible:outline-2 focus-visible:outline-offset-2" href="/registrations">Choose another event</Link>
+    </nav>
+    <header><h1 className="text-3xl font-bold tracking-tight text-slate-950">Event registrations</h1>{event.ok ? <p className="mt-2 text-lg text-slate-700">{event.record.name}</p> : null}</header>
     <ParticipationSummary result={summary} />
-    <RegistrationList result={list} changeStatus={changeRegistrationStatus} />
+    <RegistrationWorkspace initiallyEmpty={list.total === 0} records={<RegistrationList result={list} changeStatus={changeRegistrationStatus} />} form={event.ok ? <IdentityRegistrationForm eventId={eventId} requiresStudentId={event.record.requiresStudentId} /> : <p role="alert">Event details are unavailable. Refresh before registering.</p>} />
   </div>;
 }

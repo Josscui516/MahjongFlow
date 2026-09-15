@@ -31,6 +31,13 @@ function TaskRows({ items, now }: Readonly<{ items: readonly TaskRecordDTO[]; no
 function TaskSection({ result, now }: Readonly<{ result: DashboardTaskSectionResult; now: Date }>) {
   const key = keyOf(result);
   const copy = SECTION_COPY[key];
+  if (key === "unfinished" && result.ok && result.section.items.length > 0) {
+    return <details id="dashboard-unfinished" className="scroll-mt-4 rounded-xl border border-slate-200 bg-white px-5">
+      <summary className="min-h-11 cursor-pointer py-4 text-sm font-semibold text-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-2">All unfinished tasks ({result.section.total})</summary>
+      <TaskRows items={result.section.items} now={now} />
+    </details>;
+  }
+
   return <section id={`dashboard-${key}`} aria-labelledby={`heading-${key}`} className="min-w-0 scroll-mt-4 self-start rounded-xl border border-slate-200 bg-white p-4 sm:p-5">
     <h2 id={`heading-${key}`} className="text-lg font-bold text-slate-950">{copy.title}</h2>
     {!result.ok ? <p className="mt-3 text-sm text-rose-900" role="alert">{result.code === "UPSTREAM_NOT_CONNECTED" ? "Task summaries are waiting for the shared task query provider." : result.code === "PERMISSION_DENIED" ? "You do not have permission to view this task summary." : "This task summary could not be loaded."}</p>
@@ -50,14 +57,17 @@ export function DashboardView({ snapshot, upcomingEvents }: Readonly<{ snapshot:
   const now = new Date(snapshot.capturedAt);
   return <div className="min-w-0">
     <header className="flex items-center justify-between gap-4">
-      <div><h1 className="text-3xl font-bold tracking-tight text-slate-950">Dashboard</h1><p className="mt-1 text-sm text-slate-600">Your next actions, with urgent work first.</p></div>
+      <div><h1 className="text-3xl font-bold tracking-tight text-slate-950">Dashboard</h1><p className="mt-1 text-sm text-slate-600">Upcoming events and work that needs your attention.</p></div>
       <Link href="/tasks" className="inline-flex min-h-11 shrink-0 items-center rounded-lg border border-emerald-800 px-3 text-sm font-semibold text-emerald-950 focus-visible:outline-2 focus-visible:outline-offset-2">Open tasks</Link>
     </header>
     <nav aria-label="Task summaries" className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
       {sections.map(result => { const key = keyOf(result); return <a key={key} href={`#dashboard-${key}`} className={`flex min-h-20 flex-col justify-between rounded-lg border p-3 focus-visible:outline-2 focus-visible:outline-offset-2 ${key === "overdue" ? "border-rose-200 bg-rose-50 text-rose-950" : "border-slate-200 bg-white text-slate-900"}`}><span className="text-xs font-medium">{SECTION_COPY[key].title}</span><span className="mt-1 text-2xl font-semibold tabular-nums">{result.ok ? result.section.total : "Unavailable"}</span></a>; })}
     </nav>
-    <p className="mt-2 text-xs text-slate-500">Groups overlap. All deadlines use Sydney time.</p>
-    <div className="mt-4 grid items-start gap-4 lg:grid-cols-2">{sections.map(result => <TaskSection key={keyOf(result)} result={result} now={now} />)}</div>
-    <div className="mt-4"><UpcomingEventsPanel result={upcomingEvents} /></div>
+    <p className="mt-2 text-xs text-slate-600">A task can appear in more than one group. All deadlines use Sydney time.</p>
+    <div className="mt-4 grid items-start gap-5 xl:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
+      <UpcomingEventsPanel result={upcomingEvents} />
+      <div className="min-w-0 space-y-4">{sections.filter(result => keyOf(result) !== "unfinished").map(result => <TaskSection key={keyOf(result)} result={result} now={now} />)}</div>
+    </div>
+    <div className="mt-5">{sections.filter(result => keyOf(result) === "unfinished").map(result => <TaskSection key={keyOf(result)} result={result} now={now} />)}</div>
   </div>;
 }

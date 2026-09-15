@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { MeetingEditorFlow } from "@/features/meetings/editor/MeetingEditorFlow";
@@ -83,6 +84,7 @@ export default async function MeetingDetailPage({
 
   return (
     <>
+      <Link className="mb-3 inline-flex min-h-11 items-center text-sm font-semibold text-emerald-900 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2" href="/meetings">Back to meetings</Link>
       <MeetingPageHeader
         description="Review the meeting record, capture discussion points, and save key decisions."
         title="Meeting details"

@@ -29,3 +29,11 @@ describe("PreparationPanel", () => {
     expect(denied).toContain("do not have permission"); expect(failed).toContain("could not be loaded");
   });
 });
+
+it("puts unfinished work before completed tasks without losing unlink access", () => {
+  const html = renderToStaticMarkup(<PreparationPanel candidates={[]} eventId={task.eventId!} linkAction={async () => {}} result={{ok:true,snapshot:{eventId:task.eventId!,progress:{completed:1,total:2},tasks:[task,{...task,id:"44444444-4444-4444-8444-444444444444",title:"Outstanding fictional work",status:"not_started"}]}}} />);
+  expect(html.indexOf("Outstanding fictional work")).toBeLessThan(html.indexOf("<details"));
+  expect(html.indexOf(task.title)).toBeGreaterThan(html.indexOf("<details"));
+  expect(html).toContain(`Remove ${task.title} from event`);
+  expect(html).toContain("20 Sept 2026");
+});
