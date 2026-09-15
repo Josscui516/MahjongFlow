@@ -9,12 +9,13 @@ import type { AssigneeOption } from "./server";
 const labels: Record<TaskStatus, string> = { completed: "Completed", in_progress: "In Progress", not_started: "Not Started" };
 type TaskEditorProps = Readonly<{
   assignees: readonly AssigneeOption[];
+  eventOptions?: readonly { id: string; label: string }[];
   createTaskAction: (input: TaskInput) => Promise<TaskMutationResult>;
   initialRecord?: TaskRecordDTO;
   updateTaskAction: (taskId: string, input: TaskInput) => Promise<TaskMutationResult>;
 }>;
 
-export function TaskEditor({ assignees, createTaskAction, initialRecord, updateTaskAction }: TaskEditorProps) {
+export function TaskEditor({ assignees, eventOptions = [], createTaskAction, initialRecord, updateTaskAction }: TaskEditorProps) {
   const router = useRouter();
   const [values, setValues] = useState<TaskInput>(initialRecord ?? { assigneeId: assignees[0]?.id ?? "", description: "", dueDate: "", status: "not_started", title: "" });
   const [message, setMessage] = useState(""); const [pending, setPending] = useState(false); const last = useRef("");
@@ -38,6 +39,8 @@ export function TaskEditor({ assignees, createTaskAction, initialRecord, updateT
       <label className="text-sm font-semibold text-slate-800">Due date<input className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-950" disabled={pending} onChange={(e) => set("dueDate", e.target.value)} required type="date" value={values.dueDate}/></label>
       <label className="text-sm font-semibold text-slate-800">Status<select className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-950" disabled={pending} onChange={(e) => set("status", e.target.value as TaskStatus)} value={values.status}>{TASK_STATUSES.map((status) => <option key={status} value={status}>{labels[status]}</option>)}</select></label>
     </div>
+    <label className="block text-sm font-semibold text-slate-800">Related event (optional)<select aria-describedby="task-event-help" className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-950" disabled={pending} value={values.eventId ?? ""} onChange={(event) => set("eventId", event.target.value || null)}><option value="">None — standalone task</option>{values.eventId && !eventOptions.some(event => event.id === values.eventId) ? <option value={values.eventId}>Current linked event</option> : null}{eventOptions.map(event => <option key={event.id} value={event.id}>{event.label}</option>)}</select></label>
+    <p className="text-sm text-slate-600" id="task-event-help">Choose an event to include this task in its preparation progress. Leave it blank for a standalone task.</p>
     <button className="min-h-11 rounded-xl bg-emerald-950 px-5 py-3 font-semibold text-white transition hover:bg-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:opacity-50" disabled={pending} type="submit">{pending ? "Saving…" : initialRecord ? "Save task" : "Create task"}</button>
   </form>;
 }

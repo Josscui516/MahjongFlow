@@ -1,0 +1,14 @@
+{
+  "checks": [
+    "Registration without optional student ID and no automatic attendance",
+    "Repeated identity creates no duplicate registration",
+    "Cancel and restore keeps the same record",
+    "Attendance stays independent when registration is cancelled",
+    "Required student ID is enforced against real event data",
+    "Mobile registration content has no horizontal overflow",
+    "Committee can read event preparation but cannot read roster",
+    "Committee and anonymous REST cannot obtain participant data",
+    "Committee can read only aggregate participation counts"
+  ],
+  "errors": []
+}

@@ -14,6 +14,8 @@ import {
   requireAuthorised,
 } from "@/lib/auth/authorization";
 
+const eventDateFormatter = new Intl.DateTimeFormat("en-AU", { dateStyle: "medium", timeStyle: "short", timeZone: "Australia/Sydney" });
+
 const BACK_ACTION = (
   <Link
     className="inline-flex min-h-11 items-center rounded-lg border border-current px-3 py-2 text-sm font-semibold"
@@ -67,10 +69,10 @@ export default async function RegistrationsPage() {
       signOutSlot={<LogoutForm />}
     >
       <PageFrame
-        description="Participant registration details are restricted to authorised committee users."
+        description="Choose an event to manage its participant registrations."
         title="Registrations"
       >
-        {!events.ok ? <SystemErrorFeedback /> : events.items.length === 0 ? <EmptyFeedback title="No events available" description="Create an event before registering participants." /> : <ul className="space-y-3">{events.items.map((event) => <li key={event.id}><Link className="block rounded-lg border p-4 font-semibold underline" href={`/registrations/${event.id}`}>{event.name}</Link></li>)}</ul>}
+        {!events.ok ? <SystemErrorFeedback /> : events.items.length === 0 ? <EmptyFeedback title="No events available" description="Create an event before registering participants." /> : <ul className="space-y-3">{events.items.map((event) => <li key={event.id}><Link className="block rounded-lg border p-4 font-semibold" href={`/registrations/${event.id}`}><span className="underline underline-offset-4">{event.name}</span><span className="mt-2 block text-sm font-normal"><time dateTime={event.startsAt}>{eventDateFormatter.format(new Date(event.startsAt))} (Sydney time)</time> · {event.status.charAt(0).toUpperCase() + event.status.slice(1)}</span></Link></li>)}</ul>}
       </PageFrame>
     </BackofficeShell>
   );

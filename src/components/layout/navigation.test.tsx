@@ -8,36 +8,61 @@ import {
 } from "./navigation";
 
 describe("role-aware navigation", () => {
+  it("keeps section identities unique and stable across roles and capabilities", () => {
+    for (const role of ["committee", "authorised"] as const) {
+      for (const canManageAccounts of [false, true]) {
+        const sections = getNavigationSections(role, canManageAccounts);
+        const ids = sections.map((section) => section.id);
+        expect(ids.every((id) => typeof id === "string" && id.length > 0)).toBe(true);
+        expect(new Set(ids).size).toBe(ids.length);
+        expect(sections[0].id).toBe("primary");
+        if (role === "authorised") {
+          expect(sections.find((section) => section.items.some((item) => item.href === "/registrations"))?.id).toBe("registrations");
+        }
+        if (canManageAccounts) {
+          expect(sections.find((section) => section.items.some((item) => item.href === "/admin/users"))?.id).toBe("administration");
+        }
+      }
+    }
+  });
+
   it("returns only shared destinations for committee members", () => {
     expect(getNavigationSections("committee")).toEqual([
       {
+        id: "primary",
         items: [
-          { href: "/backoffice", label: "Dashboard" },
+          { href: "/dashboard", label: "Dashboard" },
           { href: "/meetings", label: "Meetings" },
           { href: "/tasks", label: "Tasks" },
+          { href: "/events", label: "Events" },
         ],
       },
     ]);
   });
 
-  it("keeps unfinished registration workflows out of authorised navigation", () => {
+  it("exposes registration workflows only to authorised members", () => {
     expect(getNavigationSections("authorised")).toEqual([
       {
+        id: "primary",
         items: [
-          { href: "/backoffice", label: "Dashboard" },
+          { href: "/dashboard", label: "Dashboard" },
           { href: "/meetings", label: "Meetings" },
           { href: "/tasks", label: "Tasks" },
+          { href: "/events", label: "Events" },
         ],
       },
+      { id: "registrations", items: [{ href: "/registrations", label: "Registrations" }] },
     ]);
   });
 
   it("adds account administration independently from the data role", () => {
     expect(getNavigationSections("committee", true)).toContainEqual({
+      id: "administration",
       label: "Administration",
       items: [{ href: "/admin/users", label: "Accounts" }],
     });
     expect(getNavigationSections("authorised", false)).not.toContainEqual({
+      id: "administration",
       label: "Administration",
       items: [{ href: "/admin/users", label: "Accounts" }],
     });
@@ -75,7 +100,7 @@ describe("role-aware navigation", () => {
       /<a(?=[^>]*aria-current="page")(?=[^>]*href="\/tasks")[^>]*>Tasks<\/a>/,
     );
     expect(html).not.toContain("Sensitive operations");
-    expect(html).not.toContain('href="/registrations"');
+    expect(html).toContain('href="/registrations"');
 
     const ids = [...html.matchAll(/ id="([^"]+)"/g)].map((match) => match[1]);
     expect(new Set(ids).size).toBe(ids.length);
@@ -92,6 +117,6 @@ describe("role-aware navigation", () => {
     expect(html).toContain('href="/backoffice"');
     expect(html).toContain('href="/meetings"');
     expect(html).toContain('href="/tasks"');
-    expect(html).not.toContain('href="/events"');
+    expect(html).toContain('href="/events"');
   });
 });

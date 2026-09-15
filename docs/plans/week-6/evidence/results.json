@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "Anonymous events access redirects to login",
+    "Real Dashboard providers and upcoming events",
+    "Create real weekly event and empty preparation",
+    "Edit preserves Sydney local datetime",
+    "Create three real tasks including two completed",
+    "Link preparation tasks updates progress to 2/3",
+    "Task event filter uses real event choices",
+    "Unlink only changes relationship and progress"
+  ],
+  "errors": []
+}

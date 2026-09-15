@@ -10,7 +10,15 @@ describe("PreparationPanel", () => {
     const html = renderToStaticMarkup(<PreparationPanel candidates={[]} eventId={task.eventId!} linkAction={async () => {}} result={{ ok: true, snapshot: { eventId: task.eventId!, progress: { completed: 1, total: 1 }, tasks: [task] } }}/>)
     expect(html).toContain("1/1");
     expect(html).toContain("Prepare fictional venue");
-    expect(html).toContain("Unlink");
+    expect(html).toContain("Remove from event");
+    expect(html).toContain(`href="/tasks/${task.id}"`);
+  });
+
+  it("requires an explicit candidate selection before adding a task", () => {
+    const html = renderToStaticMarkup(<PreparationPanel candidates={[{ ...task, eventId: null }]} eventId={task.eventId!} linkAction={async () => {}} result={{ ok: true, snapshot: { eventId: task.eventId!, progress: { completed: 0, total: 0 }, tasks: [] } }}/>);
+    expect(html).toContain('name="taskId" required=""');
+    expect(html).toContain('<option value="" disabled="" selected="">Choose a task</option>');
+    expect(html).toContain("Add to event");
   });
 
   it("distinguishes empty, permission, and system-error states", () => {

@@ -29,18 +29,18 @@ function NavigationLinks({
 
   return (
     <nav aria-label={ariaLabel} className="space-y-7">
-      {sections.map((section, sectionIndex) => (
+      {sections.map((section) => (
         <div
           aria-labelledby={
-            section.label ? `${idPrefix}-section-${sectionIndex}` : undefined
+            section.label ? `${idPrefix}-section-${section.id}` : undefined
           }
-          key={section.label ?? "primary"}
+          key={section.id}
           role={section.label ? "group" : undefined}
         >
           {section.label ? (
             <h2
               className="mb-2 px-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500"
-              id={`${idPrefix}-section-${sectionIndex}`}
+              id={`${idPrefix}-section-${section.id}`}
             >
               {section.label}
             </h2>

@@ -14,5 +14,5 @@ export class UpcomingEventRepositoryError extends Error {
 export type UpcomingEventRepository = Readonly<{ listFrom(startsAt: string): Promise<readonly UpcomingEventDTO[]> }>;
 
 export function createUpcomingEventRepository(getClient: () => Promise<SupabaseClient<Database>> = createServerSupabaseClient): UpcomingEventRepository {
-  return { async listFrom(startsAt) { const result = await (await getClient()).from("events").select(PUBLIC_COLUMNS).gte("starts_at", startsAt).order("starts_at").order("id"); if (result.error) throw new UpcomingEventRepositoryError(result.error.code); return (result.data ?? []).map((row) => { const event = row as EventRow; return { id: event.id, location: event.location, name: event.name, startsAt: event.starts_at }; }); } };
+  return { async listFrom(startsAt) { const result = await (await getClient()).from("events").select(PUBLIC_COLUMNS).eq("status", "scheduled").gte("starts_at", startsAt).order("starts_at").order("id"); if (result.error) throw new UpcomingEventRepositoryError(result.error.code); return (result.data ?? []).map((row) => { const event = row as EventRow; return { id: event.id, location: event.location, name: event.name, startsAt: event.starts_at }; }); } };
 }
