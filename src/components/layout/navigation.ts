@@ -11,7 +11,7 @@ export type NavigationSection = Readonly<{
 }>;
 
 const SHARED_NAVIGATION_ITEMS = [
-  { href: "/backoffice", label: "Dashboard" },
+  { href: "/dashboard", label: "Dashboard" },
   { href: "/meetings", label: "Meetings" },
   { href: "/tasks", label: "Tasks" },
 ] as const satisfies readonly NavigationItem[];
