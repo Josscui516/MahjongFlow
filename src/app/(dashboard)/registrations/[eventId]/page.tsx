@@ -23,15 +23,15 @@ export default async function RegistrationsPage({ params, searchParams }: Readon
       const next = isRegistrationId(eventId) ? `/registrations/${eventId}` : "/registrations";
       redirect(`/login?next=${encodeURIComponent(next)}`);
     }
-    return <main className="mx-auto max-w-4xl p-6"><h1 className="mb-4 text-2xl font-bold">Registrations</h1><p role="alert">{registrationErrors[list.code]}</p></main>;
+    return <div className="mx-auto max-w-4xl"><h1 className="mb-4 text-2xl font-bold">Registrations</h1><p role="alert">{registrationErrors[list.code]}</p></div>;
   }
   const summary = await participationSummaryService.get(eventId);
   const event = await getEvent(eventId);
-  return <main className="mx-auto w-full max-w-4xl space-y-6 p-6">
+  return <div className="mx-auto w-full max-w-4xl space-y-6">
     <h1 className="text-2xl font-bold">Event registrations</h1>
     <Link className="underline" href="/registrations">Choose another event</Link>
     {event.ok ? <><h2 className="text-lg font-semibold">{event.record.name}</h2><IdentityRegistrationForm eventId={eventId} requiresStudentId={event.record.requiresStudentId} /></> : <p role="alert">Event details are unavailable. Refresh before registering.</p>}
     <ParticipationSummary result={summary} />
     <RegistrationList result={list} changeStatus={changeRegistrationStatus} />
-  </main>;
+  </div>;
 }

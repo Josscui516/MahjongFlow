@@ -22,4 +22,3 @@ async function main(){
  console.log('Created two fictional local acceptance accounts.');
 }
 main().catch(e=>{console.error(e.message);process.exit(1)});
-

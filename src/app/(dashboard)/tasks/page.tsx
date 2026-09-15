@@ -15,13 +15,13 @@ export default async function TasksPage({ searchParams }: Readonly<{ searchParam
   const events = result?.ok ? await listTaskEventOptions() : null;
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-6 border-b border-slate-200 pb-7 sm:flex-row sm:items-end sm:justify-between">
+      <header className="flex items-start justify-between gap-3 border-b border-slate-200 pb-4 sm:items-end">
         <div className="min-w-0">
           <h1 className="text-3xl font-bold tracking-tight text-slate-950">
             Tasks
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600 sm:text-base">
-            Turn committee decisions into owned, dated action items and keep their delivery status visible.
+            Track ownership, deadlines and progress.
           </p>
         </div>
 

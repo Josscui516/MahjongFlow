@@ -81,3 +81,11 @@ describe("MeetingAgendaSection", () => {
     expect(createAgendaFingerprint(first)).not.toBe(createAgendaFingerprint(second));
   });
 });
+
+it("opens existing meetings in read mode with explicit editing", () => {
+ const html=renderToStaticMarkup(<MeetingAgendaSection startInReadMode agenda={{meetingId:"meeting",discussionPoints:[],decisions:[{id:"decision",content:"Fictional booking",position:0}]}} onSave={vi.fn()}/>);
+ expect(html).toContain("Edit agenda");
+ expect(html).toContain("Fictional booking");
+ expect(html).not.toContain("textarea");
+ expect(html).not.toContain("Save agenda");
+});

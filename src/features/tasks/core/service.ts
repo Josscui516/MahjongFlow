@@ -25,3 +25,17 @@ export const deleteTask = service.deleteTask;
 export const getTask = service.getTask;
 export const listTasks = service.listTasks;
 export const updateTask = service.updateTask;
+
+export function createTaskCompletionService({authorise,repository}: Dependencies) {
+ return async function completeTask(taskId: string): Promise<TaskMutationResult> {
+  try {
+    await authorise();
+    if (!isTaskId(taskId)) return {ok:false,code:"NOT_FOUND"};
+    if (!repository.complete) return {ok:false,code:"SYSTEM_ERROR"};
+    const record = await repository.complete(taskId);
+    return record ? {ok:true,record} : {ok:false,code:"NOT_FOUND"};
+  } catch (error) { return {ok:false,code:code(error)}; }
+}
+
+}
+export const completeTask = createTaskCompletionService({authorise:requireBackendUser,repository:createTaskRepository()});

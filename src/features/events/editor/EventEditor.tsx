@@ -2,6 +2,7 @@
 import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { EVENT_STATUSES, EVENT_TYPES, type EventDTO, type EventInput, type EventMutationResult, type EventStatus, type EventType } from "../core/contracts";
+import { readEventForm } from "./form-input";
 import { validateEventInput } from "../core/validation";
 type Props = Readonly<{ createEventAction: (input: EventInput) => Promise<EventMutationResult>; initialRecord?: EventDTO; updateEventAction: (id: string, input: EventInput) => Promise<EventMutationResult> }>;
 const fieldClass = "mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-950 outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-200";
@@ -17,7 +18,8 @@ export function EventEditor({ createEventAction, initialRecord, updateEventActio
   const set = <K extends keyof EventInput>(key: K, value: EventInput[K]) => setValues((current) => ({ ...current, [key]: value }));
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); if (lock.current) return; setMessage("");
-    const checked = validateEventInput(values);
+    const form = new FormData(event.currentTarget);
+    const checked = validateEventInput(readEventForm(form));
     if (!checked.ok) { setMessage(checked.errors.map((item) => item.message).join(" ")); return; }
     const fingerprint = JSON.stringify(checked.value);
     if (fingerprint === last.current) { setMessage("This exact event was already submitted."); return; }
@@ -31,11 +33,11 @@ export function EventEditor({ createEventAction, initialRecord, updateEventActio
   }
   return <form className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6" noValidate onSubmit={submit}>
     {message ? <p className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">{message}</p> : null}
-    <label className="block text-sm font-semibold text-slate-800">Name<input className={fieldClass} disabled={pending} maxLength={200} onChange={(e) => set("name", e.target.value)} required value={values.name}/></label>
-    <label className="block text-sm font-semibold text-slate-800">Description<textarea className={`${fieldClass} min-h-32`} disabled={pending} maxLength={10000} required onChange={(e) => set("description", e.target.value)} value={values.description}/></label>
-    <div className="grid gap-5 sm:grid-cols-2"><label className="text-sm font-semibold text-slate-800">Type<select className={fieldClass} disabled={pending} onChange={(e) => set("eventType", e.target.value as EventType)} value={values.eventType}>{EVENT_TYPES.map((type) => <option key={type} value={type}>{type === "weekly_session" ? "Weekly session" : "Tournament"}</option>)}</select></label><label className="text-sm font-semibold text-slate-800">Status<select className={fieldClass} disabled={pending} onChange={(e) => set("status", e.target.value as EventStatus)} value={values.status}>{EVENT_STATUSES.map((status) => <option key={status} value={status}>{status.replace("_", " ")}</option>)}</select></label></div>
-    <div className="grid gap-5 sm:grid-cols-2"><label className="text-sm font-semibold text-slate-800">Date and time (Sydney time)<input className={fieldClass} disabled={pending} onChange={(e) => set("startsAt", e.target.value)} required type="datetime-local" value={localDateTime(values.startsAt)}/></label><label className="text-sm font-semibold text-slate-800">Location<input className={fieldClass} disabled={pending} maxLength={300} onChange={(e) => set("location", e.target.value)} required value={values.location}/></label></div>
-    <label className="flex min-h-11 items-center gap-3 text-sm font-semibold text-slate-800"><input checked={values.requiresStudentId} disabled={pending} onChange={(e) => set("requiresStudentId", e.target.checked)} type="checkbox"/>Require student ID for registration</label>
+    <label className="block text-sm font-semibold text-slate-800">Name<input className={fieldClass} disabled={pending} maxLength={200} name="name" onChange={(e) => set("name", e.target.value)} required value={values.name}/></label>
+    <label className="block text-sm font-semibold text-slate-800">Description<textarea className={`${fieldClass} min-h-32`} disabled={pending} maxLength={10000} required name="description" onChange={(e) => set("description", e.target.value)} value={values.description}/></label>
+    <div className="grid gap-5 sm:grid-cols-2"><label className="text-sm font-semibold text-slate-800">Type<select className={fieldClass} disabled={pending} name="eventType" onChange={(e) => set("eventType", e.target.value as EventType)} value={values.eventType}>{EVENT_TYPES.map((type) => <option key={type} value={type}>{type === "weekly_session" ? "Weekly session" : "Tournament"}</option>)}</select></label><label className="text-sm font-semibold text-slate-800">Status<select className={fieldClass} disabled={pending} name="status" onChange={(e) => set("status", e.target.value as EventStatus)} value={values.status}>{EVENT_STATUSES.map((status) => <option key={status} value={status}>{status.replace("_", " ")}</option>)}</select></label></div>
+    <div className="grid gap-5 sm:grid-cols-2"><label className="text-sm font-semibold text-slate-800">Date and time (Sydney time)<input className={fieldClass} disabled={pending} name="startsAt" onChange={(e) => set("startsAt", e.target.value)} required type="datetime-local" value={localDateTime(values.startsAt)}/></label><label className="text-sm font-semibold text-slate-800">Location<input className={fieldClass} disabled={pending} maxLength={300} name="location" onChange={(e) => set("location", e.target.value)} required value={values.location}/></label></div>
+    <label className="flex min-h-11 items-center gap-3 text-sm font-semibold text-slate-800"><input checked={values.requiresStudentId} disabled={pending} name="requiresStudentId" onChange={(e) => set("requiresStudentId", e.target.checked)} type="checkbox"/>Require student ID for registration</label>
     <button className="min-h-11 rounded-xl bg-emerald-950 px-5 py-3 font-semibold text-white disabled:opacity-50" disabled={pending} type="submit">{pending ? "Saving…" : initialRecord ? "Save event" : "Create event"}</button>
   </form>;
 }

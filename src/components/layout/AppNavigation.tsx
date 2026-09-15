@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type {ReactNode} from "react";
 
 import {
   getNavigationSections,
@@ -7,6 +8,7 @@ import {
 } from "./navigation";
 
 export type AppNavigationProps = Readonly<{
+  accountSlot?: ReactNode;
   canManageAccounts?: boolean;
   currentPath?: string;
   role: BackofficeRole;
@@ -77,6 +79,7 @@ function NavigationLinks({
 }
 
 export function AppNavigation({
+  accountSlot,
   canManageAccounts,
   currentPath,
   role,
@@ -126,6 +129,7 @@ export function AppNavigation({
                 idPrefix="mobile-navigation"
                 role={role}
               />
+              {accountSlot ? <div className="mt-3 space-y-3 border-t border-slate-200 pt-3 text-sm">{accountSlot}</div> : null}
             </div>
           </details>
         </div>

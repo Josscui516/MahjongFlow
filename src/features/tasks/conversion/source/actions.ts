@@ -1,4 +1,5 @@
 "use server";
+import { revalidatePath } from "next/cache";
 
 import type {
   TaskConversionCreateInput,
@@ -44,11 +45,16 @@ export async function convertTaskSourceAction(
     };
   }
 
-  return convertTaskSource(
+  const result = await convertTaskSource(
     sourceKind,
     sourceId,
     input,
     createTaskSourceReader(),
     createTaskConversionPort(),
   );
+  if (result.ok) {
+    revalidatePath("/tasks", "layout");
+    revalidatePath("/dashboard");
+  }
+  return result;
 }

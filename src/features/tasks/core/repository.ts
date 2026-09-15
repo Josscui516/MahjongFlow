@@ -14,6 +14,7 @@ export type TaskRepository = Readonly<{
   get: (taskId: string) => Promise<TaskRecordDTO | null>;
   list: () => Promise<readonly TaskRecordDTO[]>;
   query?: (criteria: TaskFilterCriteria) => Promise<Readonly<{ items: readonly TaskRecordDTO[]; total: number }>>;
+  complete?: (taskId: string) => Promise<TaskRecordDTO | null>;
   update: (taskId: string, input: TaskInput) => Promise<TaskRecordDTO | null>;
 }>;
 type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
@@ -24,6 +25,11 @@ function payload(input: TaskInput) { return { assignee_id: input.assigneeId, des
 function escapePostgrestPattern(value: string) { return value.replace(/[\\%_]/g, "\\$&").replace(/[(),.]/g, " "); }
 export function createTaskRepository(getClient: () => Promise<SupabaseClient<Database>> = createServerSupabaseClient): TaskRepository {
   return {
+    async complete(taskId) {
+      const result = await (await getClient()).from("tasks").update({ status: "completed" }).eq("id", taskId).select(select).maybeSingle();
+      if (result.error) fail(result.error);
+      return result.data ? map(result.data as TaskRow) : null;
+    },
     async create(actorId, input) { const result = await (await getClient()).from("tasks").insert({ ...payload(input), created_by: actorId }).select(select).single(); if (result.error) fail(result.error); return map(result.data as TaskRow); },
     async delete(taskId) { const result = await (await getClient()).rpc("delete_task_record", { target_task_id: taskId }); if (result.error) fail(result.error); return result.data === "deleted" ? "deleted" : "not_found"; },
     async get(taskId) { const result = await (await getClient()).from("tasks").select(select).eq("id", taskId).maybeSingle(); if (result.error) fail(result.error); return result.data ? map(result.data as TaskRow) : null; },
@@ -43,6 +49,11 @@ export function createTaskRepository(getClient: () => Promise<SupabaseClient<Dat
       if (result.error) fail(result.error);
       return { items: (result.data ?? []).map((row) => map(row as TaskRow)), total: result.count ?? 0 };
     },
-    async update(taskId, input) { const result = await (await getClient()).from("tasks").update({ assignee_id: input.assigneeId, description: input.description, due_date: input.dueDate, event_id: input.eventId ?? null, status: input.status, title: input.title }).eq("id", taskId).select(select).maybeSingle(); if (result.error) fail(result.error); return result.data ? map(result.data as TaskRow) : null; },
+    async update(taskId, input) {
+      const mutable = { assignee_id: input.assigneeId, description: input.description, due_date: input.dueDate, event_id: input.eventId ?? null, status: input.status, title: input.title };
+      const result = await (await getClient()).from("tasks").update(mutable).eq("id", taskId).select(select).maybeSingle();
+      if (result.error) fail(result.error);
+      return result.data ? map(result.data as TaskRow) : null;
+    },
   };
 }
