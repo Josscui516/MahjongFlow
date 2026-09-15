@@ -1,4 +1,5 @@
 "use server";
+import { revalidatePath } from "next/cache";
 
 import { AuthorizationError } from "@/lib/auth/authorization";
 
@@ -52,7 +53,7 @@ export async function submitTaskConversionAction(
 
     const assigneeOptions = await listAssigneeOptions();
 
-    return submitTaskConversionForm(
+    const result = await submitTaskConversionForm(
       {
         port: createTaskConversionPort(),
         sourceContext,
@@ -62,6 +63,12 @@ export async function submitTaskConversionAction(
       },
       formData,
     );
+    if (result.status === "success") {
+      revalidatePath("/tasks", "layout");
+      revalidatePath("/dashboard");
+      revalidatePath(`/meetings/${sourceContext.meetingId}`);
+    }
+    return result;
   } catch (error) {
     return safeFailureState(
       previousState,

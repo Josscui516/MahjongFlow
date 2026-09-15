@@ -14,6 +14,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run && npm run test:scripts",
     "test:scripts": "node --test .github/scripts/run-database-tests.test.mjs",
+    "test:sprint5": "node tests/fixtures/task-follow-up/local-runtime.cjs test",
     "test:acceptance": "vitest run tests/acceptance tests/integration/auth tests/unit/auth tests/unit/authorization.test.ts \"src/app/(auth)\" src/components",
     "test:m1": "npm run db:reset:no-seed && npm run db:reset && npm run lint && npm run typecheck && npm test && npm run test:acceptance && npm run db:test && npm run db:test:concurrency && npm run db:lint && npm run db:diff && npm run build",
     "db:start": "supabase start -x vector",

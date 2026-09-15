@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { classifyTaskDueRisk } from "../due-risk";
+import { DueRiskReminder } from "../reminders";
 import { EmptyFeedback } from "@/components/feedback";
 import { TaskDeleteButton } from "../TaskDeleteButton";
 import type { TaskRecordDTO, TaskStatus } from "../core/contracts";
@@ -12,7 +14,7 @@ const STATUS: Readonly<Record<TaskStatus, { className: string; label: string }>>
 };
 const DATE_FORMATTER = new Intl.DateTimeFormat("en-AU", { dateStyle: "medium", timeZone: "UTC" });
 
-export function TaskList({ assigneeLabels, criteria, items, total }: Readonly<{ assigneeLabels: ReadonlyMap<string, string>; criteria: TaskListCriteria; items: readonly TaskRecordDTO[]; total: number }>) {
+export function TaskList({ assigneeLabels, criteria, items, total, now = new Date() }: Readonly<{ assigneeLabels: ReadonlyMap<string, string>; criteria: TaskListCriteria; items: readonly TaskRecordDTO[]; total: number; now?: Date }>) {
   const hasFilters = hasTaskListFilters(criteria);
   const currentHref = buildTaskListHref(criteria);
   const successHref = `${currentHref}${currentHref.includes("?") ? "&" : "?"}deleted=1`;
@@ -36,7 +38,7 @@ export function TaskList({ assigneeLabels, criteria, items, total }: Readonly<{ 
       <ol className="divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
         {items.map((task) => { const status = STATUS[task.status]; const headingId = `task-list-item-${task.id}`; return <li key={task.id}><article aria-labelledby={headingId} className="grid min-h-32 gap-4 p-5 transition-colors hover:bg-emerald-50/50 sm:grid-cols-[minmax(0,1fr)_10rem_auto] sm:items-center sm:px-6">
           <Link className="min-w-0 rounded-lg focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-700" href={`/tasks/${encodeURIComponent(task.id)}`}><div className="flex flex-wrap items-center gap-2"><h2 className="text-lg font-semibold text-slate-950" id={headingId}>{task.title}</h2><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${status.className}`}>{status.label}</span></div><p className="mt-1.5 line-clamp-2 text-sm leading-6 text-slate-600">{task.description}</p><p className="mt-2 text-xs font-medium text-slate-500">Assigned to {assigneeLabels.get(task.assigneeId) ?? "Unavailable member"}{task.sourceMeetingId ? " · From meeting" : " · Direct task"}</p></Link>
-          <p className="text-sm"><span className="block text-xs font-bold uppercase tracking-wide text-slate-500">Due</span><time className="mt-1 block font-semibold text-emerald-800" dateTime={task.dueDate}>{DATE_FORMATTER.format(new Date(`${task.dueDate}T00:00:00Z`))}</time></p>
+          <div className="min-w-0 text-sm"><span className="block text-xs font-bold uppercase tracking-wide text-slate-500">Due</span><time className="mt-1 block font-semibold text-emerald-800" dateTime={task.dueDate}>{DATE_FORMATTER.format(new Date(`${task.dueDate}T00:00:00Z`))}</time><DueRiskReminder risk={classifyTaskDueRisk({ ...task, now })} taskTitle={task.title} /></div>
           <div className="flex flex-wrap items-center gap-2 sm:justify-end"><Link className="inline-flex min-h-11 items-center justify-center rounded-lg px-2 py-2 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700" href={`/tasks/${encodeURIComponent(task.id)}`}>Open task</Link><TaskDeleteButton hasSource={Boolean(task.sourceMeetingId)} successHref={successHref} taskId={task.id} taskTitle={task.title} /></div>
         </article></li>; })}
       </ol>
