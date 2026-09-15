@@ -1,0 +1,3 @@
+PASS Task status edit updates preparation and revisited Dashboard
+PASS Task editor real event selection updates preparation to 3/3
+PASS Mobile menu navigates to real Events route

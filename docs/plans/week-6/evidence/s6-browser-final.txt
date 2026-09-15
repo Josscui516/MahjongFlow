@@ -1,0 +1,8 @@
+PASS Anonymous events access redirects to login
+PASS Real Dashboard providers and upcoming events
+PASS Create real weekly event and empty preparation
+PASS Edit preserves Sydney local datetime
+PASS Create three real tasks including two completed
+PASS Link preparation tasks updates progress to 2/3
+PASS Task event filter uses real event choices
+PASS Unlink only changes relationship and progress

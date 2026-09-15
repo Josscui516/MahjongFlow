@@ -56,7 +56,7 @@ describe("meetings history page", () => {
       reason: "unauthenticated",
     });
 
-    await expect(MeetingsPage()).rejects.toThrow(
+    await expect(MeetingsPage({})).rejects.toThrow(
       "NEXT_REDIRECT:/login?next=%2Fmeetings",
     );
     expect(mocks.redirect).toHaveBeenCalledWith(
@@ -71,7 +71,7 @@ describe("meetings history page", () => {
       reason: "forbidden",
     });
 
-    const html = renderToStaticMarkup(await MeetingsPage());
+    const html = renderToStaticMarkup(await MeetingsPage({}));
 
     expect(html).toContain('data-feedback-state="permission"');
     expect(html).toContain("No meeting information has been displayed.");
@@ -94,7 +94,7 @@ describe("meetings history page", () => {
         result: pageResult(),
       });
 
-      const html = renderToStaticMarkup(await MeetingsPage());
+      const html = renderToStaticMarkup(await MeetingsPage({}));
 
       expect(html).toContain(FICTIONAL_ITEM.title);
       expect(html).toContain('href="/meetings/new"');
@@ -206,7 +206,7 @@ describe("meetings history page", () => {
       result: pageResult([]),
     });
 
-    const html = renderToStaticMarkup(await MeetingsPage());
+    const html = renderToStaticMarkup(await MeetingsPage({}));
 
     expect(html).toContain('data-feedback-state="empty"');
     expect(html).toContain("No meetings recorded");
@@ -227,7 +227,7 @@ describe("meetings history page", () => {
       ok: false,
     });
 
-    const html = renderToStaticMarkup(await MeetingsPage());
+    const html = renderToStaticMarkup(await MeetingsPage({}));
 
     expect(html).toContain('data-feedback-state="error"');
     expect(html).not.toContain(FICTIONAL_ITEM.title);
@@ -239,7 +239,7 @@ describe("meetings history page", () => {
       reason: "system-error",
     });
 
-    const html = renderToStaticMarkup(await MeetingsPage());
+    const html = renderToStaticMarkup(await MeetingsPage({}));
 
     expect(html).toContain('data-feedback-state="error"');
     expect(html).not.toContain(FICTIONAL_ITEM.title);

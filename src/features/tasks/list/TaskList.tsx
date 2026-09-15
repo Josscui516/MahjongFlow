@@ -16,13 +16,13 @@ const STATUS: Readonly<Record<TaskStatus, { className: string; label: string }>>
   not_started: { className: "bg-slate-100 text-slate-700 ring-slate-200", label: "Not started" },
 };
 
-export function TaskList({ assigneeLabels, criteria, items, total, now = new Date() }: Readonly<{ assigneeLabels: ReadonlyMap<string, string>; criteria: TaskListCriteria; items: readonly TaskRecordDTO[]; total: number; now?: Date }>) {
+export function TaskList({ assigneeLabels, criteria, items, total, eventOptions = [], now = new Date() }: Readonly<{ assigneeLabels: ReadonlyMap<string, string>; criteria: TaskListCriteria; items: readonly TaskRecordDTO[]; total: number; eventOptions?: readonly { id: string; label: string }[]; now?: Date }>) {
   const hasFilters = hasTaskListFilters(criteria);
   const currentHref = buildTaskListHref(criteria);
   const successHref = `${currentHref}${currentHref.includes("?") ? "&" : "?"}deleted=1`;
 
   return <div className="space-y-5">
-    <TaskFilters key={currentHref} assigneeLabels={assigneeLabels} criteria={criteria} />
+    <TaskFilters key={currentHref} assigneeLabels={assigneeLabels} criteria={criteria} eventOptions={eventOptions} />
 
     {items.length === 0 ? <EmptyFeedback action={hasFilters ? <Link className="font-semibold underline underline-offset-4" href="/tasks">Clear search and filters</Link> : <Link className="font-semibold underline underline-offset-4" href="/tasks/new">Create the first task</Link>} description={hasFilters ? "Try different assignee, status, date, or event filters." : "Create an action item directly, or convert a decision from a meeting."} title={hasFilters ? "No matching tasks" : "No tasks yet"} /> : <>
       <div className="flex flex-col items-start gap-1 sm:flex-row sm:items-center sm:justify-between sm:gap-3"><p className="text-sm font-semibold text-slate-800" role="status">Showing {items.length} of {total} matching {total === 1 ? "task" : "tasks"}</p><p className="text-sm text-slate-500">{criteria.sort === "due_soonest" ? "Due soonest first" : criteria.sort === "due_latest" ? "Due latest first" : "Recently updated first"}</p></div>

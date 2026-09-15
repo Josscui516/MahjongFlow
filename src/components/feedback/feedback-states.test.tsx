@@ -100,7 +100,7 @@ describe("shared feedback states", () => {
     const protectedDetail = "fictional-participant@example.test";
     const html = renderToStaticMarkup(
       <PermissionDeniedFeedback
-        backAction={<a href="/events">Return to events</a>}
+        backAction={<Link href="/events">Return to events</Link>}
       />,
     );
 

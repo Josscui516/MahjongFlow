@@ -2,6 +2,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
+vi.mock("@/features/events/core/service", () => ({ listEvents: async () => ({ ok: true, items: [] }) }));
 
 const authMocks = vi.hoisted(() => ({
   requireAuthorised: vi.fn(),
@@ -50,7 +51,7 @@ describe("integrated role-aware pages", () => {
       expect(html).toContain(`Role: ${role === "authorised" ? "Authorised" : "Committee"}`);
       expect(html).toContain("Committee dashboard");
       expect(html).toContain("Fictional committee member");
-      expect(html).not.toContain('href="/registrations"');
+      expect(html.includes('href="/registrations"')).toBe(role === "authorised");
     },
   );
 
@@ -74,7 +75,7 @@ describe("integrated role-aware pages", () => {
     const html = renderToStaticMarkup(await RegistrationsPage());
 
     expect(html).toContain("Role: Authorised");
-    expect(html).toContain("Registration module not started");
-    expect(html).toContain("No participant data is loaded");
+    expect(html).toContain("No events available");
+    expect(html).toContain("Create an event before registering participants");
   });
 });

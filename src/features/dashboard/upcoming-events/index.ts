@@ -1,2 +1,2 @@
-export * from "./contracts";
-export * from "./UpcomingEventsPanel";
+export { UpcomingEventsPanel } from "./UpcomingEventsPanel";
+export type { UpcomingEventSummary, UpcomingEventsPort, UpcomingEventsResult } from "./contracts";

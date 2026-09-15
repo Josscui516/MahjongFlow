@@ -2,6 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 import { LogoutForm } from "@/app/(auth)/backoffice/logout-form";
+import { listEvents } from "@/features/events/core/service";
 import {
   EmptyFeedback,
   PermissionDeniedFeedback,
@@ -12,6 +13,8 @@ import {
   AuthorizationError,
   requireAuthorised,
 } from "@/lib/auth/authorization";
+
+const eventDateFormatter = new Intl.DateTimeFormat("en-AU", { dateStyle: "medium", timeStyle: "short", timeZone: "Australia/Sydney" });
 
 const BACK_ACTION = (
   <Link
@@ -56,6 +59,7 @@ export default async function RegistrationsPage() {
     return <RegistrationAccessFailure forbidden={false} />;
   }
 
+  const events = await listEvents();
   return (
     <BackofficeShell
       accountSlot={<span>Signed in</span>}
@@ -65,13 +69,10 @@ export default async function RegistrationsPage() {
       signOutSlot={<LogoutForm />}
     >
       <PageFrame
-        description="Participant registration details are restricted to authorised committee users."
+        description="Choose an event to manage its participant registrations."
         title="Registrations"
       >
-        <EmptyFeedback
-          description="No participant data is loaded in this foundation demo. Registration workflows will be added in a later Sprint."
-          title="Registration module not started"
-        />
+        {!events.ok ? <SystemErrorFeedback /> : events.items.length === 0 ? <EmptyFeedback title="No events available" description="Create an event before registering participants." /> : <ul className="space-y-3">{events.items.map((event) => <li key={event.id}><Link className="block rounded-lg border p-4 font-semibold" href={`/registrations/${event.id}`}><span className="underline underline-offset-4">{event.name}</span><span className="mt-2 block text-sm font-normal"><time dateTime={event.startsAt}>{eventDateFormatter.format(new Date(event.startsAt))} (Sydney time)</time> · {event.status.charAt(0).toUpperCase() + event.status.slice(1)}</span></Link></li>)}</ul>}
       </PageFrame>
     </BackofficeShell>
   );

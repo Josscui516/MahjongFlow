@@ -42,3 +42,10 @@ it("retains every task behind a bounded preview and preserves the accurate total
  expect(html).toContain("Fictional task 4");
  expect(html).toContain('href="#dashboard-mine"');
 });
+
+it("places upcoming events ahead of task groups while preserving independent error states", () => {
+  const html = renderToStaticMarkup(<DashboardView snapshot={snapshot} upcomingEvents={{state:"ready",events:[]}} />);
+  expect(html.indexOf('id="upcoming-events-heading"')).toBeLessThan(html.indexOf('id="dashboard-mine"'));
+  expect(html).toContain("This task summary could not be loaded.");
+  expect(html).toContain("There are no unfinished committee tasks.");
+});

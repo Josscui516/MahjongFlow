@@ -1,0 +1,147 @@
+CREATE EXTENSION
+CREATE EXTENSION
+GRANT
+SET
+DELETE 0
+DELETE 0
+DELETE 0
+DELETE 0
+DELETE 0
+ALTER TABLE
+DELETE 0
+ALTER TABLE
+DELETE 0
+DELETE 0
+INSERT 0 2
+INSERT 0 2
+INSERT 0 1
+INSERT 0 2
+INSERT 0 2
+INSERT 0 2
+INSERT 0 2
+CREATE TABLE
+INSERT 0 2
+INSERT 0 2
+CREATE TABLE
+ plan
+------
+ 1..9
+(1 row)
+
+DO
+                      lives_ok
+-----------------------------------------------------
+ ok 1 - the first concurrent attendee delete commits
+(1 row)
+
+                                throws_ok
+--------------------------------------------------------------------------
+ ok 2 - the second concurrent attendee delete cannot remove the final row
+(1 row)
+
+                                is
+------------------------------------------------------------------
+ ok 3 - concurrent attendee deletes retain one committed attendee
+(1 row)
+
+DO
+                    is
+-------------------------------------------
+ ok 4 - first concurrent check-in succeeds
+(1 row)
+
+                               is
+-----------------------------------------------------------------
+ ok 5 - second concurrent check-in returns the idempotent result
+(1 row)
+
+                               is
+----------------------------------------------------------------
+ ok 6 - concurrent check-ins persist exactly one attendance row
+(1 row)
+
+DO
+                                        ok
+----------------------------------------------------------------------------------
+ ok 7 - check-in waits while the event and registration state swap is uncommitted
+(1 row)
+
+ dblink_exec
+-------------
+ COMMIT
+(1 row)
+
+                                      is
+-------------------------------------------------------------------------------
+ ok 8 - check-in revalidates the committed cancelled event and fails uniformly
+(1 row)
+
+                           is
+---------------------------------------------------------
+ ok 9 - state-swap race leaves no invalid attendance row
+(1 row)
+
+ dblink_disconnect
+-------------------
+ OK
+(1 row)
+
+ dblink_disconnect
+-------------------
+ OK
+(1 row)
+
+ dblink_disconnect
+-------------------
+ OK
+(1 row)
+
+ dblink_disconnect
+-------------------
+ OK
+(1 row)
+
+ dblink_disconnect
+-------------------
+ OK
+(1 row)
+
+ dblink_disconnect
+-------------------
+ OK
+(1 row)
+
+DELETE 1
+DELETE 2
+DELETE 2
+DROP TABLE
+DELETE 2
+DELETE 2
+ALTER TABLE
+DELETE 1
+ALTER TABLE
+DELETE 2
+DELETE 2
+ finish
+--------
+(0 rows)
+
+ALTER TABLE
+BEGIN
+DELETE 0
+DELETE 0
+DELETE 0
+DELETE 0
+DELETE 0
+COMMIT
+BEGIN
+ALTER TABLE
+DELETE 0
+ALTER TABLE
+COMMIT
+BEGIN
+DELETE 0
+DELETE 0
+COMMIT
+DROP EXTENSION
+DROP EXTENSION

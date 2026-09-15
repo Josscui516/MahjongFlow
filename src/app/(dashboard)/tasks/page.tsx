@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { listTaskEventOptions } from "@/features/tasks/event-link";
 
 import { SuccessFeedback, SystemErrorFeedback } from "@/components/feedback";
 import { listTasks } from "@/features/tasks/core/service";
@@ -11,6 +12,7 @@ export default async function TasksPage({ searchParams }: Readonly<{ searchParam
   const parsed = parseTaskFilterCriteria(query);
   const result = parsed.ok ? await listTasks(parsed.criteria) : null;
   const assignees = result?.ok ? await listAssigneeOptions() : [];
+  const events = result?.ok ? await listTaskEventOptions() : null;
   return (
     <div className="space-y-6">
       <header className="flex items-start justify-between gap-3 border-b border-slate-200 pb-4 sm:items-end">
@@ -58,6 +60,7 @@ export default async function TasksPage({ searchParams }: Readonly<{ searchParam
           <SystemErrorFeedback />
         ) : (
           <TaskList
+            eventOptions={events?.ok ? events.items : []}
             assigneeLabels={new Map(
               assignees.map((assignee) => [assignee.id, assignee.label]),
             )}

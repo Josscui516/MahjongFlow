@@ -5,6 +5,7 @@ import { createTask, deleteTask, updateTask, completeTask } from "../core/servic
 function refreshTasks() {
   revalidatePath("/tasks", "layout");
   revalidatePath("/dashboard");
+  revalidatePath("/events", "layout");
 }
 export async function createTaskAction(input: TaskInput): Promise<TaskMutationResult> { const result = await createTask(input); if (result.ok) refreshTasks(); return result; }
 export async function deleteTaskAction(taskId: string): Promise<TaskDeleteResult> { const result = await deleteTask(taskId); if (result.ok) { refreshTasks(); revalidatePath("/meetings", "layout"); } return result; }

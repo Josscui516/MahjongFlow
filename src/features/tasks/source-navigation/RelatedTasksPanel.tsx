@@ -43,7 +43,7 @@ export function RelatedTasksPanel({ result }: RelatedTasksPanelProps) {
             Related tasks
           </h2>
           <p className="mt-1 text-sm leading-6 text-slate-600">
-            Open work created from this meeting&apos;s decisions or discussion points.
+            All tasks created from this meeting, with their current status.
           </p>
         </div>
         <p className="text-sm font-semibold text-emerald-800">

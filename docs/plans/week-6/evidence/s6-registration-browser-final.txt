@@ -1,0 +1,11 @@
+PASS Registration without optional student ID and no automatic attendance
+PASS Repeated identity creates no duplicate registration
+BUTTONS ["Sign out","Register participant","Cancel registration"]
+PASS Cancel and restore keeps the same record
+PASS Attendance stays independent when registration is cancelled
+PASS Required student ID is enforced against real event data
+PASS Mobile registration content has no horizontal overflow
+PASS Committee can read event preparation but cannot read roster
+PASS Committee and anonymous REST cannot obtain participant data
+AGGREGATE [{"event_id":"ff7ab3f7-32d6-4084-9d4d-87e306116420","registration_count":0,"attendance_count":1}]
+PASS Committee can read only aggregate participation counts

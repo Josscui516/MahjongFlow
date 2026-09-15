@@ -35,11 +35,20 @@ function queryFixture() {
 }
 
 describe("task follow-up repository query", () => {
-  it("updates only mutable fields and preserves database-owned source columns", async () => {
-    const update = vi.fn(() => ({ eq: () => ({ select: () => ({ maybeSingle: async () => ({ data: row, error: null }) }) }) }));
+  it("edits a sourced task without requesting forbidden source-column updates", async () => {
+    const update = vi.fn((values: Record<string, unknown>) => {
+      const forbidden = Object.keys(values).some(key => key.startsWith("source_") || key === "created_by");
+      return { eq: () => ({ select: () => ({ maybeSingle: async () => forbidden
+        ? { data: null, error: { code: "42501", message: "source column update denied" } }
+        : { data: { ...row, ...values, source_meeting_id: "44444444-4444-4444-8444-444444444444" }, error: null } }) }) };
+    });
     const repository = createTaskRepository(async () => ({ from: () => ({ update }) }) as never);
-    await repository.update(row.id, { assigneeId: row.assignee_id, description: row.description, dueDate: row.due_date, eventId: row.event_id, status: "completed", title: row.title, sourceMeetingId: "immutable-source" });
-    expect(update).toHaveBeenCalledWith({ assignee_id: row.assignee_id, description: row.description, due_date: row.due_date, event_id: row.event_id, status: "completed", title: row.title });
+    const result = await repository.update(row.id, {
+      assigneeId: row.assignee_id, description: row.description, dueDate: row.due_date,
+      eventId: row.event_id, status: "completed", title: row.title,
+      sourceMeetingId: "44444444-4444-4444-8444-444444444444",
+    });
+    expect(result).toMatchObject({ status: "completed", sourceMeetingId: "44444444-4444-4444-8444-444444444444" });
   });
   it("applies every filter with AND semantics before a bounded page and exact total", async () => {
     const fixture = queryFixture();

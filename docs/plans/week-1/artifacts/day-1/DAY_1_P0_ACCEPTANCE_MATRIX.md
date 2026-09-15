@@ -219,3 +219,12 @@ Joshua 已明确批准按企划书排期：课程第 6 周（开发第 5 周）�
 | 完整 T-06 | Sprint 6 #19 | 真实近期活动接入 Dashboard，当前／未来边界、排序、权限及空／错状态全部通过 |
 
 #4 可在 Sprint 5 全部阶段验收、独立审查、总 PR 合并及必要环境验证完成后结束该阶段；这不意味着完整 T-05/T-06 已通过。最终 RTM 的真实活动部分保持待验收，直到 Sprint 6 #5 汇总 #18/#19 的实测证据。不得用 mock 或占位截图作为完整 T-06 的通过证据。
+
+
+## 2026-09-10 Sprint 6 实测追踪
+
+完整 T-05/T-06 及 E-01–E-07、R-01–R-06/R-08 已在独立 Sprint 6 候选分支上完成真实本地 Supabase + Chrome 验证，详见[活动报名验收记录](../../../week-6/EVENTS_REGISTRATION_ACCEPTANCE_RECORD.md)。本次记录补充技术覆盖，不改变原验收标准；非作者审查、Project 人工门禁、Sprint 总 PR 与 main/部署验收仍须完成，不能由本记录自动推导 Done。
+
+### Sprint 6 最终复验（2026-09-15）
+
+E-01–E-07、R-01–R-06、R-08 及完整 T-05/T-06 已在 main 最新 Sprint 5 与 Sprint 6 组合上通过技术验收；R-07/#29 不属本周。证据与 Joshua 本次独立审查例外见 [最终记录](../../../week-6/SPRINT_6_FINAL_ACCEPTANCE_20260915.md)。交付止于总 PR，尚未合并 main 或关闭 Issues。

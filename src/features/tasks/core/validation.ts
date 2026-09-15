@@ -8,9 +8,9 @@ export function validateTaskInput(input: TaskInput) {
   const errors: TaskValidationError[] = [];
   const title = input.title.trim();
   const description = input.description.trim();
-  if (!title || title.length > 200) errors.push({ field: "title", message: "Title must contain 1 to 200 characters." });
-  if (!description || description.length > 10_000) errors.push({ field: "description", message: "Description must contain 1 to 10000 characters." });
-  if (!UUID.test(input.assigneeId)) errors.push({ field: "assigneeId", message: "Select a valid assignee." });
+  if (!title || title.length > 200) errors.push({ field: "title", message: !title ? "Enter a task title." : "Use 200 characters or fewer for the title." });
+  if (!description || description.length > 10_000) errors.push({ field: "description", message: !description ? "Enter a task description." : "Use 10000 characters or fewer for the description." });
+  if (!UUID.test(input.assigneeId)) errors.push({ field: "assigneeId", message: "Choose an assignee." });
   if (!DATE.test(input.dueDate) || Number.isNaN(Date.parse(`${input.dueDate}T00:00:00Z`))) errors.push({ field: "dueDate", message: "Enter a valid due date." });
   if (!(TASK_STATUSES as readonly string[]).includes(input.status)) errors.push({ field: "status", message: "Select a valid task status." });
   const optionalIds = ["eventId", "sourceMeetingId", "sourceDecisionId", "sourceDiscussionPointId"] as const;

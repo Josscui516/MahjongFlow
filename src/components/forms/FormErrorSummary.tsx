@@ -1,3 +1,7 @@
+"use client";
+
+import { useId } from "react";
+
 export type FormErrorItem = Readonly<{
   fieldId: string;
   label: string;
@@ -35,6 +39,13 @@ export function FormErrorSummary({
             <a
               className="font-medium underline decoration-rose-400 underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-700"
               href={`#${error.fieldId}`}
+              onClick={(event) => {
+                const field = document.getElementById(error.fieldId);
+                if (field) {
+                  event.preventDefault();
+                  field.focus();
+                }
+              }}
             >
               {error.label}: {error.message}
             </a>
@@ -44,4 +55,3 @@ export function FormErrorSummary({
     </section>
   );
 }
-import { useId } from "react";

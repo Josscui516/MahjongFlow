@@ -1,0 +1,4 @@
+PASS Event date/location update preserves task, registration and attendance relationships
+PASS Invalid event input creates no database row
+PASS Tournament with student-ID requirement survives reload
+PASS Invalid event URL returns safe not-found state

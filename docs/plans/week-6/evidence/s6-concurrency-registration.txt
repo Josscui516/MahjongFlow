@@ -1,0 +1,173 @@
+CREATE EXTENSION
+CREATE EXTENSION
+GRANT
+SET
+DELETE 0
+DELETE 0
+DELETE 0
+DELETE 0
+DELETE 0
+INSERT 0 1
+INSERT 0 1
+INSERT 0 3
+INSERT 0 3
+INSERT 0 1
+CREATE TABLE
+CREATE FUNCTION
+ plan
+-------
+ 1..18
+(1 row)
+
+DO
+                                       ok
+---------------------------------------------------------------------------------
+ ok 1 - the registration writer itself acquires the production coordination lock
+(1 row)
+
+                                    ok
+---------------------------------------------------------------------------
+ ok 2 - the event writer waits for the registration writer production lock
+(1 row)
+
+                           is
+--------------------------------------------------------
+ ok 3 - the concurrent no-ID registration commits first
+(1 row)
+
+DO
+ dblink_exec
+-------------
+ COMMIT
+(1 row)
+
+                             throws_ok
+-------------------------------------------------------------------
+ ok 4 - the waiting event requirement update revalidates and fails
+(1 row)
+
+                            is
+----------------------------------------------------------
+ ok 5 - the first race retains the committed registration
+(1 row)
+
+                              is
+---------------------------------------------------------------
+ ok 6 - the first race retains a valid final event requirement
+(1 row)
+
+DO
+                                    ok
+--------------------------------------------------------------------------
+ ok 7 - the event writer itself acquires the production coordination lock
+(1 row)
+
+                                    ok
+--------------------------------------------------------------------------
+ ok 8 - the participant writer waits for the event writer production lock
+(1 row)
+
+                          is
+-------------------------------------------------------
+ ok 9 - the concurrent event requirement commits first
+(1 row)
+
+DO
+ dblink_exec
+-------------
+ COMMIT
+(1 row)
+
+                         throws_ok
+------------------------------------------------------------
+ ok 10 - the waiting student-ID clear revalidates and fails
+(1 row)
+
+                               is
+-----------------------------------------------------------------
+ ok 11 - the second race retains the committed event requirement
+(1 row)
+
+                                is
+------------------------------------------------------------------
+ ok 12 - the second race retains the valid participant student ID
+(1 row)
+
+DO
+                                        ok
+-----------------------------------------------------------------------------------
+ ok 13 - the reverse event writer itself acquires the production coordination lock
+(1 row)
+
+                            ok
+-----------------------------------------------------------
+ ok 14 - the registration writer waits when it runs second
+(1 row)
+
+                         is
+-----------------------------------------------------
+ ok 15 - the reverse event requirement commits first
+(1 row)
+
+DO
+ dblink_exec
+-------------
+ COMMIT
+(1 row)
+
+                          throws_ok
+--------------------------------------------------------------
+ ok 16 - the waiting no-ID registration revalidates and fails
+(1 row)
+
+                                is
+------------------------------------------------------------------
+ ok 17 - the reverse race retains the committed event requirement
+(1 row)
+
+                           is
+---------------------------------------------------------
+ ok 18 - the reverse race leaves no invalid registration
+(1 row)
+
+ dblink_disconnect
+-------------------
+ OK
+(1 row)
+
+ dblink_disconnect
+-------------------
+ OK
+(1 row)
+
+ dblink_disconnect
+-------------------
+ OK
+(1 row)
+
+ dblink_disconnect
+-------------------
+ OK
+(1 row)
+
+ dblink_disconnect
+-------------------
+ OK
+(1 row)
+
+ dblink_disconnect
+-------------------
+ OK
+(1 row)
+
+DELETE 2
+DELETE 3
+DELETE 3
+DELETE 1
+DELETE 1
+ finish
+--------
+(0 rows)
+
+DROP EXTENSION
+DROP EXTENSION

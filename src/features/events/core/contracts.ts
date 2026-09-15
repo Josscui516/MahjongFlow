@@ -1,0 +1,11 @@
+export const EVENT_TYPES = ["weekly_session", "tournament"] as const;
+export const EVENT_STATUSES = ["scheduled", "completed", "cancelled"] as const;
+export type EventType = (typeof EVENT_TYPES)[number];
+export type EventStatus = (typeof EVENT_STATUSES)[number];
+export type EventInput = Readonly<{ description: string; eventType: EventType; location: string; name: string; requiresStudentId: boolean; startsAt: string; status: EventStatus }>;
+export type EventDTO = Readonly<EventInput & { createdAt: string; createdBy: string; id: string; updatedAt: string }>;
+export type EventSummary = Readonly<Pick<EventDTO, "eventType" | "id" | "location" | "name" | "startsAt" | "status">>;
+export type EventValidationError = Readonly<{ field: keyof EventInput; message: string }>;
+export type EventMutationResult = Readonly<{ ok: true; record: EventDTO }> | Readonly<{ code: "NOT_FOUND" | "PERMISSION_DENIED" | "SYSTEM_ERROR" | "VALIDATION"; errors?: readonly EventValidationError[]; ok: false }>;
+export type EventReadResult = Readonly<{ ok: true; record: EventDTO }> | Readonly<{ code: "NOT_FOUND" | "PERMISSION_DENIED" | "SYSTEM_ERROR"; ok: false }>;
+export type EventListResult = Readonly<{ items: readonly EventSummary[]; ok: true }> | Readonly<{ code: "PERMISSION_DENIED" | "SYSTEM_ERROR"; ok: false }>;

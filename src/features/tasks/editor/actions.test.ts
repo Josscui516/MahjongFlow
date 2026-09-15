@@ -12,7 +12,7 @@ describe("task mutations invalidate visited follow-up pages", () => {
     if (operation === "create") await createTaskAction(input);
     else if (operation === "update") await updateTaskAction("fictional-id", input);
     else await deleteTaskAction("fictional-id");
-    expect(mocks.revalidatePath.mock.calls).toEqual([["/tasks", "layout"], ["/dashboard"], ...(operation === "delete" ? [["/meetings", "layout"]] : [])]);
+    expect(mocks.revalidatePath.mock.calls).toEqual([["/tasks", "layout"], ["/dashboard"], ["/events", "layout"], ...(operation === "delete" ? [["/meetings", "layout"]] : [])]);
   });
   it("preserves denied writes without invalidating data", async () => {
     mocks.updateTask.mockResolvedValue({ ok: false, code: "PERMISSION_DENIED" });
@@ -26,7 +26,7 @@ it("refreshes the source meeting after completing a linked task", async () => {
   mocks.completeTask.mockResolvedValue({ok:true,record:{sourceMeetingId:"fictional-meeting"}});
   await completeTaskAction("fictional-task");
   expect(mocks.completeTask).toHaveBeenCalledWith("fictional-task");
-  expect(mocks.revalidatePath.mock.calls).toEqual([["/tasks","layout"],["/dashboard"],["/meetings/fictional-meeting"]]);
+  expect(mocks.revalidatePath.mock.calls).toEqual([["/tasks","layout"],["/dashboard"],["/events","layout"],["/meetings/fictional-meeting"]]);
 });
 it("does not refresh after denied completion", async () => {
   vi.resetAllMocks();

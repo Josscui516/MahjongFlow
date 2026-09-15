@@ -12,15 +12,16 @@ import type { AssigneeOption } from "./server";
 
 type TaskEditorProps = Readonly<{
   assignees: readonly AssigneeOption[];
+  eventOptions?: readonly { id: string; label: string }[];
   createTaskAction: (input: TaskInput) => Promise<TaskMutationResult>;
   initialRecord?: TaskRecordDTO;
   returnTo?: string;
   updateTaskAction: (taskId: string, input: TaskInput) => Promise<TaskMutationResult>;
 }>;
 
-export function TaskEditor({ assignees, createTaskAction, initialRecord, updateTaskAction, returnTo = "/tasks" }: TaskEditorProps) {
+export function TaskEditor({ assignees, eventOptions = [], createTaskAction, initialRecord, updateTaskAction, returnTo = "/tasks" }: TaskEditorProps) {
   const router = useRouter();
-  const [values, setValues] = useState<TaskInput>(initialRecord ?? { assigneeId: assignees[0]?.id ?? "", description: "", dueDate: "", status: "not_started", title: "" });
+  const [values, setValues] = useState<TaskInput>(initialRecord ?? { assigneeId: "", description: "", dueDate: "", status: "not_started", title: "" });
   const [message, setMessage] = useState(""); const [pending, setPending] = useState(false); const last = useRef("");
   const [errors,setErrors]=useState<Partial<Record<keyof TaskInput,string>>>({});
   const errorRef=useRef<HTMLParagraphElement>(null);
@@ -47,15 +48,17 @@ export function TaskEditor({ assignees, createTaskAction, initialRecord, updateT
     last.current = fingerprint; router.push(`${taskDetailHref(result.record.id,returnTo)}&saved=1`); router.refresh();
   }
   return <form className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6" noValidate onSubmit={submit}>
-    <p className="text-sm text-slate-600">All fields are required. Dates use Sydney time.</p>
+    <p className="text-sm text-slate-600">All fields except the related event are required. Dates use Sydney time.</p>
     {message ? <p ref={errorRef} tabIndex={-1} className="rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950" role="alert">{message}</p> : null}
     <div><label className="block text-sm font-semibold text-slate-800">Title<input id="task-title" name="title" aria-invalid={Boolean(errors.title)} aria-describedby={errors.title ? "error-title" : undefined} className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-950 outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-200" disabled={pending} maxLength={200} onChange={(e) => set("title", e.target.value)} required value={values.title}/></label>{errors.title ? <p id="error-title" className="text-sm text-rose-800">{errors.title}</p> : null}</div>
     <div><label className="block text-sm font-semibold text-slate-800">Description<textarea id="task-description" name="description" aria-invalid={Boolean(errors.description)} aria-describedby={errors.description ? "error-description" : undefined} className="mt-2 min-h-32 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-950 outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-200" disabled={pending} maxLength={10000} onChange={(e) => set("description", e.target.value)} required value={values.description}/></label>{errors.description ? <p id="error-description" className="text-sm text-rose-800">{errors.description}</p> : null}</div>
     <div className="grid gap-5 sm:grid-cols-3">
-      <div><label className="text-sm font-semibold text-slate-800">Assignee<select id="task-assigneeId" name="assigneeId" aria-invalid={Boolean(errors.assigneeId)} aria-describedby={errors.assigneeId ? "error-assigneeId" : undefined} className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-950" disabled={pending} onChange={(e) => set("assigneeId", e.target.value)} value={values.assigneeId}>{assignees.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>{errors.assigneeId ? <p id="error-assigneeId" className="text-sm text-rose-800">{errors.assigneeId}</p> : null}</div>
-      <div><label className="text-sm font-semibold text-slate-800">Due date<input id="task-dueDate" name="dueDate" aria-invalid={Boolean(errors.dueDate)} aria-describedby={errors.dueDate ? "error-dueDate" : undefined} className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-950" disabled={pending} onChange={(e) => set("dueDate", e.target.value)} required type="date" value={values.dueDate}/></label>{errors.dueDate ? <p id="error-dueDate" className="text-sm text-rose-800">{errors.dueDate}</p> : null}</div>
+      <div><label className="text-sm font-semibold text-slate-800">Assignee<select id="task-assigneeId" name="assigneeId" aria-invalid={Boolean(errors.assigneeId)} aria-describedby={errors.assigneeId ? "error-assigneeId" : undefined} className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-950" disabled={pending} onChange={(e) => set("assigneeId", e.target.value)} value={values.assigneeId} required><option value="" disabled>Choose an assignee</option>{assignees.map((option) => <option key={option.id} value={option.id}>{option.label}</option>)}</select></label>{errors.assigneeId ? <p id="error-assigneeId" className="text-sm text-rose-800">{errors.assigneeId}</p> : null}</div>
+      <div><label className="text-sm font-semibold text-slate-800">Due date<input id="task-dueDate" name="dueDate" aria-invalid={Boolean(errors.dueDate)} aria-describedby={errors.dueDate ? "error-dueDate" : undefined} className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-950" disabled={pending} required type="date" defaultValue={initialRecord?.dueDate ?? ""}/></label>{errors.dueDate ? <p id="error-dueDate" className="text-sm text-rose-800">{errors.dueDate}</p> : null}</div>
       <div><label className="text-sm font-semibold text-slate-800">Status<select id="task-status" name="status" aria-invalid={Boolean(errors.status)} aria-describedby={errors.status ? "error-status" : undefined} className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-950" disabled={pending} onChange={(e) => set("status", e.target.value as TaskStatus)} value={values.status}>{TASK_STATUSES.map((status) => <option key={status} value={status}>{labels[status]}</option>)}</select></label>{errors.status ? <p id="error-status" className="text-sm text-rose-800">{errors.status}</p> : null}</div>
     </div>
+    <label className="block text-sm font-semibold text-slate-800">Related event (optional)<select aria-describedby="task-event-help" className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white p-3 text-slate-950" disabled={pending} value={values.eventId ?? ""} onChange={(event) => set("eventId", event.target.value || null)}><option value="">None — standalone task</option>{values.eventId && !eventOptions.some(event => event.id === values.eventId) ? <option value={values.eventId}>Current linked event</option> : null}{eventOptions.map(event => <option key={event.id} value={event.id}>{event.label}</option>)}</select></label>
+    <p className="text-sm text-slate-600" id="task-event-help">Choose an event to include this task in its preparation progress. Leave it blank for a standalone task.</p>
     <div className="flex flex-wrap items-center gap-3"><button className="min-h-11 rounded-xl bg-emerald-950 px-5 py-3 font-semibold text-white transition hover:bg-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 disabled:opacity-50" disabled={pending} type="submit">{pending ? "Saving…" : initialRecord ? "Save task" : "Create task"}</button>{!pending ? <Link className="inline-flex min-h-11 items-center rounded-lg px-4 text-sm font-semibold text-slate-700 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2" href={cancelHref}>Cancel</Link> : null}</div>
   </form>;
 }
