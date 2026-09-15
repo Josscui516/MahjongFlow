@@ -5,7 +5,7 @@ import { getEvent } from "@/features/events/core/service";
 import { IdentityRegistrationForm } from "@/features/registrations/records/IdentityRegistrationForm";
 import { registrationService } from "@/features/registrations/records/service";
 import { changeRegistrationStatus } from "@/features/registrations/records/actions";
-import { RegistrationList } from "@/features/registrations/records/RegistrationList";
+import { RegistrationSearch } from "@/features/registrations/records/RegistrationSearch";
 import { ParticipationSummary } from "@/features/registrations/attendance-summary/ParticipationSummary";
 import { participationSummaryService } from "@/features/registrations/attendance-summary/service";
 import { registrationErrors } from "@/features/registrations/records/messages";
@@ -35,6 +35,6 @@ export default async function RegistrationsPage({ params, searchParams }: Readon
     </nav>
     <header><h1 className="text-3xl font-bold tracking-tight text-slate-950">Event registrations</h1>{event.ok ? <p className="mt-2 text-lg text-slate-700">{event.record.name}</p> : null}</header>
     <ParticipationSummary result={summary} />
-    <RegistrationWorkspace initiallyEmpty={list.total === 0} records={<RegistrationList result={list} changeStatus={changeRegistrationStatus} />} form={event.ok ? <IdentityRegistrationForm eventId={eventId} requiresStudentId={event.record.requiresStudentId} /> : <p role="alert">Event details are unavailable. Refresh before registering.</p>} />
+    <RegistrationWorkspace initiallyEmpty={list.total === 0} records={<RegistrationSearch key={eventId} eventId={eventId} initialResult={list} changeStatus={changeRegistrationStatus} />} form={event.ok ? <IdentityRegistrationForm eventId={eventId} requiresStudentId={event.record.requiresStudentId} /> : <p role="alert">Event details are unavailable. Refresh before registering.</p>} />
   </div>;
 }

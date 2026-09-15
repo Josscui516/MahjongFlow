@@ -3,15 +3,17 @@ import { REGISTRATION_PAGE_SIZE, type RegistrationListResult, type RegistrationM
 import { registrationErrors } from "./messages";
 import { RegistrationStatusForm } from "./RegistrationForms";
 
-export function RegistrationList({ result, changeStatus }: Readonly<{
+export function RegistrationList({ result, changeStatus, onPage, searching = false }: Readonly<{
   result: RegistrationListResult;
+  onPage?: (page: number) => void;
+  searching?: boolean;
   changeStatus: RegistrationMutationPort["changeStatus"];
 }>) {
   if (!result.ok) return <p role="alert">{registrationErrors[result.code]}</p>;
   return <section aria-label="Registration records" className="space-y-4">
     <h2 className="text-xl font-semibold text-slate-950" tabIndex={-1}>Registration records</h2>
-    <p className="text-sm text-slate-600">{result.total} registration {result.total === 1 ? "record" : "records"}, including cancelled registrations.</p>
-    {result.items.length === 0 ? <p>No registrations on this page.</p> : <ul className="space-y-3">
+    <p className="text-sm text-slate-600">{result.total} registration {result.total === 1 ? "record" : "records"}, {searching ? "matching your search, including cancelled registrations." : "including cancelled registrations."}</p>
+    {result.items.length === 0 ? <p>{searching ? "No matching registrations on this page. Try another name or email, or clear the search." : "No registrations on this page."}</p> : <ul className="space-y-3">
       {result.items.map((item) => <li key={item.id} className="min-w-0 space-y-3 rounded-xl border border-slate-200 bg-white p-4">
         <div className="[overflow-wrap:anywhere]"><h3 className="font-semibold">{item.participantName}</h3><p>{item.participantEmail}</p><p className="font-medium">{item.status === "registered" ? "Registered" : "Cancelled"}</p></div>
         <RegistrationStatusForm eventId={result.eventId} item={item} changeStatus={changeStatus} />
@@ -19,8 +21,8 @@ export function RegistrationList({ result, changeStatus }: Readonly<{
       </li>)}
     </ul>}
     <nav aria-label="Registration pages" className="flex gap-4">
-      {result.page > 1 && <Link className="underline" href={`/registrations/${result.eventId}?page=${result.page - 1}`}>Previous page</Link>}
-      {result.page * REGISTRATION_PAGE_SIZE < result.total && <Link className="underline" href={`/registrations/${result.eventId}?page=${result.page + 1}`}>Next page</Link>}
+      {result.page > 1 && (onPage ? <button type="button" className="min-h-11 underline focus-visible:outline-2 focus-visible:outline-offset-2" onClick={() => onPage(result.page - 1)}>Previous page</button> : <Link className="underline" href={`/registrations/${result.eventId}?page=${result.page - 1}`}>Previous page</Link>)}
+      {result.page * REGISTRATION_PAGE_SIZE < result.total && (onPage ? <button type="button" className="min-h-11 underline focus-visible:outline-2 focus-visible:outline-offset-2" onClick={() => onPage(result.page + 1)}>Next page</button> : <Link className="underline" href={`/registrations/${result.eventId}?page=${result.page + 1}`}>Next page</Link>)}
     </nav>
   </section>;
 }

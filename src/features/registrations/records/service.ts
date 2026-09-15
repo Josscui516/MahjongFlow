@@ -16,7 +16,7 @@ export function createRegistrationService({ authorise, repository }: Readonly<{
   authorise: () => Promise<AccessContext>;
   repository: RegistrationRepository;
 }>): RegistrationMutationPort & Readonly<{
-  list: (eventId: string, page?: number) => Promise<RegistrationListResult>;
+  list: (eventId: string, page?: number, search?: string) => Promise<RegistrationListResult>;
   count: (eventId: string) => Promise<RegistrationCountResult>;
 }> {
   async function check(sensitive: boolean) {
@@ -43,11 +43,11 @@ export function createRegistrationService({ authorise, repository }: Readonly<{
         return { ok: true, eventId: input.eventId, status: input.status, outcome };
       } catch (error) { return failure(error); }
     },
-    async list(eventId, page = 1) {
+    async list(eventId, page = 1, search = "") {
       try {
         await check(true);
-        if (!isRegistrationId(eventId) || !validRegistrationPage(page)) return { ok: false, code: "VALIDATION" };
-        const result = await repository.list(eventId, page);
+        if (!isRegistrationId(eventId) || !validRegistrationPage(page) || typeof search !== "string" || search.length > 100 || /[\u0000-\u001f]/.test(search)) return { ok: false, code: "VALIDATION" };
+        const result = await repository.list(eventId, page, search.trim());
         return result ? { ok: true, eventId, page, ...result } : { ok: false, code: "UNAVAILABLE" };
       } catch (error) { return failure(error); }
     },

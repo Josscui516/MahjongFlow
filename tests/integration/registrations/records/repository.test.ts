@@ -79,3 +79,13 @@ describe("registration repository using the real Supabase SDK at a simulated HTT
     await expect(repository.count(eventId)).rejects.toThrow("Registration persistence failed");
   });
 });
+
+it("searches both identity columns within the event before paginating", async () => {
+  const { repository, requests } = setup([{ body: [{ id: eventId }] }, { count: "25-25/26", body: [] }]);
+  await repository.list(eventId, 2, 'Fictional.*,"Name"');
+  const query = requests[1].url.searchParams;
+  expect(query.get("event_id")).toBe(`eq.${eventId}`);
+  expect(query.get("participants.or")).toBe('(full_name.imatch."Fictional\\\\.\\\\*,\\"Name\\"",email.imatch."Fictional\\\\.\\\\*,\\"Name\\"")');
+  expect(query.get("select")).toContain("participants!inner(full_name,email)");
+  expect(query.get("offset")).toBe("25");
+});

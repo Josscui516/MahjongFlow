@@ -1,3 +1,4 @@
+import { literalPattern } from "@/lib/search/literal-pattern";
 import "server-only";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -8,7 +9,7 @@ type StoredRegistration = Readonly<{ id: string; registration_status: Registrati
 export type RegistrationRepository = Readonly<{
   create: (input: RegistrationCreateInput) => Promise<Readonly<{ created: boolean; status: RegistrationStatus }>>;
   update: (input: RegistrationUpdateInput) => Promise<"updated" | "unchanged" | "conflict" | "unavailable">;
-  list: (eventId: string, page: number) => Promise<Readonly<{ items: readonly RegistrationItem[]; total: number }> | null>;
+  list: (eventId: string, page: number, search?: string) => Promise<Readonly<{ items: readonly RegistrationItem[]; total: number }> | null>;
   count: (eventId: string) => Promise<number | null>;
 }>;
 export class RegistrationRepositoryError extends Error {
@@ -58,15 +59,20 @@ export function createRegistrationRepository(
       if (!latest) return "unavailable";
       return latest.registration_status === input.status ? "unchanged" : "conflict";
     },
-    async list(eventId, page) {
+    async list(eventId, page, search = "") {
       const client = await getClient();
       const event = await client.from("events").select("id").eq("id", eventId).maybeSingle();
       if (event.error) fail(event.error);
       if (!event.data) return null;
       const offset = (page - 1) * REGISTRATION_PAGE_SIZE;
-      const result = await client.from("registrations")
+      let query = client.from("registrations")
         .select("id, registration_status, updated_at, privacy_notice_acknowledged_at, participants!inner(full_name, email)", { count: "exact" })
-        .eq("event_id", eventId).order("registered_at", { ascending: false }).order("id")
+        .eq("event_id", eventId);
+      if (search) {
+        const pattern = JSON.stringify(literalPattern(search));
+        query = query.or(`full_name.imatch.${pattern},email.imatch.${pattern}`, { referencedTable: "participants" });
+      }
+      const result = await query.order("registered_at", { ascending: false }).order("id")
         .range(offset, offset + REGISTRATION_PAGE_SIZE - 1);
       if (result.error || result.count === null) fail(result.error ?? {});
       return {

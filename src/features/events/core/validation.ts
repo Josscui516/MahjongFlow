@@ -2,7 +2,7 @@ import { EVENT_STATUSES, EVENT_TYPES, type EventInput, type EventValidationError
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const LOCAL_DATE_TIME = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/;
 export const isEventId = (value: string) => UUID.test(value);
-function sydneyInstant(value: string): Date | null {
+export function sydneyInstant(value: string): Date | null {
   const match = LOCAL_DATE_TIME.exec(value);
   if (!match) {
     if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/i.test(value)) return null;

@@ -22,3 +22,8 @@ export async function registerParticipant(input: RegistrationCreateInput): Promi
 export async function changeRegistrationStatus(input: RegistrationUpdateInput): Promise<RegistrationMutationResult> {
   return refresh(await registrationService.changeStatus(input));
 }
+
+/** Search text travels in the POST body, never a URL or persisted preference. */
+export async function searchRegistrations(eventId: string, page: number, search: string) {
+  return registrationService.list(eventId, page, search);
+}

@@ -34,6 +34,8 @@ describe("registration service authorisation and state contract", () => {
     authorise.mockRejectedValue(new AuthorizationError("UNAUTHENTICATED"));
     expect(await service.register({ eventId: "bad", participantId })).toEqual({ ok: false, code: "UNAUTHENTICATED" });
     expect(await service.count(eventId)).toEqual({ ok: false, code: "UNAUTHENTICATED" });
+    expect(await service.list(eventId, 1, "Fictional")).toEqual({ ok: false, code: "UNAUTHENTICATED" });
+    expect(repository.list).not.toHaveBeenCalled();
     expect(repository.create).not.toHaveBeenCalled(); expect(repository.count).not.toHaveBeenCalled();
   });
   it.each(["committee", "authorised"])("returns only the safe count for %s", async (role) => {
@@ -77,7 +79,7 @@ describe("registration service authorisation and state contract", () => {
   it("preserves global list count and unavailable result", async () => {
     const { service, repository } = setup(); repository.list.mockResolvedValueOnce({ items: [], total: 51 });
     expect(await service.list(eventId, 3)).toEqual({ ok: true, eventId, items: [], total: 51, page: 3 });
-    expect(repository.list).toHaveBeenCalledWith(eventId, 3);
+    expect(repository.list).toHaveBeenCalledWith(eventId, 3, "");
     repository.list.mockResolvedValueOnce(null);
     expect(await service.list(eventId)).toEqual({ ok: false, code: "UNAVAILABLE" });
   });
@@ -86,4 +88,15 @@ describe("registration service authorisation and state contract", () => {
     expect(validUpdateInput(update)).toBe(true);
     for (const value of [{ ...update, status: "attended" }, { ...update, expectedUpdatedAt: "today" }, { ...update, recordedBy: participantId }]) expect(validUpdateInput(value)).toBe(false);
   });
+});
+
+it("authorises and bounds search text before querying", async () => {
+  const denied = setup("committee");
+  expect(await denied.service.list(eventId, 1, "Fictional")).toEqual({ ok: false, code: "PERMISSION_DENIED" });
+  expect(denied.repository.list).not.toHaveBeenCalled();
+  const allowed = setup();
+  expect(await allowed.service.list(eventId, 1, "x".repeat(101))).toEqual({ ok: false, code: "VALIDATION" });
+  expect(allowed.repository.list).not.toHaveBeenCalled();
+  await allowed.service.list(eventId, 2, " Fictional ");
+  expect(allowed.repository.list).toHaveBeenCalledWith(eventId, 2, "Fictional");
 });
