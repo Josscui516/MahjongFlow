@@ -109,4 +109,8 @@
 
 ## 10. 周末交接
 
-当前仅完成计划编制，功能、测试、PR 和验收均待执行；不能填写虚假完成状态。交接时将各 Issue 的已完成场景、未完成原因与责任期限、公共入口、实际 SHA／checks／review、migration 顺序和回退写入本文件。Joshua 据此执行 M4 集成，下一周接全项目内部验收。
+2026-09-28：已从 Sprint 7 基线 `f44b64a` 在独立工作目录的 `codex/35-dinner-eligibility` 分支完成 #35 的纯函数与 15 个局部测试；全量 Vitest 636 个通过、3 个既有实际数据库测试跳过，测试运行器 5 个测试通过，ESLint 与类型检查通过。公共入口为 `@/features/dinner-verification`。没有新增资格字段、migration、写接口或个人属性。
+
+#32 的真实 attendance read port 尚未交付，#35 的数据库事实接入和最终验收仍未完成；本次按用户授权以 Draft 成员 PR 交付已完成部分，未变更 Project 状态。按照顺序门禁，#36/#37 尚未启动。完整命令、Schema 核对、边界及待办见[模块交接说明](../../../src/features/dinner-verification/README.md)。
+
+阻断始于 2026-09-28（Sydney）：Shiying 需交付 #32 公共入口，Yubo 接入并补真实 provider 验证，Joshua 独立审查并手动维护状态；下次团队检查建议为 2026-09-29 10:00（Sydney）。目前不存在真实 provider 验收、独立 review 或 M4 完成证明。Joshua 是唯一交接对象。
