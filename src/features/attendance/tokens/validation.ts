@@ -25,7 +25,8 @@ function parts(date: Date) {
   ) as Record<string, number>;
 }
 
-function parseSydneyLocal(value: string): string | null {
+function parseSydneyLocal(value: unknown): string | null {
+  if (typeof value !== "string") return null;
   const match = LOCAL_DATE_TIME.exec(value.trim());
   if (!match) return null;
   const [, year, month, day, hour, minute] = match;
@@ -51,11 +52,16 @@ function parseSydneyLocal(value: string): string | null {
   return candidates.sort((left, right) => left.getTime() - right.getTime())[0]?.toISOString() ?? null;
 }
 
-export function validateCheckInWindow(input: CheckInWindowInput):
+export function validateCheckInWindow(input: unknown):
   | Readonly<{ errors: readonly CheckInWindowError[]; ok: false }>
   | Readonly<{ ok: true; value: Readonly<{ closesAt: string; opensAt: string }> }> {
-  const opensAt = parseSydneyLocal(input.opensAt);
-  const closesAt = parseSydneyLocal(input.closesAt);
+  // Server Action arguments are untrusted at runtime, regardless of the form's
+  // TypeScript contract. Invalid shapes must receive the same safe field errors.
+  const fields = input !== null && typeof input === "object" && !Array.isArray(input)
+    ? input as Partial<Record<keyof CheckInWindowInput, unknown>>
+    : {};
+  const opensAt = parseSydneyLocal(fields.opensAt);
+  const closesAt = parseSydneyLocal(fields.closesAt);
   const errors: CheckInWindowError[] = [];
   if (!opensAt) errors.push({ field: "opensAt", message: "Choose a valid Sydney opening date and time." });
   if (!closesAt) errors.push({ field: "closesAt", message: "Choose a valid Sydney closing date and time." });

@@ -32,6 +32,12 @@ PR #88（Shiying / #32）已审阅并合入 Sprint 7，合并 SHA `dcdbcdb`。�
 
 没有实现大列表分页；超过上限时返回错误，由 provider 所有者后续扩展合同。
 
+## #85 合并后的参数校验修正
+
+2026-09-28 按用户相同审阅原则批准并合并 Li 的 #30 / PR #85，合并 SHA 为 `2c29a1b`。审阅时复跑原 head 的 628 个测试与 19 条 #30 数据库断言均通过，五项 CI 通过，无未解决审阅线程。当前分支已同步该 Sprint 基线。
+
+记录的小问题是 `validateCheckInWindow` 对空值／缺字段／非字符串日期抛出 TypeError，无法返回安全 VALIDATION 结果，但不触发数据库写入。按用户授权在合并后统一修复：仅修改 tokens 的 validation 及两个局部测试文件，补运行时类型校验和 8 条回归；归属仍为 Li / #30，本次作为已授权的跨所有权后续修正纳入 PR #87，不改 migration 或有效日期行为。
+
 ## Docker 与本地环境
 
 Docker Desktop 因遗留 AF_UNIX socket 无法启动。已备份 `Docker/run` 的运行时 socket，以及只含 `engine.sock` 的 `docker-secrets-engine` 目录，再启动 Desktop；未重置 Docker、删除卷或原有容器。备份命名含 `stale-sprint7` / `sprint7-backup`。
@@ -58,9 +64,9 @@ runner 在内存读取本地 CLI 配置，只向测试子进程传递，不打�
 
 ## 结果与交接
 
-- 全量 Vitest：714 通过、10 个 opt-in 跳过；其中本模块 7 个真实测试已另行显式运行通过，另外 3 个为已有 Sprint 5 套件。
+- 同步 #85 并修正参数校验后的全量 Vitest：729 通过、10 个 opt-in 跳过；其中本模块 7 个真实测试已另行显式运行通过，另外 3 个为已有 Sprint 5 套件。token 局部测试 15 个通过。
 - 本模块纯规则、适配器、刷新、UI、路由：63 通过；真实 Auth／PostgREST／RLS：7 通过。
-- 全量 SQL：13 文件、372 条断言通过；全量 ESLint、TypeScript、production webpack build 通过；数据库 runner 自测 5 个通过。
+- 全量 SQL：14 文件、391 条断言通过；全量 ESLint、TypeScript、production webpack build 通过；数据库 runner 自测 5 个通过。
 - 虚构浏览器截图与结果见 `evidence/`：桌面、390px 手机、键盘、搜索、空／无效活动、加载、旧值、刷新失败、真实更正、页面／action 拒绝及撤权。
 
 分支 `codex/35-dinner-eligibility`，PR #87，base `sprint/7-qr-check-in-dinner`。Joshua 是唯一交接对象，负责非作者 review 和手动 Project 状态。

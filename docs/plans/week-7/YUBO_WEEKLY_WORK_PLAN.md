@@ -113,7 +113,9 @@
 
 2026-09-28 更新：#32 的 PR #88 已审阅并合入 Sprint 7（`dcdbcdb`），本分支已同步真实 provider。#35 完成规则和真实读取；#36 完成 authorised-only 活动选择／名单、最小 DTO、同快照人数、搜索、空／拒绝／错误状态；#37 完成本人负责的下一次重查、回到页面自动刷新、60 秒过期提示、失败保留旧值但标记过期、权限失效清除名单和请求顺序保护。没有新增 schema、个人属性或资格写接口。
 
-当前全量 Vitest 714 个通过，普通命令跳过 10 个 opt-in 测试；其中本模块 7 个已另行使用真实 Auth／PostgREST／RLS 显式运行通过，其余 3 个是已有 Sprint 5 套件。本模块局部测试 63 个、SQL 13 文件 372 条断言、数据库 runner 自测 5 个、production 浏览器 14 项全部通过；全量 Lint、TypeScript、webpack build 通过。桌面、390px 手机、键盘、陈旧／失败、权限及真实签到更正证据见 [模块交接说明](../../../src/features/dinner-verification/README.md)。#32 的列表截断保护与两条回归仍归属其输出合同，是用户授权的合并后修正。
+当前全量 Vitest 729 个通过，普通命令跳过 10 个 opt-in 测试；其中本模块 7 个已另行使用真实 Auth／PostgREST／RLS 显式运行通过，其余 3 个是已有 Sprint 5 套件。本模块局部测试 63 个、数据库 runner 自测 5 个、production 浏览器 14 项全部通过；全量 Lint、TypeScript、webpack build 通过。桌面、390px 手机、键盘、陈旧／失败、权限及真实签到更正证据见 [模块交接说明](../../../src/features/dinner-verification/README.md)。#32 的列表截断保护与两条回归仍归属其输出合同，是用户授权的合并后修正。
+
+同日按用户相同审阅／合并授权处理 PR #85 / #30：628 个原 head 测试、19 条真实数据库断言及五项 CI 通过后，批准并合入 Sprint（`2c29a1b`），本分支已同步。发现的非阻断参数校验异常已记录在 review，合并后补运行时校验及 8 条回归，统一放入 PR #87；仅涉及 tokens validation 与局部测试，不扩大到其他 token 功能或改变有效输入行为。
 
 交付继续使用 `codex/35-dinner-eligibility` / Draft PR #87，目标 `sprint/7-qr-check-in-dinner`。Docker 已恢复：备份遗留运行时 socket 后启动 engine，保留容器／卷；本地库通过 forward migration 补齐两条已有迁移，没有 reset 或远程变更。测试 fixture 按本次 UUID 清理，凭据只在内存传递。
 
