@@ -119,4 +119,6 @@
 
 交付继续使用 `codex/35-dinner-eligibility` / Draft PR #87，目标 `sprint/7-qr-check-in-dinner`。Docker 已恢复：备份遗留运行时 socket 后启动 engine，保留容器／卷；本地库通过 forward migration 补齐两条已有迁移，没有 reset 或远程变更。测试 fixture 按本次 UUID 清理，凭据只在内存传递。
 
-剩余依赖：#33 尚无可调用的人工 UI／action，当前真实更正测试使用 authorised JWT 和数据库触发器，不能当作 #33 界面全链路已完成；Shiying 发布后由 Yubo／Joshua 补联调。共享导航挂载交 Li / #34；本包入口可直接访问。记录始于 2026-09-28，下次团队检查建议为 2026-09-29 10:00（Sydney），没有设置提醒。Joshua 负责独立 review 及手动 Project 状态；当前 #35/#36/#37 均仍是 Sprint 7 / Backlog，不自动标 Testing／Done。没有独立 review 或 M4 完成证明，PR 保留 Draft。
+同日 PR #90 / #33 经独立复核通过后已合入 Sprint（`bb88002`），本分支已同步：765 个原 head 测试、438 条 SQL 断言、14 项组件浏览器交互及真实双连接并发均通过，无阻断发现。本模块 7 项真实测试已升级为调用 #33 公共服务，覆盖新增、作废、恢复、重复、拒绝、并发和过期版本后重查晚餐资格；全部通过。同步后全量 Vitest 838 通过、10 个 opt-in 跳过，Lint 和 TypeScript 通过。用户明确要求多个原 PR 的小补丁集中在现有 #87，保留来源，不另拆补丁 PR。
+
+剩余依赖：#33 公共服务已完成本模块联调；真实人工 UI 页面挂载及共享导航属于 Li / #34，挂载后由 Yubo／Joshua 补人工 UI → 核验页面测试。本包入口可直接访问。记录始于 2026-09-28，下次团队检查建议为 2026-09-29 10:00（Sydney），没有设置提醒。Joshua 负责独立 review 及手动 Project 状态；当前 #35/#36/#37 均仍是 Sprint 7 / Backlog，不自动标 Testing／Done。没有独立 review 或 M4 完成证明，PR 保留 Draft。

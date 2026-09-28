@@ -24,7 +24,7 @@
 - 按钮可随时刷新；重新获得焦点／从隐藏恢复时自动重查，跨页面更正后返回即可读取当前事实。
 - 刷新中禁用重复按钮，旧结果标为 Previous，提示等待后再发餐。60 秒未核验或离开页面后标记可能过期，要求成功刷新后再使用。
 - 只接受最新请求结果，旧响应不能覆盖新响应。系统失败保留旧值但明确标记过期；权限／会话失效清除旧名单；成功时同时重算名单和人数。
-- 不订阅或伪造 #33 的未发布 action，不反向修改人工签到模块。真实测试已通过 authorised JWT 更新／新增签到，并验证下一次读取与界面更新；这证明消费方链路，不等于 #33 人工 UI 全链路已完成。
+- #90 合并后，真实数据库测试已通过 #33 公共 `manualAttendanceService` 执行新增、作废、恢复、重复提交、拒绝和并发 CAS，再调用本模块读取／刷新接口验证资格与人数。仅替换 Next cookie/client 传输边界，实际授权、写入、读取、PostgREST 和 RLS 均真实运行。生产浏览器证据仍使用 authorised JWT 数据库更正，不等于人工 UI 全链路已完成。
 
 ## #32 合并后的边界修正
 
@@ -39,6 +39,8 @@ PR #88（Shiying / #32）已审阅并合入 Sprint 7，合并 SHA `dcdbcdb`。�
 记录的小问题是 `validateCheckInWindow` 对空值／缺字段／非字符串日期抛出 TypeError，无法返回安全 VALIDATION 结果，但不触发数据库写入。按用户授权在合并后统一修复：仅修改 tokens 的 validation 及两个局部测试文件，补运行时类型校验和 8 条回归；归属仍为 Li / #30，本次作为已授权的跨所有权后续修正纳入 PR #87，不改 migration 或有效日期行为。
 
 ## Docker 与本地环境
+
+2026-09-28：PR #90 / #33 已批准并合入 Sprint（`bb88002`），本分支已同步。独立审阅验证为 765 个测试、16 个 SQL 文件／438 条断言、14 项组件浏览器检查及真实双连接并发检查全部通过，没有阻断发现。#90 已包含 #89 的 #32 审计补充，无需重复合并。按用户最新要求，跨 PR 的后续小补丁统一放在现有 PR #87，逐项保留来源。
 
 Docker Desktop 因遗留 AF_UNIX socket 无法启动。已备份 `Docker/run` 的运行时 socket，以及只含 `engine.sock` 的 `docker-secrets-engine` 目录，再启动 Desktop；未重置 Docker、删除卷或原有容器。备份命名含 `stale-sprint7` / `sprint7-backup`。
 
@@ -64,13 +66,13 @@ runner 在内存读取本地 CLI 配置，只向测试子进程传递，不打�
 
 ## 结果与交接
 
-- 同步 #85 并修正参数校验后的全量 Vitest：729 通过、10 个 opt-in 跳过；其中本模块 7 个真实测试已另行显式运行通过，另外 3 个为已有 Sprint 5 套件。token 局部测试 15 个通过。
+- 同步 #90 后全量 Vitest：838 通过、10 个 opt-in 跳过；其中本模块 7 个真实测试已另行显式运行通过，覆盖 #33 公共服务 → 当前签到 provider → dinner 刷新，另外 3 个为已有 Sprint 5 套件。token 局部测试 15 个通过。
 - 本模块纯规则、适配器、刷新、UI、路由：63 通过；真实 Auth／PostgREST／RLS：7 通过。
-- 全量 SQL：14 文件、391 条断言通过；全量 ESLint、TypeScript、production webpack build 通过；数据库 runner 自测 5 个通过。
+- #90 基线全量 SQL：16 文件、438 条断言通过；同步后全量 ESLint、TypeScript 通过。此前 #87 与 #90 的 production build 和五项 CI 均通过；本轮仅升级本模块测试及交接文档，未修改运行时代码。数据库 runner 自测此前 5 个通过。
 - 虚构浏览器截图与结果见 `evidence/`：桌面、390px 手机、键盘、搜索、空／无效活动、加载、旧值、刷新失败、真实更正、页面／action 拒绝及撤权。
 
 分支 `codex/35-dinner-eligibility`，PR #87，base `sprint/7-qr-check-in-dinner`。Joshua 是唯一交接对象，负责非作者 review 和手动 Project 状态。
 
-剩余：Shiying / #33 发布人工操作入口后，由 Yubo 与 Joshua 复跑人工 UI → 核验页面；共享导航由 Li / #34 接入。记录开始于 2026-09-28，下次团队检查建议为 2026-09-29 10:00（Sydney），未设置提醒。PR 保留 Draft，等待依赖联调及独立审查；不宣称 Issues 已进入 Testing/Done 或 Sprint 完成。
+剩余：#33 公共服务联调已通过；待 Li / #34 挂载真实人工操作页面后，由 Yubo 与 Joshua 复跑人工 UI → 核验页面及共享导航。记录开始于 2026-09-28，下次团队检查建议为 2026-09-29 10:00（Sydney），未设置提醒。PR 保留 Draft，等待完整页面联调及独立审查；不宣称 Issues 已进入 Testing/Done 或 Sprint 完成。
 
 回退：回退本 PR 的 dinner 功能／路由及可独立回退的 provider 完整性检查。没有资格持久化或数据恢复步骤。

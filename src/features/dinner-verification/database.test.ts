@@ -17,6 +17,8 @@ vi.mock("@/lib/supabase/server", () => ({
 
 import { readDinnerEligibility, readDinnerVerification } from "./server";
 import { refreshDinnerVerification } from "./actions";
+import { manualAttendanceService } from "@/features/attendance/manual/server";
+import { attendanceAuditService } from "@/features/attendance/records/server";
 
 describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("#35 real public attendance provider", () => {
   let admin: SupabaseClient<Database>;
@@ -32,6 +34,20 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("#35 real public atte
 
   function check(error: unknown) {
     if (error) throw new Error("Fictional local database operation failed");
+  }
+
+  async function correction(targetStatus: "confirmed" | "voided") {
+    const audit = await attendanceAuditService.listForEvent(eventId);
+    if (!audit.ok) throw new Error("Expected authorised audit snapshot");
+    const record = audit.items.find((item) => item.participantId === participantId);
+    if (!record) throw new Error("Missing fictional attendance");
+    const form = new FormData();
+    form.set("operation", "correct");
+    form.set("recordId", record.id);
+    form.set("expectedUpdatedAt", record.updatedAt);
+    form.set("targetStatus", targetStatus);
+    form.set("confirmation", "confirmed");
+    return form;
   }
 
   function fixtureSql(sql: string) {
@@ -96,11 +112,10 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("#35 real public atte
     expect(await readDinnerEligibility(otherEventId, participantId)).toMatchObject({ eligibility: "Not Eligible Yet" });
   });
 
-  it("re-reads voided and restored facts without an eligibility write", async () => {
+  it("D-04: re-reads real #33 void and restore results without an eligibility write", async () => {
     session.client = authorised;
     for (const [status, eligibility] of [["voided", "Not Eligible Yet"], ["confirmed", "Eligible"]] as const) {
-      check((await authorised.from("attendance_records").update({ attendance_status: status })
-        .eq("event_id", eventId).eq("participant_id", participantId)).error);
+      expect(await manualAttendanceService.submit(eventId, await correction(status))).toMatchObject({ status: "success", eventId });
       expect(await readDinnerEligibility(eventId, participantId)).toMatchObject({ eligibility });
       expect(await refreshDinnerVerification(eventId)).toMatchObject({
         ok: true, eligibleCount: status === "confirmed" ? 1 : 0,
@@ -125,8 +140,10 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("#35 real public atte
   });
 
   it("preserves the current eligibility when a committee correction cannot change attendance", async () => {
-    await committee.from("attendance_records").update({ attendance_status: "voided" })
-      .eq("event_id", eventId).eq("participant_id", participantId);
+    session.client = authorised;
+    const form = await correction("voided");
+    session.client = committee;
+    expect(await manualAttendanceService.submit(eventId, form)).toEqual({ status: "permission-denied" });
     session.client = authorised;
     expect(await readDinnerEligibility(eventId, participantId)).toMatchObject({ eligibility: "Eligible" });
     expect(await refreshDinnerVerification(eventId)).toMatchObject({ ok: true, eligibleCount: 1 });
@@ -143,22 +160,35 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("#35 real public atte
 
   it("D-04: a concurrent correction is recalculated from the final database fact", async () => {
     session.client = authorised;
-    const changes = await Promise.all(["voided", "confirmed"].map((status) => authorised.from("attendance_records")
-      .update({ attendance_status: status as "voided" | "confirmed" }).eq("event_id", eventId).eq("participant_id", participantId)));
-    changes.forEach((result) => check(result.error));
+    const form = await correction("voided");
+    const changes = await Promise.all([
+      manualAttendanceService.submit(eventId, form),
+      manualAttendanceService.submit(eventId, form),
+    ]);
+    expect(changes.map((result) => result.status).sort()).toEqual(["conflict", "success"]);
     const fact = await authorised.from("attendance_records").select("attendance_status").eq("event_id", eventId).eq("participant_id", participantId).single();
     check(fact.error);
     expect(await refreshDinnerVerification(eventId)).toMatchObject({
       ok: true, eligibleCount: fact.data?.attendance_status === "confirmed" ? 1 : 0,
       items: [{ eligibility: fact.data?.attendance_status === "confirmed" ? "Eligible" : "Not Eligible Yet" }],
     });
+    // A stale restore cannot make the dinner consumer report eligibility.
+    form.set("targetStatus", "confirmed");
+    expect(await manualAttendanceService.submit(eventId, form)).toEqual({ status: "conflict" });
+    expect(await readDinnerEligibility(eventId, participantId)).toMatchObject({ eligibility: "Not Eligible Yet" });
+    expect(await manualAttendanceService.submit(eventId, await correction("confirmed"))).toMatchObject({ status: "success" });
+    expect(await refreshDinnerVerification(eventId)).toMatchObject({ ok: true, eligibleCount: 1 });
   });
 
   it("D-01/04: manual confirmation without registration grants eligibility with no separate write", async () => {
     session.client = authorised;
     fixtureSql(`delete from public.registrations where event_id='${eventId}' and participant_id='${absentParticipantId}';`);
-    const created = await authorised.from("attendance_records").insert({ event_id: eventId, participant_id: absentParticipantId } as Database["public"]["Tables"]["attendance_records"]["Insert"]);
-    check(created.error);
+    const form = new FormData();
+    form.set("operation", "create");
+    form.set("email", `issue35-${absentParticipantId}@example.test`);
+    form.set("confirmation", "confirmed");
+    expect(await manualAttendanceService.submit(eventId, form)).toMatchObject({ status: "success", eventId });
+    expect(await manualAttendanceService.submit(eventId, form)).toEqual({ status: "duplicate" });
     const before = await authorised.from("attendance_records").select("id,updated_at,attendance_status").eq("event_id", eventId).eq("participant_id", absentParticipantId).single();
     check(before.error);
     expect(await readDinnerEligibility(eventId, absentParticipantId)).toMatchObject({ eligibility: "Eligible" });
