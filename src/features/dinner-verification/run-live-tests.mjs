@@ -9,7 +9,10 @@ try {
     throw new Error("Requires the dedicated local fixture database.");
   }
   if (!config.ANON_KEY || !config.SERVICE_ROLE_KEY) throw new Error("Missing local fixture keys.");
-  const result = spawnSync(process.execPath, [
+  const browser = process.argv.includes("--browser");
+  const result = spawnSync(process.execPath, browser ? [
+    "src/features/dinner-verification/run-browser-tests.mjs",
+  ] : [
     "node_modules/vitest/vitest.mjs", "run",
     "src/features/dinner-verification/database.test.ts",
   ], {
@@ -24,6 +27,6 @@ try {
   });
   process.exitCode = result.status ?? 1;
 } catch {
-  console.error("Issue 35 live verification could not start. Start the local Supabase fixture stack on port 45321; no credentials were printed.");
+  console.error("Dinner live verification could not start. Start the local Supabase fixture stack on port 45321; no credentials were printed.");
   process.exitCode = 1;
 }

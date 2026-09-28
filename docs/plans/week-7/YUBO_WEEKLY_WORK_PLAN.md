@@ -4,10 +4,12 @@
 
 直接依赖文档：[Shiying 的当前签到 read port 和人工更正结果](SHIYING_WEEKLY_WORK_PLAN.md)。
 
+2026-09-28 用户授权例外：先修复 Docker 并完成 #35 的真实测试，再将 #36/#37 的本人部分一起实现并放入现有 PR #87。下文逐项等待 Testing、分别开分支／PR 的原定安排在本次被该明确指示覆盖；#35 为主要 Issue，#36/#37 为同一 PR 的相关范围。独立审查、真实权限验证、其他成员所有权和 Joshua 手动 Project 状态规则继续适用。
+
 ### Sprint 交付路线
 
 - GitHub Sprint：`Sprint 7`；集成分支及成员 PR base：`sprint/7-qr-check-in-dinner`。
-- Issue 分支：codex/35-dinner-eligibility；后续 codex/36-dinner-verification、codex/37-dinner-refresh。
+- 实际分支：`codex/35-dinner-eligibility`，三项本人工作按用户授权统一进入 PR #87。
 - Sprint 总 PR 主要 Issue：#7；本包顺序 Issues：#35 → #36 → #37。
 - 唯一交接对象：Joshua；消费者通过统一合同接入，避免多头交接。
 
@@ -109,10 +111,10 @@
 
 ## 10. 周末交接
 
-2026-09-28 更新：#32 的 PR #88 已审阅并合入 Sprint 7（`dcdbcdb`），#35 分支已同步，并通过 provider 公共入口接入当前签到事实。纯函数保持只依赖最小事实；server-only 适配器保留鉴权／查询错误、统一 UUID 大小写且不泄露身份或审计详情。未新增 schema、个人属性或资格写接口。
+2026-09-28 更新：#32 的 PR #88 已审阅并合入 Sprint 7（`dcdbcdb`），本分支已同步真实 provider。#35 完成规则和真实读取；#36 完成 authorised-only 活动选择／名单、最小 DTO、同快照人数、搜索、空／拒绝／错误状态；#37 完成本人负责的下一次重查、回到页面自动刷新、60 秒过期提示、失败保留旧值但标记过期、权限失效清除名单和请求顺序保护。没有新增 schema、个人属性或资格写接口。
 
-当前全量 Vitest 679 个通过、7 个 opt-in 真实数据库测试跳过；dinner 本地测试 28 个通过，attendance 30 个通过，类型检查和相关 Lint 通过。按用户允许合并后集中修正的要求，额外修复 provider 列表截断时可能误判缺失签到的问题；该修正和两条回归属于 #32 输出合同，已在 [模块交接说明](../../../src/features/dinner-verification/README.md) 记录。
+当前全量 Vitest 714 个通过，普通命令跳过 10 个 opt-in 测试；其中本模块 7 个已另行使用真实 Auth／PostgREST／RLS 显式运行通过，其余 3 个是已有 Sprint 5 套件。本模块局部测试 63 个、SQL 13 文件 372 条断言、数据库 runner 自测 5 个、production 浏览器 14 项全部通过；全量 Lint、TypeScript、webpack build 通过。桌面、390px 手机、键盘、陈旧／失败、权限及真实签到更正证据见 [模块交接说明](../../../src/features/dinner-verification/README.md)。#32 的列表截断保护与两条回归仍归属其输出合同，是用户授权的合并后修正。
 
-交付继续使用 `codex/35-dinner-eligibility` / Draft PR #87，目标 `sprint/7-qr-check-in-dinner`。#32 缺失接口的阻断已解除；当前 Docker Desktop 因本地 inference socket 初始化失败退出，4 个新增真实数据库测试尚未执行成功。已有本地 runner，可在环境恢复后直接复跑，不能以 mock 或 CI 的独立 SQL 检查替代该证据。
+交付继续使用 `codex/35-dinner-eligibility` / Draft PR #87，目标 `sprint/7-qr-check-in-dinner`。Docker 已恢复：备份遗留运行时 socket 后启动 engine，保留容器／卷；本地库通过 forward migration 补齐两条已有迁移，没有 reset 或远程变更。测试 fixture 按本次 UUID 清理，凭据只在内存传递。
 
-Yubo 负责补真实 provider 验证，Joshua 独立审查并手动维护 Project 状态；下次团队检查建议为 2026-09-29 10:00（Sydney）。#35 尚未进入 Testing，#36/#37 尚未启动；没有独立 review 或 M4 完成证明。Joshua 是唯一交接对象。
+剩余依赖：#33 尚无可调用的人工 UI／action，当前真实更正测试使用 authorised JWT 和数据库触发器，不能当作 #33 界面全链路已完成；Shiying 发布后由 Yubo／Joshua 补联调。共享导航挂载交 Li / #34；本包入口可直接访问。记录始于 2026-09-28，下次团队检查建议为 2026-09-29 10:00（Sydney），没有设置提醒。Joshua 负责独立 review 及手动 Project 状态；当前 #35/#36/#37 均仍是 Sprint 7 / Backlog，不自动标 Testing／Done。没有独立 review 或 M4 完成证明，PR 保留 Draft。

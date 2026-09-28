@@ -7,6 +7,7 @@ import {
 } from "@/features/attendance/records/server";
 
 import { calculateDinnerEligibility, type DinnerEligibility } from "./index";
+import type { DinnerVerificationResult } from "./contracts";
 
 export type DinnerEligibilityResult =
   | Extract<AttendanceAuditResult, { ok: false }>
@@ -67,3 +68,45 @@ export function createDinnerEligibilityReader(attendance: AttendanceReadPort) {
 }
 
 export const readDinnerEligibility = createDinnerEligibilityReader(attendanceAuditService);
+
+export function createDinnerVerificationReader(
+  attendance: AttendanceReadPort,
+  now: () => Date = () => new Date(),
+) {
+  return async function readDinnerVerification(eventId: string): Promise<DinnerVerificationResult> {
+    try {
+      const result = await attendance.listForEvent(eventId);
+      if (!result.ok) return { ok: false, code: result.code };
+      if (typeof eventId !== "string" || !UUID.test(eventId)) return { ok: false, code: "VALIDATION" };
+      const currentEventId = eventId.toLowerCase();
+      const seen = new Set<string>();
+      if (result.event.id.toLowerCase() !== currentEventId) return { ok: false, code: "SYSTEM_ERROR" };
+      for (const item of result.items) {
+        const id = item.participantId.toLowerCase();
+        if (item.eventId.toLowerCase() !== currentEventId || seen.has(id) || !UUID.test(id)) {
+          return { ok: false, code: "SYSTEM_ERROR" };
+        }
+        seen.add(id);
+      }
+      const items = result.items.map((item) => ({
+        participantId: item.participantId.toLowerCase(),
+        participantName: item.participantName,
+        participantEmail: item.participantEmail,
+        eligibility: calculateDinnerEligibility(currentEventId, item.participantId.toLowerCase(), {
+          eventId: currentEventId,
+          participantId: item.participantId.toLowerCase(),
+          attendanceStatus: item.status,
+        }),
+      }));
+      return {
+        ok: true,
+        event: { id: currentEventId, name: result.event.name },
+        items,
+        eligibleCount: items.filter((item) => item.eligibility === "Eligible").length,
+        readAt: now().toISOString(),
+      };
+    } catch { return { ok: false, code: "SYSTEM_ERROR" }; }
+  };
+}
+
+export const readDinnerVerification = createDinnerVerificationReader(attendanceAuditService);

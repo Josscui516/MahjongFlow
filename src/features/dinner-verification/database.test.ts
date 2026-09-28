@@ -1,4 +1,5 @@
 import { randomUUID, randomBytes } from "node:crypto";
+import { execFileSync } from "node:child_process";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { Database } from "@/types/database.generated";
@@ -14,7 +15,8 @@ vi.mock("@/lib/supabase/server", () => ({
   },
 }));
 
-import { readDinnerEligibility } from "./server";
+import { readDinnerEligibility, readDinnerVerification } from "./server";
+import { refreshDinnerVerification } from "./actions";
 
 describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("#35 real public attendance provider", () => {
   let admin: SupabaseClient<Database>;
@@ -32,6 +34,14 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("#35 real public atte
     if (error) throw new Error("Fictional local database operation failed");
   }
 
+  function fixtureSql(sql: string) {
+    try {
+      execFileSync("docker", ["exec", "-i", "supabase_db_MahjongFlow", "psql", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1"], {
+        input: sql, stdio: ["pipe", "pipe", "pipe"], timeout: 30000,
+      });
+    } catch { throw new Error("Local fictional SQL fixture operation failed"); }
+  }
+
   beforeAll(async () => {
     const url = process.env.ISSUE35_LOCAL_URL!;
     if (new URL(url).origin !== "http://127.0.0.1:45321") throw new Error("Local fixture database required");
@@ -47,23 +57,20 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("#35 real public atte
       if (!created.data.user) throw new Error("Missing fictional user");
       const id = created.data.user.id;
       users.push(id);
-      if (role) check((await admin.from("profiles").insert({ id, display_name: "Fictional Dinner Tester", committee_role: role })).error);
+      if (role) fixtureSql(`insert into public.profiles (id, display_name, committee_role) values ('${id}', 'Fictional Dinner Tester', '${role}');`);
       check((await db.auth.signInWithPassword({ email, password })).error);
     }
-    check((await admin.from("events").insert([eventId, otherEventId].map((id) => ({
-      id, name: "Fictional Issue 35 Event", description: "Disposable local verification",
-      event_type: "weekly_session" as const, starts_at: "2026-09-28T08:00:00Z",
-      location: "Fictional Room", created_by: users[0],
-    })))).error);
-    check((await admin.from("participants").insert([participantId, absentParticipantId].map((id) => ({
-      id, full_name: "Fictional Dinner Attendee", email: `issue35-${id}@example.test`,
-    })))).error);
-    check((await admin.from("registrations").insert([participantId, absentParticipantId].map((id) => ({
-      event_id: eventId, participant_id: id, recorded_by: users[0],
-    })))).error);
-    check((await admin.from("attendance_records").insert({
-      event_id: eventId, participant_id: participantId, check_in_method: "qr", recorded_by: null,
-    })).error);
+    // SQL is fixture administration only. Repository migrations intentionally do
+    // not grant service_role table CRUD; production reads still use user JWTs.
+    fixtureSql(`begin;
+      insert into public.events (id,name,description,event_type,starts_at,location,created_by) values
+      ${[eventId, otherEventId].map((id) => `('${id}','Fictional Issue 35 Event','Disposable local verification','weekly_session','2026-09-28T08:00:00Z','Fictional Room','${users[0]}')`).join(",")};
+      insert into public.participants (id,full_name,email) values
+      ${[participantId, absentParticipantId].map((id) => `('${id}','Fictional Dinner Attendee','issue35-${id}@example.test')`).join(",")};
+      insert into public.registrations (event_id,participant_id,recorded_by) values
+      ${[participantId, absentParticipantId].map((id) => `('${eventId}','${id}','${users[0]}')`).join(",")};
+      insert into public.attendance_records (event_id,participant_id,check_in_method) values ('${eventId}','${participantId}','qr');
+      commit;`);
     session.client = authorised;
   }, 60000);
 
@@ -71,11 +78,13 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("#35 real public atte
     session.client = null;
     if (!admin) return;
     // Delete only UUID-scoped records created by this test, never reset the DB.
-    check((await admin.from("attendance_records").delete().in("event_id", [eventId, otherEventId])).error);
-    check((await admin.from("registrations").delete().in("event_id", [eventId, otherEventId])).error);
-    check((await admin.from("events").delete().in("id", [eventId, otherEventId])).error);
-    check((await admin.from("participants").delete().in("id", [participantId, absentParticipantId])).error);
-    if (users.length) check((await admin.from("profiles").delete().in("id", users)).error);
+    fixtureSql(`begin;
+      delete from public.attendance_records where event_id in ('${eventId}','${otherEventId}');
+      delete from public.registrations where event_id in ('${eventId}','${otherEventId}');
+      delete from public.events where id in ('${eventId}','${otherEventId}');
+      delete from public.participants where id in ('${participantId}','${absentParticipantId}');
+      ${users.length ? `delete from public.profiles where id in (${users.map((id) => `'${id}'`).join(",")});` : ""}
+      commit;`);
     for (const id of users) check((await admin.auth.admin.deleteUser(id)).error);
   }, 60000);
 
@@ -93,6 +102,10 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("#35 real public atte
       check((await authorised.from("attendance_records").update({ attendance_status: status })
         .eq("event_id", eventId).eq("participant_id", participantId)).error);
       expect(await readDinnerEligibility(eventId, participantId)).toMatchObject({ eligibility });
+      expect(await refreshDinnerVerification(eventId)).toMatchObject({
+        ok: true, eligibleCount: status === "confirmed" ? 1 : 0,
+        items: [{ participantId, eligibility }],
+      });
     }
   });
 
@@ -100,8 +113,14 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("#35 real public atte
     for (const [db, code] of [[committee, "PERMISSION_DENIED"], [outsider, "PERMISSION_DENIED"], [anonymous, "UNAUTHENTICATED"]] as const) {
       session.client = db;
       expect(await readDinnerEligibility(eventId, participantId)).toEqual({ ok: false, code });
+      expect(await readDinnerVerification(eventId)).toEqual({ ok: false, code });
+      expect(await refreshDinnerVerification(eventId)).toEqual({ ok: false, code });
       const rows = await db.from("attendance_records").select("participant_id").eq("event_id", eventId);
       expect(rows.data ?? []).toEqual([]);
+      const participants = await db.from("participants").select("id").eq("id", participantId);
+      const registrations = await db.from("registrations").select("id").eq("participant_id", participantId);
+      expect(participants.data ?? []).toEqual([]);
+      expect(registrations.data ?? []).toEqual([]);
     }
   });
 
@@ -110,5 +129,42 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("#35 real public atte
       .eq("event_id", eventId).eq("participant_id", participantId);
     session.client = authorised;
     expect(await readDinnerEligibility(eventId, participantId)).toMatchObject({ eligibility: "Eligible" });
+    expect(await refreshDinnerVerification(eventId)).toMatchObject({ ok: true, eligibleCount: 1 });
+  });
+
+  it("D-03: exposes only necessary identity and a matching current-event aggregate", async () => {
+    session.client = authorised;
+    const result = await readDinnerVerification(eventId);
+    expect(result).toMatchObject({ ok: true, eligibleCount: 1 });
+    if (!result.ok) throw new Error("Expected authorised verification");
+    expect(Object.keys(result.items[0]).sort()).toEqual(["eligibility", "participantEmail", "participantId", "participantName"]);
+    expect(await readDinnerVerification(otherEventId)).toMatchObject({ ok: true, items: [], eligibleCount: 0 });
+  });
+
+  it("D-04: a concurrent correction is recalculated from the final database fact", async () => {
+    session.client = authorised;
+    const changes = await Promise.all(["voided", "confirmed"].map((status) => authorised.from("attendance_records")
+      .update({ attendance_status: status as "voided" | "confirmed" }).eq("event_id", eventId).eq("participant_id", participantId)));
+    changes.forEach((result) => check(result.error));
+    const fact = await authorised.from("attendance_records").select("attendance_status").eq("event_id", eventId).eq("participant_id", participantId).single();
+    check(fact.error);
+    expect(await refreshDinnerVerification(eventId)).toMatchObject({
+      ok: true, eligibleCount: fact.data?.attendance_status === "confirmed" ? 1 : 0,
+      items: [{ eligibility: fact.data?.attendance_status === "confirmed" ? "Eligible" : "Not Eligible Yet" }],
+    });
+  });
+
+  it("D-01/04: manual confirmation without registration grants eligibility with no separate write", async () => {
+    session.client = authorised;
+    fixtureSql(`delete from public.registrations where event_id='${eventId}' and participant_id='${absentParticipantId}';`);
+    const created = await authorised.from("attendance_records").insert({ event_id: eventId, participant_id: absentParticipantId } as Database["public"]["Tables"]["attendance_records"]["Insert"]);
+    check(created.error);
+    const before = await authorised.from("attendance_records").select("id,updated_at,attendance_status").eq("event_id", eventId).eq("participant_id", absentParticipantId).single();
+    check(before.error);
+    expect(await readDinnerEligibility(eventId, absentParticipantId)).toMatchObject({ eligibility: "Eligible" });
+    const result = await refreshDinnerVerification(eventId);
+    expect(result.ok && result.items.some((item) => item.participantId === absentParticipantId && item.eligibility === "Eligible")).toBe(true);
+    const after = await authorised.from("attendance_records").select("id,updated_at,attendance_status").eq("event_id", eventId).eq("participant_id", absentParticipantId).single();
+    expect(after.data).toEqual(before.data);
   });
 });

@@ -1,0 +1,21 @@
+{
+  "checks": [
+    "Anonymous list and detail redirect to login",
+    "Authorised real provider result and minimal fields",
+    "Search, no-match and keyboard refresh",
+    "Mobile layout has no horizontal overflow",
+    "Current attendance correction updates visible eligibility and count",
+    "Failed committee correction preserves confirmed eligibility",
+    "Returning from another view refreshes the current database fact",
+    "Slow refresh disables duplicate action and labels old results",
+    "Network failure keeps previous result explicitly stale",
+    "Authorised event selection, empty event and invalid event",
+    "An old open view is labelled stale before further serving",
+    "Committee and participant sessions cannot read pages or refresh endpoint",
+    "Permission loss during a refresh removes previously visible identities",
+    "No unexpected browser runtime or console errors"
+  ],
+  "pageErrors": [],
+  "consoleErrors": [],
+  "note": "Correction uses the real authorised database boundary. Issue #33 manual UI is not yet available."
+}
