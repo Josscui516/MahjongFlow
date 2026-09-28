@@ -8,6 +8,7 @@ import { EventStatusBadge } from "@/features/events/presentation";
 import { EventPreparationSection } from "@/features/events/preparation/EventPreparationSection";
 import { EventParticipationSection } from "@/features/registrations/attendance-summary/EventParticipationSection";
 import { ParticipationSummary } from "@/features/registrations/attendance-summary/ParticipationSummary";
+import { EventCheckInTokenSection } from "@/features/attendance/tokens";
 
 const formatter = new Intl.DateTimeFormat("en-AU", { dateStyle: "full", timeStyle: "short", timeZone: "Australia/Sydney" });
 export default async function EventPage({ params, searchParams }: Readonly<{ params: Promise<{ eventId: string }>; searchParams: Promise<{ saved?: string; preparation?: string; candidatePage?: string }> }>) {
@@ -29,6 +30,7 @@ export default async function EventPage({ params, searchParams }: Readonly<{ par
       </div>
     </header>
     {query.saved === "1" ? <SuccessFeedback message="The event details were saved." /> : null}
+    {access.role === "authorised" ? <Suspense fallback={<p role="status">Loading secure check-in settings…</p>}><EventCheckInTokenSection eventId={eventId} /></Suspense> : null}
     <Suspense fallback={<ParticipationSummary />}><EventParticipationSection eventId={eventId} /></Suspense>
     {query.preparation === "saved" ? <p role="status">Preparation tasks updated.</p> : query.preparation === "error" ? <p role="alert">Preparation tasks could not be updated. Refresh and try again.</p> : null}
     <Suspense fallback={<p role="status">Loading preparation tasks…</p>}><EventPreparationSection eventId={eventId} candidatePage={Number(query.candidatePage ?? 1)} /></Suspense>
