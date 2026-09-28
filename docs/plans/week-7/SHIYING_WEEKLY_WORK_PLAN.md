@@ -11,6 +11,14 @@
 - Sprint 总 PR 主要 Issue：#7；本包顺序 Issues：#32 → #33。
 - 唯一交接对象：Joshua；消费者通过统一合同接入，避免多头交接。
 
+### 2026-09-28 用户批准的本次交付例外
+
+用户明确要求把 #32 的剩余补证与 #33 人工补签／更正放入一个新的 PR，并授权提交、push、创建 Draft PR 和对齐这两项的 Project 状态；不授权合并。本次以 #33 为主要实现 Issue，附带 #32 补证，分支为 `codex/33-manual-attendance`，base 仍是 `sprint/7-qr-check-in-dinner`。此明确要求覆盖本文关于顺序 Issue 必须各自独立 PR、等待他人手动更新状态后才能开工的安排，不改变其他成员的文件所有权、独立审查或 Sprint 最终验收要求。
+
+#32 已有批准并合入 Sprint 的 [PR #88](https://github.com/Josscui516/MahjongFlow/pull/88)，新分支从最新 Sprint 基线创建，并迁入 [PR #89](https://github.com/Josscui516/MahjongFlow/pull/89) 的两文件补证。#89 暂不关闭；新 PR 集中审查相同补证及 #33，不应把两份重复补证分别合并。Acceptance Gate 保持未通过，两项 Issue 均不提前关闭或标记 Done。
+
+状态对齐已尝试：目标为 #32 `Testing`、#33 实施时 `In Progress`／可审查时 `Review`；GitHub API 因当前授权只有 `read:project`、缺少 `project` 写 scope 拒绝，实际状态仍为 `Backlog`。这是看板同步权限问题，不再阻止本次已获批准的实现。Shiying 补充 `project` 授权后重试并读取确认；下一次检查为本次 PR 交付前或最迟 2026-09-29 16:30 AEST。未改变 Sprint、负责人或验收门禁。
+
 ## 1. 独立目标
 
 交付签到审计与人工更正，覆盖 CHECKIN-05/06。Shiying（`Scarletthekiller`）负责全部功能实现和功能自身验证，估算 8 点；Joshua 负责跨包集成验收。
@@ -109,11 +117,11 @@
 
 ## 10. 周末交接
 
-### 2026-09-28 交接核对（Australia/Sydney）
+### 2026-09-28 首次交接核对（实施 #33 前的历史快照）
 
 本节区分已经集成的个人交付、本次独立补证和仍未完成的跨包验收，不作为 Sprint 7 完成证明。唯一交接对象仍为 Joshua。
 
-| 项目 | 实际证据 | 当前结论 |
+| 项目 | 实际证据 | 当时结论 |
 |---|---|---|
 | #32 审计读取与显示 | [PR #88](https://github.com/Josscui516/MahjongFlow/pull/88)，实现 `33fe42a4eb35b3cebb78d0ea70e850bdd29aed65`，合并提交 `dcdbcdb571bd0b201e8251c552843ea48964838e` | 已合入 `sprint/7-qr-check-in-dinner`；不是合入 `main` 或最终 Done |
 | 非作者审查 | Caiqwe123 于 2026-09-28 13:41 AEST 批准该实现；审查明确保留真实联调、路由和视觉验收 | 独立读取工作包无阻塞发现；不将代理自查当作团队批准 |
@@ -170,9 +178,55 @@
 
 | 未完成项／影响 | 已核对或尝试 | 所需帮助／责任人 | 下一步与复查时间 |
 |---|---|---|---|
-| #32 Project 尚非 Testing，阻止顺序开始 #33 | 已读取 Issue、计划、实时 Project、PR 批准和合并证据；未擅自将 Backlog 视为 Testing | Joshua 核对证据并手动同步状态；Shiying 确认开始条件 | 下次获授权继续时复查，团队协调最迟 2026-09-29 16:30 AEST |
+| #32/#33 Project 状态尚未同步（原开工阻断已解除） | 用户已批准合并交付及状态对齐；API 写入因缺少 `project` scope 拒绝 | Shiying 补充 GitHub 授权后重试；不等待 Joshua 代改 | 本次交付前复查，最迟 2026-09-29 16:30 AEST |
 | #31 HTTP／页面到 #32 审计的真实链路尚未验收 | #86 未合并；既有数据库 RPC 可以独立验证，但不能代替新 HTTP 边界 | Xuanwei 完成 #31；Shiying 复验审计输出；Joshua 协调 | provider 集成后切换真实入口复验；同上复查时间 |
 | #34 挂载、路由权限、桌面／手机／键盘证据未完成 | 当前 Sprint 尚无签到后台页面，静态渲染测试不能代表整页验收 | Li 负责路由和界面集成；Shiying 配合核对审计组件 | 页面交接后执行三角色与视觉检查；同上复查时间 |
 | #35 真实 read port 消费与 Sprint 最终验收 | #87 尚未合并，未宣称晚餐链路完成 | Yubo 负责消费端；Joshua 负责跨包验收、总 PR 和 Project | 按冻结公共入口接入；同上复查时间 |
 
-上述未完成项于本次 2026-09-28 核对记录；#31 依赖已在 #88 正文提前记录。没有设置自动监控，也没有未经授权发送 Issue 评论、修改项目字段或请求合并。#33 后续仍需人工补签、void／恢复、可信归属、失败零变更、QR／manual 竞争、权限和真实表单交互测试；不能把 #32 的通过结果替代这些验收。
+上述未完成项于本次 2026-09-28 核对记录；#31 依赖已在 #88 正文提前记录。没有设置自动监控，也没有未经授权发送 Issue 评论或请求合并。以下新增交付节记录 #33 本次实现和实际验证，不能把上面的 #32 历史通过结果替代 #33 验收。
+
+## 11. #33 人工操作与 #32 补证的合并交付
+
+### 实现与消费者接入
+
+本次新增 `src/features/attendance/manual/`，不修改 Li 的路由、Xuanwei 的匿名入口或 Yubo 的晚餐模块。
+
+- 不可变合同与纯校验：`contracts.ts`、`validation.ts`。逐字段使用 `FormData.getAll` 拒绝重复值和 File；检查活动／记录 UUID、现有参与者邮箱、确认、状态和真实日历日期，保留数据库时间的微秒精度。
+- 服务与副作用边界：`service.ts` 先 `requireAuthorised` 再校验／查询；`repository.ts` 只使用当前用户 JWT client。补签按精确规范化邮箱查找既有参与者，不创建参与者或报名；更正只更新状态，以活动、记录、原状态和原 `updated_at` 一次性条件 UPDATE 防止丢失更新。
+- 可信审计：INSERT 只写 `event_id`、`participant_id`；UPDATE 只写 `attendance_status`。操作者、人工方式、签到时间和更新时间由既有数据库列授权、默认值和触发器控制；QR 原始方式／签到时间不会被人工更正覆盖。
+- UI：确认内容随参与者、操作或版本变化失效；pending 使用同步锁和禁用控件；每次返回结果重新聚焦摘要；成功／重复／版本冲突不允许重用旧操作；临时事务失败保持可重新确认后重试，未自动重试数据库写入。
+- 公共 Server Component：从 `@/features/attendance/manual` 导入 `ManualAttendancePanel`、`ManualAttendanceLoading`。Li 在自己的 authorised 路由挂载 `<ManualAttendancePanel eventId={eventId} />`，可用 Suspense 的 fallback 显示 Loading。组件通过 #32 公共 read port 自行校验授权，拒绝时不向 client 提供记录。
+- 公共服务端入口：`@/features/attendance/manual/server` 导出 `manualAttendanceService.submit(eventId, formData)` 和 `submitManualAttendance(eventId, previousState, formData)`。后者忽略浏览器传来的旧结果；成功的最小结果为 `{ status: "success", eventId, updatedAt }`。缓存刷新失败附加 `refreshRequired: true`，不把已经提交的写入误报失败。
+- Li/Yubo 成功后按 `eventId` 重新读取当前事实；本包不写晚餐资格，也不导入消费者内部模块。已连接表单在成功或冲突后刷新当前路由输入，组件交互测试使用隔离的 action／router 边界。
+
+### 本次验收证据
+
+| 场景 | 本包证据与结果 |
+|---|---|
+| K-05 #32 补证 | 保留真实 QR RPC 到 authorised 审计投影的 20 条 SQL 回归；没有以手工 QR fixture 代替全部真实 provider 证据 |
+| K-06 创建／void／恢复 | 服务／适配器／action 测试及新增 27 条 SQL，验证当前操作者、数据库时间、原始 QR 元数据和未报名人工例外 |
+| K-04 QR/manual 并发 | 专属双连接脚本确认第二事务真实锁等待后才释放第一事务；分别验证 QR 胜出、manual 胜出均一行且不覆盖审计 |
+| 并发更正与失败零变更 | 两位操作者并发同版本更新只成功一次；新版本可由第二人恢复；旧版本、非法字段、越权操作不改原行 |
+| 权限／隐私 | authorised 允许；committee、无有效 profile、匿名／参与者拒绝；服务先鉴权、RLS 和列授权双重防线；只使用虚构数据 |
+| 组件反馈 | loading、empty、validation、permission、unauthenticated、duplicate、conflict、system error、success 及 pending 均实现；真实浏览器测试另见交付 PR 的执行记录 |
+
+| 命令／检查 | 结果 |
+|---|---|
+| `npm run lint`、`npm run typecheck` | 通过 |
+| `npx vitest run src/features/attendance/manual` | 6 个文件、109 项通过，含事务回滚后同一表单可重新确认重试的回归 |
+| `npm test` | 765 项通过、3 项既有跳过；另有 5 项脚本测试通过 |
+| `env ISSUE33_PLAYWRIGHT_MODULE=/Users/syscarlet/.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright ISSUE33_EVIDENCE_DIR=/private/tmp/mahjongflow-issue32-delivery.Sufe6N/issue33-ui node tests/integration/attendance/manual/browser.mjs` | Chrome 中 14 项真实组件交互通过；桌面／390px 窄屏截图已生成并检查，无横向溢出 |
+| `npm run build -- --webpack` | 通过；没有把尚未挂载的 #34 路由列为已验收 |
+| `npx supabase test db supabase/tests/rls/issue-33-manual-attendance.sql --local` | 27 条通过；本地已持久应用 migration 截至 `20260908232400` |
+| `node tests/integration/attendance/manual/database-concurrency.mjs` | 4 类真实竞争／更正场景通过，精确清理本脚本随机 UUID 的虚构 fixture |
+| `node /private/tmp/mahjongflow-issue33-suite.f4o24r/run.mjs` | 16 个 SQL 文件、438 条断言通过；逐文件临时加载最新 #30 migration 后运行并回滚 |
+
+最新结构全量 SQL 复验使用临时包装器：每份原 SQL 保持断言不变，仅在首个 `begin;` 后插入原样 `20260916000100_secure_event_check_in_token_management.sql`，保留末尾 `rollback;`。首次临时包装器的 JavaScript 替换字符串错误处理了 SQL dollar quote，测试未进入断言；改为函数式替换后重新生成并运行全部 438 条通过。仓库 migration／测试原文件没有为此改写，结束后核对新增管理函数和 #33 固定 fixture 均未遗留。在已经应用完整 Sprint migration 的独立开发／CI 环境直接运行 `npm run db:test` 即可；本次没有对共享库 reset、持久迁移或声称全量从空库重放已完成。
+
+### 数据库、回退与剩余交接
+
+本次没有 schema、RLS、索引、函数、seed 或生成类型变化，因此不新增空 migration，也不手工修改 Li 持有的生成类型。复用 `(event_id, participant_id)` 唯一约束、状态与条件操作者约束及可信审计触发器。回退只撤下人工组件并回退本次应用提交，保留全部历史签到行；禁止通过删除签到纠错。若消费者已接入，先协调移除导入，再回退提供者。
+
+浏览器 runner 使用已有 Vite 与外部 Playwright runtime，不改共享依赖或 CI；其他开发机可将 `ISSUE33_PLAYWRIGHT_MODULE` 指向本机 Playwright 模块，`ISSUE33_BROWSER_CHANNEL` 默认 `chrome`。截图位于上表 evidence 目录的 `manual-attendance-desktop.png`、`manual-attendance-mobile.png`，按仓库约定不提交运行产物。
+
+功能自身实现和验证不等于 Sprint Done。仍需 Joshua 的团队非作者审查、Li 的 #34 路由挂载／权限与完整页面视觉验收、#31 HTTP 真实链路及 Yubo 消费后重算的集成验证。浏览器证据是实际 React 组件在虚构数据、注入 action／router、真实 `globals.css` 和隔离容器下的交互测试，**不是**正式路由或晚餐全链路验收。新 Draft PR 不合并，不关闭 #32/#33，不把 Acceptance Gate 改为 Passed。
