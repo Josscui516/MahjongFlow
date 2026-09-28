@@ -161,12 +161,20 @@ export function createAttendanceAuditRepository(
 
       const attendanceResult = await client
         .from("attendance_records")
-        .select(ATTENDANCE_SELECT)
+        .select(ATTENDANCE_SELECT, { count: "exact" })
         .eq("event_id", eventId)
         .order("checked_in_at", { ascending: false })
         .order("id", { ascending: true });
 
       if (attendanceResult.error) fail(attendanceResult.error);
+      // PostgREST may cap the response. Consumers must never interpret an
+      // omitted attendee as absent or present a partial list as a full count.
+      if (
+        attendanceResult.count === null ||
+        attendanceResult.count !== (attendanceResult.data ?? []).length
+      ) {
+        fail({ code: "INCOMPLETE_DATA" });
+      }
 
       return {
         event: {
