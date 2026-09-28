@@ -1,48 +1,53 @@
-# #35：晚餐资格纯推导
+# #35：晚餐资格推导与签到接口接入
 
-本模块实现 DINNER-01/02、DIN-C01–03 的纯计算部分。它不读取数据库、不提供公开接口、不保存资格，也不承担鉴权。
+本模块实现 DINNER-01/02 的纯计算，以及消费 #32 公共接口的 server-only 读取适配器。不保存资格、不提供资格写接口、不新增个人属性。
 
-## 公共入口
+## 公共入口与边界
 
-从 `@/features/dinner-verification` 导入 `calculateDinnerEligibility` 与 `DinnerAttendanceFact`。
+- `@/features/dinner-verification`：`calculateDinnerEligibility(eventId, participantId, fact)`。同活动、同参与者、confirmed 才为 `Eligible`；voided、缺失或不匹配为 `Not Eligible Yet`。报名本身不授予资格，人工确认签到不额外要求报名。
+- `@/features/dinner-verification/server`：`readDinnerEligibility(eventId, participantId)`。调用 `@/features/attendance/records/server` 的真实 `attendanceAuditService.listForEvent`，由 provider 执行用户会话鉴权和 RLS。只返回活动、参与者 ID 和资格，不转发姓名、邮箱或审计字段。
+- 适配器将 provider 的 `status` 映射为纯函数的 `attendanceStatus`，统一 UUID 大小写，拒绝跨活动或重复当前记录。授权／查询失败保留安全错误，绝不转换为“暂不符合资格”。每次调用重新读取，不缓存结果。
+- `createDinnerEligibilityReader` 仅作为测试注入边界；生产入口始终使用真实 provider，不导入其内部 repository。
+- 无页面、公开 endpoint 或 Server Action。#36 页面和 #37 人工操作后的刷新仍需按顺序交付；当前更正事实测试不等于完成 #33/#37 界面流程。
 
-输入为当前 `eventId`、目标 `participantId`、该参与者当前唯一签到事实（或明确缺失的 `null`／`undefined`）。只有两个 ID 均匹配且 `attendanceStatus` 为 `confirmed` 时返回 `Eligible`；其余返回 `Not Eligible Yet`。报名、签到方式和额外个人属性不是资格条件，已确认的人工现场例外同样有效。
+## #32 审阅及合并后的边界修正
 
-这里的事实类型是消费者所需的最小输入，不宣称是 #32 已交付的 DTO。等待 Shiying 的公开 read port 后，在服务端显式映射其实际 DTO；不得读取 provider 内部 repository，也不得把数据库完整记录传给客户端。读取失败必须作为错误传播，不能转换为缺失签到并展示不符合资格。
+2026-09-28 已审阅 #32 / PR #88 的 `33fe42a`，28 个针对性测试通过，五项 CI（含数据库和 Build）通过，无未解决 review thread；已批准并合入 Sprint 7，合并 SHA 为 `dcdbcdb`。QR 新写入流程联调由 #31/#32 负责，路由挂载／视觉验收由 #34 负责；成员合并不是 Sprint 完成证明。
 
-调用方必须使用当前数据库事实，不能传入历史签到快照。函数不会缓存资格，但这不等于已经实现 #37 的页面刷新和真实更正链路。
+按用户“记录小问题、合并后统一修正”的指示，接入时补充 provider 列表完整性检查：仓库配置 `api.max_rows = 1000`，单次读取可能被 PostgREST 截断。查询增加 exact count；若 count 缺失或与返回行数不同，返回安全系统错误，避免把截断后缺失的参与者误判为未签到。仅修改 #32 的 `repository.ts` 及其局部测试，归属仍为 #32/Shiying 的输出完整性合同，本次作为 #35 集成所需的已授权后续修正。新增两条回归测试。
 
-## Schema 与权限核对
+该保护不实现大列表分页；超过 API 行数上限时会明确失败，不能作为完整名单使用。将来需要扩大列表容量时，由 provider 所有者扩展读取合同。
 
-- 基线已经存在 `attendance_records`、`confirmed`／`voided` 枚举及 `UNIQUE(event_id, participant_id)`。
-- `attendance_records_authorised_select` 依赖 `private.is_authorised()`。未来服务端查询必须使用用户 JWT 和 authorised 检查，继续由 RLS 控制访问。
-- 已静态核对基线 migrations 与生成类型，没有独立 dinner／eligibility 字段或表。本次不修改数据库、RLS、生成类型、seed 或个人属性；不需要 migration／数据回退。
-- 本模块没有页面、Server Action 或网络入口。#36 的路由／服务／RLS 三层权限和 loading／empty／error 状态仍待其前置门禁满足后实现，不能用这些纯函数测试代替。
+## Schema 与权限
 
-## 当前验证与交接
+沿用已有 `attendance_records`、confirmed/voided 枚举、活动／参与者唯一约束及 authorised-only SELECT RLS。没有 schema、migration、生成类型、seed、RLS 或资格写入变更。生产只使用用户 JWT；真实测试中的管理员 client 仅负责本地虚构 fixture 创建和清理。
 
-2026-09-28 核对 Sprint 分支基线 `f44b64a`。#32 的 `src/features/attendance/records/` 尚不存在，也没有对应远端成员分支，因此真实 provider 接入和数据库事实集成测试尚未完成。
+回退：移除 dinner 模块及消费者引用；provider exact-count 修正可独立回退，但必须同时避免消费者把可能截断的列表当作完整事实。不涉及数据恢复。
 
-使用 Node `v24.21.0` 执行：
+## 验证（Node v24.21.0）
 
 ```text
-node node_modules/vitest/vitest.mjs run src/features/dinner-verification
 node node_modules/vitest/vitest.mjs run
-node --test .github/scripts/run-database-tests.test.mjs
-node node_modules/next/dist/bin/next typegen
 node node_modules/typescript/bin/tsc --noEmit
-node node_modules/eslint/bin/eslint.js .
+node node_modules/eslint/bin/eslint.js src/features/dinner-verification src/features/attendance/records
+node node_modules/next/dist/bin/next build --webpack
+node src/features/dinner-verification/run-live-tests.mjs
 ```
 
-结果：本模块 15 个测试通过；全量 Vitest 636 个通过、3 个跳过（既有 Sprint 5 实际数据库测试未启用）；数据库测试运行器自身 5 个测试通过；路由类型生成、TypeScript 和全库 ESLint 检查通过。运行器测试不代表数据库权限测试已执行。依赖安装使用 `npm ci --ignore-scripts --no-audit --no-fund`，未更改锁文件；系统默认 Node 22 的引擎提示已通过使用 Node 24 执行验证解决。
+- 全量 Vitest：679 通过、7 跳过；跳过包含已有 Sprint 5 的 3 个真实数据库测试及本模块 4 个 opt-in 真实数据库测试。
+- dinner 纯规则／适配器 28 个测试通过；attendance 30 个测试通过。类型检查和相关目录 ESLint 通过。
+- webpack production build 通过，使用本地地址与虚构 public key。
+- 真实数据库命令已尝试但启动失败：Docker Desktop 在初始化 `dockerInference` 本地 socket 时退出，Linux engine 不可用。不得将 skip 或 provider 原有 CI SQL 测试算成本模块真实适配器测试通过。
 
-未执行生产 build、真实 DB／provider 集成、#36 页面验收与 #37 更正回归。本次仅新增框架无关纯函数；最终 #35 验收仍需接入 #32 并复验真实事实，不可标为 Done 或 Testing。
+## 可复跑的真实数据库验证
 
-阻断记录：
+恢复本地 Docker 和已迁移的虚构 Supabase 栈（`http://127.0.0.1:45321`）后，从仓库根目录运行最后一条命令。runner 从本地 CLI 获取配置，仅在子进程环境中传递凭据，不打印或写入文件；拒绝远端地址。
 
-- 原因／影响：#32 公开读取接口缺失，无法完成 #35 真实接入；#35 未进入 Testing，因此按个人计划暂不启动 #36/#37。
-- 已尝试：核对远端分支、Project Sprint 字段、#32/#35 Issue 和双方个人计划；已完成独立纯函数与虚构样例验证。
-- 所需帮助／负责人：Shiying 提供已验证的 authorised-only 当前活动 read port；Yubo 接入并复验；Joshua 负责独立审查与手动状态维护。
-- 开始日期：2026-09-28（Sydney）；下次团队检查建议：2026-09-29 10:00（Sydney），未创建自动提醒。
-- 唯一交接对象：Joshua。交付分支为 `codex/35-dinner-eligibility`，基于 Sprint 7；按用户授权以 Draft 成员 PR 发布当前独立部分，Project 状态保持不变。
-- 下一安全操作：#32 公共入口交付后接入并测试，更新 `codex/35-dinner-eligibility` 的 Draft 成员 PR，base 为 `sprint/7-qr-check-in-dinner`；通过非作者审查并进入 Testing 后再推进 #36。
+`database.test.ts` 只替换 Next 的 cookie/client 边界，实际使用生产 provider、`requireAuthorised`、Auth、PostgREST 和 RLS。覆盖 confirmed、仅报名、错误活动、撤销／恢复以及 committee／无 profile／匿名拒绝和失败更正不改变资格。fixture 使用随机 UUID 和 `.test` 邮箱，结束后按本次 UUID 清理，不 reset 数据库。不宣称覆盖 #31 新 QR writer 或 #33 人工组件。
+
+## 交接与剩余门禁
+
+- 分支：`codex/35-dinner-eligibility`；Draft PR：#87；base：`sprint/7-qr-check-in-dinner`。已同步 #88 合并基线。
+- #32 接口缺失阻断已解除。当前阻断是本机 Docker 初始化失败，开始于 2026-09-28（Sydney）。已尝试启动 Desktop/CLI 并核对日志；未重置 Docker 或删除容器数据。
+- Yubo 负责环境恢复后执行 4 个真实测试并整理证据；Joshua 是唯一交接对象，负责非作者审查和手动 Project 状态。下次检查建议：2026-09-29 10:00（Sydney），未设置自动提醒。
+- #35 尚未通过真实 provider 验收和非作者 review，不标记 Testing/Done。按个人计划，#35 进入 Testing 后启动 #36；#37 还需 #33 可复验。

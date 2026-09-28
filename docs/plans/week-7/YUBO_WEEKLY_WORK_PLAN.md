@@ -109,8 +109,10 @@
 
 ## 10. 周末交接
 
-2026-09-28：已从 Sprint 7 基线 `f44b64a` 在独立工作目录的 `codex/35-dinner-eligibility` 分支完成 #35 的纯函数与 15 个局部测试；全量 Vitest 636 个通过、3 个既有实际数据库测试跳过，测试运行器 5 个测试通过，ESLint 与类型检查通过。公共入口为 `@/features/dinner-verification`。没有新增资格字段、migration、写接口或个人属性。
+2026-09-28 更新：#32 的 PR #88 已审阅并合入 Sprint 7（`dcdbcdb`），#35 分支已同步，并通过 provider 公共入口接入当前签到事实。纯函数保持只依赖最小事实；server-only 适配器保留鉴权／查询错误、统一 UUID 大小写且不泄露身份或审计详情。未新增 schema、个人属性或资格写接口。
 
-#32 的真实 attendance read port 尚未交付，#35 的数据库事实接入和最终验收仍未完成；本次按用户授权以 Draft 成员 PR 交付已完成部分，未变更 Project 状态。按照顺序门禁，#36/#37 尚未启动。完整命令、Schema 核对、边界及待办见[模块交接说明](../../../src/features/dinner-verification/README.md)。
+当前全量 Vitest 679 个通过、7 个 opt-in 真实数据库测试跳过；dinner 本地测试 28 个通过，attendance 30 个通过，类型检查和相关 Lint 通过。按用户允许合并后集中修正的要求，额外修复 provider 列表截断时可能误判缺失签到的问题；该修正和两条回归属于 #32 输出合同，已在 [模块交接说明](../../../src/features/dinner-verification/README.md) 记录。
 
-阻断始于 2026-09-28（Sydney）：Shiying 需交付 #32 公共入口，Yubo 接入并补真实 provider 验证，Joshua 独立审查并手动维护状态；下次团队检查建议为 2026-09-29 10:00（Sydney）。目前不存在真实 provider 验收、独立 review 或 M4 完成证明。Joshua 是唯一交接对象。
+交付继续使用 `codex/35-dinner-eligibility` / Draft PR #87，目标 `sprint/7-qr-check-in-dinner`。#32 缺失接口的阻断已解除；当前 Docker Desktop 因本地 inference socket 初始化失败退出，4 个新增真实数据库测试尚未执行成功。已有本地 runner，可在环境恢复后直接复跑，不能以 mock 或 CI 的独立 SQL 检查替代该证据。
+
+Yubo 负责补真实 provider 验证，Joshua 独立审查并手动维护 Project 状态；下次团队检查建议为 2026-09-29 10:00（Sydney）。#35 尚未进入 Testing，#36/#37 尚未启动；没有独立 review 或 M4 完成证明。Joshua 是唯一交接对象。
