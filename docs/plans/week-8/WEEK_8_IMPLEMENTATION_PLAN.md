@@ -12,6 +12,8 @@
 
 用户批准单负责人同一工作包顺序收尾，因此本次主 Issue 分支同时交付 M5 工程证据及依赖 #29 的维护输出；不创建其他成员工作包。后续 PR 的目标应为 Sprint 8 集成分支，Sprint 总 PR 再指向 main。单负责人及 M5 确认不取消后续 Git PR review／Testing 门禁，本次授权不包含 PR 创建、merge 或部署。
 
+后续授权更新（2026-09-30）：Joshua 明确要求创建 PR 并合并到 main，且本次不需要他人审核。该单次例外仅免除本次两个 PR 的非作者批准，不冒充已有 GitHub review，不修改全局分支保护。仍执行成员 PR → Sprint 8 集成分支 → Sprint 总 PR → main，等待 Lint、Typecheck、Test、Database、Build 通过，处理真实阻断问题后合并。原维护脚本固定隔离边界及备份恢复方式不变；应用变更回退走已授权的 revert／后续 PR，不能把 Git revert 当作已清理数据恢复。
+
 ## 2. 开始条件
 
 - 已集成的 US-01–US-06、账号管理及删除边界；现有 SQL／服务／浏览器 fixture。
