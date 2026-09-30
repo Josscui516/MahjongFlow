@@ -111,6 +111,9 @@ jobs:
         shell: pwsh
         run: npm run db:test:concurrency
 
+      - name: Verify QR and manual attendance races
+        run: node tests/integration/attendance/manual/database-concurrency.mjs
+
       - name: Lint database schema
         run: npm run db:lint
 

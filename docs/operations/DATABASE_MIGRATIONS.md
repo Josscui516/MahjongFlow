@@ -127,3 +127,19 @@ token。所有函数只向 `service_role` 授权，并在函数内再次验证�
 在同一前向 migration 中重建上一版本 `rotate_event_check_in_token`。已经轮换或撤销的
 明文 token 无法恢复，回退前应撤销所有公开入口并通知现场人员重新生成链接。活动窗口
 和 token 审计行应保留，不通过回退删除历史记录。
+
+## 10. Sprint 7 分布式签到限速部署与回退
+
+`20260927032601_add_atomic_self_check_in_rate_limit_after_token_management.sql`
+必须在上述 token 管理 migration 之后执行。它新增 `private.check_in_rate_limits`
+及只向 `service_role` 开放的 `consume_check_in_rate_limit`，以事务更新跨实例请求计数；
+不修改参与者、报名或签到行。来源指纹由应用生成不可逆摘要，不记录原始 IP、token
+或提交身份。重新生成 `public,graphql_public` 类型后，应用直接使用生成的 RPC 契约。
+
+上线先核对两项 migration 顺序、函数权限和生产服务端配置，再部署应用。
+回退先撤下公开签到页面/API，并撤销 `submit_event_check_in` 和
+`consume_check_in_rate_limit` 的 `service_role` 执行权限；随后按需要以新的前向
+migration 删除限速函数和私有计数表。不得删除 `attendance_records`、活动窗口或
+token 审计历史，不恢复已撤销的明文链接。2026-09-30 在隔离本地库以事务模拟撤销
+两项执行权，逐行比较签到数据不变，再 rollback 恢复权限；证据见
+[Sprint 7 验收记录](../plans/week-7/QR_CHECK_IN_DINNER_ACCEPTANCE_RECORD.md)。

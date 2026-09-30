@@ -2,6 +2,11 @@
 
 > 依据[《MVP 项目企划书》](../../project/MVP_PROJECT_PROPOSAL.md)第 9 节及[统一周计划模板](../../templates/WEEK_IMPLEMENTATION_PLAN_TEMPLATE.md)。Li、Xuanwei、Shiying、Yubo 负责功能实现和功能自测；Joshua 负责集成、共享验收与交付。本文是执行计划，不是 M4 完成证明。
 
+> 2026-09-30 执行更新：实际功能、跨包流程、权限、并发、迁移及 Chrome 验收见
+> [Sprint 7 验收记录](QR_CHECK_IN_DINNER_ACCEPTANCE_RECORD.md)。用户明确批准本次
+> 非作者审查门禁例外及必要集成修复；本次例外不延续到后周。交付状态以总 PR 和
+> GitHub Project 实时记录为准，以下计划保留原始合同与排期。
+
 ## 1. 本周目标
 
 形成“活动 → 报名 → QR／人工签到 → 晚餐核验”真实闭环，达到 M4：活动运营端到端流程完成。普通委员会只能查看安全人数，授权人员能查看签到明细、补签、更正和核验晚餐；活动参与者只能完成当前受限签到。

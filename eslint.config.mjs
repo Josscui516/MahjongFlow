@@ -7,6 +7,8 @@ const eslintConfig = defineConfig([
   ...nextTs,
   // Keep framework defaults and exclude generated or local-only artifacts.
   globalIgnores([
+    "tmp/**",
+    "temp/**",
     ".next/**",
     "out/**",
     "build/**",

@@ -10,17 +10,6 @@ import type {
   SelfCheckInOutcome,
 } from "./contracts";
 
-type RateLimitRpcClient = Readonly<{
-  rpc(
-    name: "consume_check_in_rate_limit",
-    args: Readonly<{
-      maximum_attempts: number;
-      source_fingerprint: string;
-      window_seconds: number;
-    }>,
-  ): PromiseLike<Readonly<{ data: boolean | null; error: unknown }>>;
-}>;
-
 const OUTCOMES = new Set<SelfCheckInOutcome>([
   "success",
   "already_processed",
@@ -66,7 +55,7 @@ export function createSelfCheckInGateway(): SelfCheckInGateway {
 }
 
 export function createDatabaseCheckInRateLimiter(): CheckInRateLimiter {
-  const client = createTrustedClient() as unknown as RateLimitRpcClient;
+  const client = createTrustedClient();
   return {
     async consume(fingerprint) {
       const { data, error } = await client.rpc("consume_check_in_rate_limit", {

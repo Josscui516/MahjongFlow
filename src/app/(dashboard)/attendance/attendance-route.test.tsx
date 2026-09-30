@@ -87,6 +87,7 @@ describe("attendance route access boundary", () => {
     expect(html).toContain('data-testid="registered-count">2');
     expect(html).toContain('data-testid="attendance-count">1');
     expect(html).toContain(`href="/registrations/${eventId}"`);
+    expect(html).toContain(`href="/dinner-verification/${eventId}"`);
     expect(html).toContain('aria-label="Manual attendance"');
     expect(mocks.summary).toHaveBeenCalledWith(eventId);
   });

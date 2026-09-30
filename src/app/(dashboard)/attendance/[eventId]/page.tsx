@@ -52,6 +52,12 @@ export default async function AttendancePage({
         >
           Manage registrations
         </Link>
+        <Link
+          className="inline-flex min-h-11 items-center underline focus-visible:outline-2 focus-visible:outline-offset-2"
+          href={`/dinner-verification/${eventId}`}
+        >
+          Verify dinner eligibility
+        </Link>
       </nav>
       <header className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tight text-slate-950">
