@@ -53,3 +53,7 @@ node tests/integration/registrations/fictional-cleanup.mjs
 真实参与者数据保留期限仍待 Stakeholder 确认，不承诺永久保存或自行设定天数。Joshua 在最终评审提出：保留目的、期限、负责人、授权删除、备份保留及跨活动身份处理；经确认后写入权威隐私说明并另行实现生产流程。
 
 待确认政策不阻止虚构数据开发／内部验收，但阻止宣称真实使用的最终保留政策已经完成。本脚本不用于生产，也不代表全部个人数据删除：共享身份和审计／token 历史明确保留。
+
+## 交付状态（2026-09-30）
+
+本流程通过 PR #95／#96 集成至 main，#29 Done／Passed／closed。维护目标仍限命名隔离栈，不增加生产清理权限。真实数据保留政策待 Stakeholder 决定，见[当前项目状态](../project/CURRENT_PROJECT_STATUS.md)。

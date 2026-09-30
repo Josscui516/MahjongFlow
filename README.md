@@ -4,27 +4,27 @@
 
 - **Course:** FIT3162 Computer Science Project
 - **Team:** S1_CS_01
-- **Stage:** Sprint 7 已合并至 `main`；M5 内部验收由 Joshua 确认完成，本周 Git 交付待完成
+- **Stage:** Sprint 8 merged into `main`; M5 complete; S10/M6 formal handoff pending
 - **Project board:** [MahjongFlow MVP GitHub Project](https://github.com/users/Josscui516/projects/5)
 
 ## Overview
 
-MahjongFlow 串联社团的协调工作流：
+MahjongFlow connects the club's coordination workflow:
 
 ```text
 Meeting → Decision → Task → Event → Registration → Check-in → Dinner verification
 ```
 
-截至 2026-09-30，`main` 已集成：
+As of 2026-09-30, `main` includes:
 
-- `committee`／`authorised` 角色、账号管理、服务端授权、Supabase RLS 和受保护导航；
-- 会议、讨论点、决策及来源保留的任务转换；
-- 负责人、Sydney 截止日期、状态、Dashboard 跟进与活动筹备任务；
-- 授权报名、活动专属可撤销 QR、人工签到、重复提交保护和签到更正审计；
-- 根据有效签到推导的晚餐资格，普通委员会仅查看安全聚合；
-- 虚构 fixture、timestamped migrations、权限与并发回归及集成验收基础。
+- `committee` and `authorised` roles, account management, server-side authorisation, Supabase RLS, and protected navigation;
+- meetings, discussion points, decisions, and task conversion that preserves source references;
+- task assignees, Sydney-based due dates, statuses, Dashboard follow-up, and event preparation tasks;
+- authorised registration management, event-specific revocable QR links, manual check-in, duplicate-submission protection, and audited attendance corrections;
+- dinner eligibility derived from valid attendance, with ordinary committee users restricted to safe aggregates;
+- fictional fixtures, timestamped migrations, permission and concurrency regression tests, and integrated acceptance infrastructure.
 
-批准范围与排除项见 [MVP 企划书](docs/project/MVP_PROJECT_PROPOSAL.md)。工程测试通过不等同于真人可用性、独立审查或最终交付批准。
+See the [MVP project proposal](docs/project/MVP_PROJECT_PROPOSAL.md) for approved scope and exclusions. Passing engineering tests does not establish target-user usability, independent review, or final delivery approval.
 
 ## Canonical user stories
 
@@ -50,13 +50,11 @@ defines their Project field and Issue mappings.
 
 ## Current status
 
-2026-09-30 验收基线为 `817c83fe7ce6156fa9a0b32e3b71dec51b82e330`：Sprint 7 总 PR #93 已合并，Quality 的 Lint、Typecheck、Test、Database、Build 五项成功，Vercel deployment 状态成功。该状态是当天读取结果，后续部署须重新核对。
+Verified on 2026-09-30: work-package PR [#95](https://github.com/Josscui516/MahjongFlow/pull/95) merged into `sprint/8-mvp-internal-acceptance`, and Sprint integration PR [#96](https://github.com/Josscui516/MahjongFlow/pull/96) merged into `main` at SHA `7e0c614b8a2f6e2bec06ab4df82cc2641858cdaa`. All five jobs in main's [Quality run 36673253441](https://github.com/Josscui516/MahjongFlow/actions/runs/36673253441) succeeded; Vercel Production deployment `6752199649` for the same SHA also recorded success. Issues #94 and #29 are closed and marked Done/Passed in the Project. Non-author PR approval was waived under a one-time exception explicitly authorised by Joshua; no approval event was fabricated.
 
-开发第 8 周由 Joshua 单人收尾，完成跨模块 Chrome 走查、权限／SQL／并发验证，以及 #29 的隔离虚构活动清理脚本和恢复回归。交付主 Issue 为 [#94](https://github.com/Josscui516/MahjongFlow/issues/94)，代码与文档通过 `codex/94-m5-closeout` → `sprint/8-mvp-internal-acceptance` 交付；main 合并与部署仍需独立门禁。详见 [本周计划](docs/plans/week-8/WEEK_8_IMPLEMENTATION_PLAN.md)、[内部验收记录](docs/plans/week-8/MVP_INTERNAL_ACCEPTANCE_RECORD.md)和[清理 runbook](docs/operations/FICTIONAL_ACTIVITY_DATA_CLEANUP.md)。
+Joshua confirmed M5 complete and retains the target-user walkthrough and internal review material. The five historical Sprint 3 acceptance gates were updated to Passed following Joshua's individual confirmation. S10/M6, the production data retention policy, scope reconciliation for #62–#65, and outstanding aggregate acceptance gates remain tracked separately. See the [current project status](docs/project/CURRENT_PROJECT_STATUS.md) for the complete record and the [documentation index](docs/DOCUMENTATION_INDEX.md) for all documents.
 
-2026-09-30 Joshua 确认 M5 完成；真人走查与独立审查已由团队完成，相关资料由 Joshua 保存在电脑中，无需另向 Codex 提供或补录仓库。确认记录见[内部验收记录](docs/plans/week-8/MVP_INTERNAL_ACCEPTANCE_RECORD.md)。本周 Git 交付和[范围／历史验收协调](docs/plans/week-8/DEFECTS_AND_DECISIONS.md)继续单独跟踪；干净配置启动及正式演示环境交接在开发第 9 周继续验证。里程碑完成不代表新增文件已合并或部署。
-
-生产演示地址：[mahjong-flow.vercel.app](https://mahjong-flow.vercel.app)。本周未修改生产数据或执行新部署。
+Production demo: [mahjong-flow.vercel.app](https://mahjong-flow.vercel.app). The documentation update did not trigger a new deployment or modify production data.
 
 ## Technology
 
@@ -122,7 +120,7 @@ SUPABASE_SECRET_KEY=
 ```
 
 Do not copy or commit the secret/service-role key, database password, or connection strings shown
-by `supabase status`. Leave `SUPABASE_SECRET_KEY` empty by default. After completing the local
+by `supabase status`. Leave `SUPABASE_SECRET_KEY` empty for coordination-only local use. The integrated account-management and QR check-in paths require approved server-only configuration, as described below. After completing the local
 configuration, start the application:
 
 ```bash
@@ -158,7 +156,7 @@ status is `ok`. Run the baseline checks before handoff:
 
 ```bash
 npm run lint
-npm exec tsc -- --noEmit
+npm run typecheck
 npm run build
 ```
 
@@ -166,6 +164,10 @@ Detailed setup, troubleshooting and platform procedures live in the
 [environment](docs/operations/ENVIRONMENT_CONFIGURATION.md),
 [database](docs/operations/DATABASE_MIGRATIONS.md), and
 [deployment](docs/operations/VERCEL_DEPLOYMENT.md) guides.
+
+### Server-side configuration for the complete MVP
+
+Account management, event token management, and public check-in read the server-only `SUPABASE_SECRET_KEY` and `APP_BASE_URL` variables. Setting only the two public variables is insufficient to verify these complete workflows. Configure the selected local or demo environment through private channels; keep values in ignored files or platform settings, and never copy them into chat or documentation. See the [environment configuration guide](docs/operations/ENVIRONMENT_CONFIGURATION.md). Leave these management paths disabled when only health checks and ordinary coordination features are needed.
 
 ## Security essentials
 
@@ -179,14 +181,17 @@ Detailed setup, troubleshooting and platform procedures live in the
 
 | Document | Purpose |
 |---|---|
+| [Current project status](docs/project/CURRENT_PROJECT_STATUS.md) | Sprint 8, CI and deployment evidence, Board status, and remaining M6 gates |
+| [Complete documentation index](docs/DOCUMENTATION_INDEX.md) | Current guides, historical plans, acceptance records, and module documentation |
+| [Development Week 8 plan](docs/plans/week-8/WEEK_8_IMPLEMENTATION_PLAN.md) | Completed M5 and #29 delivery, with remaining handoff boundaries |
 | [MVP project proposal](docs/project/MVP_PROJECT_PROPOSAL.md) | Authoritative scope, roles, roadmap, and acceptance baseline |
 | [Backlog and sprint management](docs/product/BACKLOG_AND_SPRINT_MANAGEMENT.md) | Product Backlog, Current Sprint, Kanban, fields, and canonical User Stories |
 | [Week 1 plan](docs/plans/week-1/WEEK_1_IMPLEMENTATION_PLAN.md) | Five-day preparation and setup plan |
 | [Sprint 2 acceptance record](docs/plans/week-2/M1_ACCEPTANCE_RECORD.md) | Authentication, role, database, shared UI, and quality-gate evidence |
 | [Sprint 3 implementation plan](docs/plans/week-3/WEEK_3_IMPLEMENTATION_PLAN.md) | Meeting work packages, integration contracts, and remaining Sprint acceptance |
-| [课程第 6 周／开发第 5 周计划](docs/plans/week-5/WEEK_5_IMPLEMENTATION_PLAN.md) | Sprint 5：四人开发任务跟进，Joshua 集成验收；含五份个人计划 |
-| [课程第 7 周／开发第 6 周计划](docs/plans/week-6/WEEK_6_IMPLEMENTATION_PLAN.md) | Sprint 6：活动与报名、真实活动接入；含五份个人计划 |
-| [课程第 8 周／开发第 7 周计划](docs/plans/week-7/WEEK_7_IMPLEMENTATION_PLAN.md) | Sprint 7：四人开发 QR 签到与晚餐核验，Joshua 集成验收；含五份个人计划 |
+| [Course Week 6 / Development Week 5 plan](docs/plans/week-5/WEEK_5_IMPLEMENTATION_PLAN.md) | Sprint 5: four members implement task follow-up, with Joshua handling integration and acceptance; includes five individual plans |
+| [Course Week 7 / Development Week 6 plan](docs/plans/week-6/WEEK_6_IMPLEMENTATION_PLAN.md) | Sprint 6: events, registration, and real event queries; includes five individual plans |
+| [Course Week 8 / Development Week 7 plan](docs/plans/week-7/WEEK_7_IMPLEMENTATION_PLAN.md) | Sprint 7: four members implement QR check-in and dinner verification, with Joshua handling integration and acceptance; includes five individual plans |
 | [P0 backlog](docs/plans/week-1/artifacts/day-2/DAY_2_STEP_3_P0_PRODUCT_BACKLOG.md) | Epics, Issues, acceptance conditions, and dependencies |
 | [Database ERD](docs/plans/week-1/artifacts/day-3/DAY_3_STEP_3_DATABASE_ERD.md) | Entities and core business relationships |
 | [Permission matrix](docs/plans/week-1/artifacts/day-3/DAY_3_STEP_5_PERMISSION_MATRIX_AND_CONTROL_POINTS.md) | Role permissions and enforcement points |

@@ -75,3 +75,7 @@ Joshua 对照 Issue 的 `Acceptance criteria` 段落手动维护：
 - 阻塞原因、负责人、开始时间和下次检查时间（如适用）。
 
 所有截图、fixture、Issue 和 Project 说明只使用虚构或匿名化数据，不记录 token、密钥或真实参与者资料。
+
+## 8. 本次手动同步（2026-09-30）
+
+依据用户本轮更新 Board 的要求及逐项验收确认，Sprint 3 五项 #2／#12／#13／#14／#56 的 checkbox 和 Gate 已同步 Passed；Current Sprint 筛选从 Sprint 7 改为 Sprint 8；Project 描述／README 已记录 #95／#96、main CI／部署和剩余门槛。没有添加自动 workflow，没有创建未来 Sprint 成员或调整负责人。完整快照见[当前项目状态](../project/CURRENT_PROJECT_STATUS.md)。
