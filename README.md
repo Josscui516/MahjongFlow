@@ -203,6 +203,7 @@ Detailed setup, troubleshooting and platform procedures live in the
 | [Sprint 3 implementation plan](docs/plans/week-3/WEEK_3_IMPLEMENTATION_PLAN.md) | Meeting work packages, integration contracts, and remaining Sprint acceptance |
 | [课程第 6 周／开发第 5 周计划](docs/plans/week-5/WEEK_5_IMPLEMENTATION_PLAN.md) | Sprint 5：四人开发任务跟进，Joshua 集成验收；含五份个人计划 |
 | [课程第 7 周／开发第 6 周计划](docs/plans/week-6/WEEK_6_IMPLEMENTATION_PLAN.md) | Sprint 6：活动与报名、真实活动接入；含五份个人计划 |
+| [课程第 8 周／开发第 7 周计划](docs/plans/week-7/WEEK_7_IMPLEMENTATION_PLAN.md) | Sprint 7：四人开发 QR 签到与晚餐核验，Joshua 集成验收；含五份个人计划 |
 | [P0 backlog](docs/plans/week-1/artifacts/day-2/DAY_2_STEP_3_P0_PRODUCT_BACKLOG.md) | Epics, Issues, acceptance conditions, and dependencies |
 | [Database ERD](docs/plans/week-1/artifacts/day-3/DAY_3_STEP_3_DATABASE_ERD.md) | Entities and core business relationships |
 | [Permission matrix](docs/plans/week-1/artifacts/day-3/DAY_3_STEP_5_PERMISSION_MATRIX_AND_CONTROL_POINTS.md) | Role permissions and enforcement points |

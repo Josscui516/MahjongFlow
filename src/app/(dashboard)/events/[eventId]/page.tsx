@@ -8,6 +8,7 @@ import { EventStatusBadge } from "@/features/events/presentation";
 import { EventPreparationSection } from "@/features/events/preparation/EventPreparationSection";
 import { EventParticipationSection } from "@/features/registrations/attendance-summary/EventParticipationSection";
 import { ParticipationSummary } from "@/features/registrations/attendance-summary/ParticipationSummary";
+import { EventCheckInTokenSection } from "@/features/attendance/tokens";
 
 const formatter = new Intl.DateTimeFormat("en-AU", { dateStyle: "full", timeStyle: "short", timeZone: "Australia/Sydney" });
 export default async function EventPage({ params, searchParams }: Readonly<{ params: Promise<{ eventId: string }>; searchParams: Promise<{ saved?: string; preparation?: string; candidatePage?: string }> }>) {
@@ -24,11 +25,14 @@ export default async function EventPage({ params, searchParams }: Readonly<{ par
       <p className="text-sm text-slate-800"><span className="font-semibold">Starts (Sydney time): </span><time dateTime={event.startsAt}>{formatter.format(new Date(event.startsAt))}</time></p>
       <div className="flex flex-wrap items-center gap-3">
         {access.role === "authorised" ? <Link className="inline-flex min-h-11 items-center rounded-lg bg-emerald-950 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-2" href={`/registrations/${event.id}`}>Manage registrations</Link> : null}
+        {access.role === "authorised" ? <Link className="inline-flex min-h-11 items-center rounded-lg bg-emerald-950 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-2" href={`/attendance/${event.id}`}>View attendance</Link> : null}
+        {access.role === "authorised" ? <Link className="inline-flex min-h-11 items-center rounded-lg bg-emerald-950 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-2" href={`/dinner-verification/${event.id}`}>Verify dinner eligibility</Link> : null}
         <Link className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-white focus-visible:outline-2 focus-visible:outline-offset-2" href={`/events/${event.id}/edit`}>Edit event</Link>
         <a className="inline-flex min-h-11 items-center text-sm font-semibold text-emerald-900 underline focus-visible:outline-2 focus-visible:outline-offset-2" href="#preparation-heading">Preparation tasks</a>
       </div>
     </header>
     {query.saved === "1" ? <SuccessFeedback message="The event details were saved." /> : null}
+    {access.role === "authorised" ? <Suspense fallback={<p role="status">Loading secure check-in settings…</p>}><EventCheckInTokenSection eventId={eventId} /></Suspense> : null}
     <Suspense fallback={<ParticipationSummary />}><EventParticipationSection eventId={eventId} /></Suspense>
     {query.preparation === "saved" ? <p role="status">Preparation tasks updated.</p> : query.preparation === "error" ? <p role="alert">Preparation tasks could not be updated. Refresh and try again.</p> : null}
     <Suspense fallback={<p role="status">Loading preparation tasks…</p>}><EventPreparationSection eventId={eventId} candidatePage={Number(query.candidatePage ?? 1)} /></Suspense>

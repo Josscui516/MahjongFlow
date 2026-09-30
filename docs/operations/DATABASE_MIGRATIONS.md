@@ -107,3 +107,39 @@ ban 并把 `profiles.is_active` 恢复为 true。
 回退时先撤下应用中的任务删除入口，再通过新的前向 migration 撤销
 `delete_task_record(uuid)` 的执行权限并删除该函数。已经删除的任务无法通过 schema
 回退恢复；上线前必须确认备份和恢复流程可用，误删只能从删除前备份恢复。
+
+## 9. Sprint 7 活动签到 token 管理 migration 部署与回退
+
+`20260916000100_secure_event_check_in_token_management.sql` 在既有 token 表、摘要约束和
+原子轮换函数之上增加三项窄边界：读取非秘密状态、配置活动签到窗口和显式撤销当前
+token。所有函数只向 `service_role` 授权，并在函数内再次验证操作者是有效的
+`authorised` profile；浏览器中的 `anon`／`authenticated` 角色不能执行。轮换函数同时
+收紧为只允许已配置有效窗口的 `scheduled` 活动，并继续在一个事务中撤销旧 token、
+生成 32 个随机字节、只保存 SHA-256 摘要和返回一次明文。
+
+部署顺序为先应用 migration，再发布引用这些 RPC 的应用代码，并确认 server-only
+`SUPABASE_SECRET_KEY` 与 `APP_BASE_URL` 已配置。该 migration 不重写现有 token 或活动
+数据；既有活动需先通过授权界面配置窗口，才能生成新 QR。
+
+回退时先撤下 token 管理界面和 Server Actions，再用新的前向 migration 撤销三个新增
+函数的执行权并删除 `get_event_check_in_token_status`、
+`configure_event_check_in_window` 和 `revoke_event_check_in_token`；如需恢复旧轮换语义，
+在同一前向 migration 中重建上一版本 `rotate_event_check_in_token`。已经轮换或撤销的
+明文 token 无法恢复，回退前应撤销所有公开入口并通知现场人员重新生成链接。活动窗口
+和 token 审计行应保留，不通过回退删除历史记录。
+
+## 10. Sprint 7 分布式签到限速部署与回退
+
+`20260927032601_add_atomic_self_check_in_rate_limit_after_token_management.sql`
+必须在上述 token 管理 migration 之后执行。它新增 `private.check_in_rate_limits`
+及只向 `service_role` 开放的 `consume_check_in_rate_limit`，以事务更新跨实例请求计数；
+不修改参与者、报名或签到行。来源指纹由应用生成不可逆摘要，不记录原始 IP、token
+或提交身份。重新生成 `public,graphql_public` 类型后，应用直接使用生成的 RPC 契约。
+
+上线先核对两项 migration 顺序、函数权限和生产服务端配置，再部署应用。
+回退先撤下公开签到页面/API，并撤销 `submit_event_check_in` 和
+`consume_check_in_rate_limit` 的 `service_role` 执行权限；随后按需要以新的前向
+migration 删除限速函数和私有计数表。不得删除 `attendance_records`、活动窗口或
+token 审计历史，不恢复已撤销的明文链接。2026-09-30 在隔离本地库以事务模拟撤销
+两项执行权，逐行比较签到数据不变，再 rollback 恢复权限；证据见
+[Sprint 7 验收记录](../plans/week-7/QR_CHECK_IN_DINNER_ACCEPTANCE_RECORD.md)。

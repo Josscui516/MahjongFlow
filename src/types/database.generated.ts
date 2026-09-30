@@ -602,6 +602,26 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      configure_event_check_in_window: {
+        Args: {
+          actor_id: string
+          closes_at: string
+          opens_at: string
+          target_event_id: string
+        }
+        Returns: {
+          check_in_closes_at: string
+          check_in_opens_at: string
+        }[]
+      }
+      consume_check_in_rate_limit: {
+        Args: {
+          maximum_attempts?: number
+          source_fingerprint: string
+          window_seconds?: number
+        }
+        Returns: boolean
+      }
       create_managed_profile: {
         Args: {
           target_can_manage_accounts?: boolean
@@ -638,6 +658,16 @@ export type Database = {
           window_status: string
         }[]
       }
+      get_event_check_in_token_status: {
+        Args: { actor_id: string; target_event_id: string }
+        Returns: {
+          active: boolean
+          check_in_closes_at: string
+          check_in_opens_at: string
+          created_at: string
+          revoked_at: string
+        }[]
+      }
       get_event_participation_totals: {
         Args: { event_ids: string[] }
         Returns: {
@@ -649,6 +679,10 @@ export type Database = {
       record_account_recovery_sent: {
         Args: { target_profile_id: string }
         Returns: undefined
+      }
+      revoke_event_check_in_token: {
+        Args: { actor_id: string; target_event_id: string }
+        Returns: string
       }
       rotate_event_check_in_token: {
         Args: { actor_id: string; target_event_id: string }
