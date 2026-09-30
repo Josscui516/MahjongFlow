@@ -614,6 +614,14 @@ export type Database = {
           check_in_opens_at: string
         }[]
       }
+      consume_check_in_rate_limit: {
+        Args: {
+          maximum_attempts?: number
+          source_fingerprint: string
+          window_seconds?: number
+        }
+        Returns: boolean
+      }
       create_managed_profile: {
         Args: {
           target_can_manage_accounts?: boolean

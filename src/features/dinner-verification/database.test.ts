@@ -51,8 +51,12 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("#35 real public atte
   }
 
   function fixtureSql(sql: string) {
+    const container = process.env.ISSUE35_LOCAL_CONTAINER ?? "supabase_db_MahjongFlow";
+    if (!/^(supabase_db_MahjongFlow|supabase_db_mahjongflow-issue33-sprint7)$/.test(container)) {
+      throw new Error("Only the named local fixture containers are allowed");
+    }
     try {
-      execFileSync("docker", ["exec", "-i", "supabase_db_MahjongFlow", "psql", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1"], {
+      execFileSync("docker", ["exec", "-i", container, "psql", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1"], {
         input: sql, stdio: ["pipe", "pipe", "pipe"], timeout: 30000,
       });
     } catch { throw new Error("Local fictional SQL fixture operation failed"); }
@@ -60,7 +64,7 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("#35 real public atte
 
   beforeAll(async () => {
     const url = process.env.ISSUE35_LOCAL_URL!;
-    if (new URL(url).origin !== "http://127.0.0.1:45321") throw new Error("Local fixture database required");
+    if (!["http://127.0.0.1:45321", "http://127.0.0.1:46321"].includes(new URL(url).origin)) throw new Error("Local fixture database required");
     const options = { auth: { persistSession: false, autoRefreshToken: false } };
     admin = createClient<Database>(url, process.env.ISSUE35_LOCAL_FIXTURE_KEY!, options);
     const client = () => createClient<Database>(url, process.env.ISSUE35_LOCAL_PUBLIC_KEY!, options);

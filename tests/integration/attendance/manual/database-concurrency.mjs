@@ -7,7 +7,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { setTimeout as delay } from "node:timers/promises";
 
 const container = process.argv[2] ?? "supabase_db_MahjongFlow";
-if (!/^(supabase_db_MahjongFlow|mahjongflow-issue33-[a-z0-9-]+)$/.test(container)) {
+if (!/^(supabase_db_MahjongFlow|supabase_db_mahjongflow-issue33-sprint7|mahjongflow-issue33-[a-z0-9-]+)$/.test(container)) {
   throw new Error("Use the local MahjongFlow or a disposable issue33 Docker container only");
 }
 
