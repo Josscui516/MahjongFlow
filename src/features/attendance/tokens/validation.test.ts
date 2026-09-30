@@ -3,6 +3,18 @@ import { describe, expect, it } from "vitest";
 import { validateCheckInWindow } from "./validation";
 
 describe("check-in window validation", () => {
+  it.each([null, undefined, true, [], {}, { opensAt: 42 }, { opensAt: {}, closesAt: [] }])(
+    "returns safe validation errors for malformed runtime input %j", (input) => {
+      expect(validateCheckInWindow(input)).toEqual({
+        ok: false,
+        errors: [
+          { field: "opensAt", message: "Choose a valid Sydney opening date and time." },
+          { field: "closesAt", message: "Choose a valid Sydney closing date and time." },
+        ],
+      });
+    },
+  );
+
   it("normalises Sydney winter and summer wall-clock values", () => {
     expect(validateCheckInWindow({ opensAt: "2026-07-10T18:00", closesAt: "2026-07-10T22:00" })).toEqual({
       ok: true,
