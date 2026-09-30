@@ -82,6 +82,7 @@ function failed<T>(code: string, data: T): QueryResult<T> {
 function createScriptedClient(
   eventResult: QueryResult<Readonly<{ id: string; name: string }> | null>,
   attendanceResult: QueryResult<readonly unknown[]>,
+  totalCount: number | null = attendanceResult.data.length,
 ) {
   const calls: unknown[][] = [];
   const eventMaybeSingle = vi.fn(async () => eventResult);
@@ -100,7 +101,7 @@ function createScriptedClient(
       calls.push(["attendance.order", column, options]);
       orderCount += 1;
       return orderCount === 2
-        ? Promise.resolve(attendanceResult)
+        ? Promise.resolve({ ...attendanceResult, count: totalCount })
         : attendanceQuery;
     },
   };
@@ -108,8 +109,9 @@ function createScriptedClient(
     calls.push(["attendance.eq", column, value]);
     return attendanceQuery;
   });
-  const attendanceSelect = vi.fn((columns: string) => {
+  const attendanceSelect = vi.fn((columns: string, options?: unknown) => {
     calls.push(["attendance.select", columns]);
+    calls.push(["attendance.selectOptions", options]);
     return { eq: attendanceEq };
   });
 
@@ -172,6 +174,7 @@ describe("createAttendanceAuditRepository", () => {
       "id, event_id, participant_id, attendance_status, checked_in_at, check_in_method, recorded_by, updated_at, participant:participants!attendance_records_participant_id_fkey(full_name, email), recorder:profiles!attendance_records_recorded_by_fkey(display_name)",
     );
     expect(selectCall?.[1]).not.toContain("student_id");
+    expect(scripted.calls).toContainEqual(["attendance.selectOptions", { count: "exact" }]);
   });
 
   it("distinguishes an existing event with no attendance from an unknown event", async () => {
@@ -243,5 +246,13 @@ describe("createAttendanceAuditRepository", () => {
         message: "Attendance audit persistence failed",
       }),
     );
+  });
+
+  it.each([1001, null])("rejects truncated or uncounted snapshots (count %s)", async (count) => {
+    const scripted = createScriptedClient(ok(FICTIONAL_ATTENDANCE_EVENT), ok([QR_ROW]), count);
+    const repository = createAttendanceAuditRepository(async () => scripted.client);
+    await expect(repository.listForEvent(FICTIONAL_ATTENDANCE_EVENT.id)).rejects.toMatchObject({
+      code: "INCOMPLETE_DATA",
+    });
   });
 });

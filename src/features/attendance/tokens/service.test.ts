@@ -7,7 +7,7 @@ vi.mock("server-only", () => ({}));
 
 import { AuthorizationError } from "@/lib/auth/authorization";
 
-import type { CheckInTokenRepository } from "./contracts";
+import type { CheckInTokenRepository, CheckInWindowInput } from "./contracts";
 import { createCheckInTokenService } from "./service";
 
 const eventId = "94000000-0000-4000-8000-000000000001";
@@ -34,6 +34,13 @@ function service(repo = repository(), authorise = async () => ({ canManageAccoun
 }
 
 describe("event check-in token service", () => {
+  it("returns validation feedback for a malformed direct action argument without writing", async () => {
+    const repo = repository();
+    await expect(service(repo).configureWindow(eventId, null as unknown as CheckInWindowInput))
+      .resolves.toMatchObject({ ok: false, code: "VALIDATION" });
+    expect(repo.configureWindow).not.toHaveBeenCalled();
+  });
+
   it("returns a one-time event URL whose QR actually decodes", async () => {
     const result = await service().rotate(eventId);
     expect(result.ok).toBe(true);
