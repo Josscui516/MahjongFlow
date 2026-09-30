@@ -1,0 +1,4 @@
+2026-09-30 Australia/Sydney
+PASS relative Markdown links: 66 across 8 documents
+PASS browser static assets: 57 files contain no matching isolated service-role/secret values
+Scope: exact current local key comparison, not an exhaustive secret scanner
