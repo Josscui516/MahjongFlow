@@ -45,3 +45,7 @@
 1. Joshua 核对 Sprint 3 Project Acceptance Gate，并决定是否接受历史 review 证据缺失；
 2. 不得把本次 Codex 复核当作团队非作者批准；
 3. 后续若改变删除、归档或任务来源保留策略，必须先同步 MVP 提案、migration 合同和验收测试。
+
+## 6. 历史 Gate 人工复核（2026-09-30）
+
+Joshua 在本轮逐项确认 #2／#12／#13／#14／#56 全部验收通过。已核对 Sprint 3 总 PR #60 的 main 合并、五项 Quality 成功及会议工程验收记录，同步这五项 checkbox 与 Project Gate 为 Passed；Done／closed 保留。本节替代第 5 节的待人工确认状态，不补造旧 review 事件，也不声称今天重跑了第 4 节测试。#65 的后续删除范围协调仍保持 open。

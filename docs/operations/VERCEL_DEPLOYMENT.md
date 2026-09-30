@@ -79,3 +79,9 @@ direct push merely to test deployment automation.
 - [Vercel deployment environments](https://vercel.com/docs/deployments/environments)
 - [Supabase Vercel integration](https://supabase.com/docs/guides/integrations/vercel-marketplace)
 - [Supabase GitHub integration](https://supabase.com/docs/guides/deployment/branching/github-integration)
+
+## 7. 当前 Production 交付记录（2026-09-30）
+
+2026-09-30 实时复核：成员 PR [#95](https://github.com/Josscui516/MahjongFlow/pull/95) 已合入 `sprint/8-mvp-internal-acceptance`，Sprint 总 PR [#96](https://github.com/Josscui516/MahjongFlow/pull/96) 已合入 `main`，SHA `7e0c614b8a2f6e2bec06ab4df82cc2641858cdaa`。main 的 [Quality run 36673253441](https://github.com/Josscui516/MahjongFlow/actions/runs/36673253441) 五项全部成功；同 SHA 的 Vercel Production deployment `6752199649` 状态为 success。#94／#29 已关闭，Project 均 Done／Passed。非作者 PR 批准采用 Joshua 已明确授权的单次例外，未虚构 approval。
+
+本轮读取 GitHub deployment／status 记录，不重审 Vercel settings 或环境变量，不创建新部署；旧 Preview URL／配置表保留为 2026-08-06 审计快照。正式演示启动、干净配置、交接和回退演练仍属于 S10／M6，不能由平台 success 状态替代。
