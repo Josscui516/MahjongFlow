@@ -4,29 +4,27 @@
 
 - **Course:** FIT3162 Computer Science Project
 - **Team:** S1_CS_01
-- **Stage:** Sprint 3 is merged to `main`; Sprint 4 decision-to-task is integrated with delivery gates pending
+- **Stage:** Sprint 7 已合并至 `main`；M5 内部验收由 Joshua 确认完成，本周 Git 交付待完成
 - **Project board:** [MahjongFlow MVP GitHub Project](https://github.com/users/Josscui516/projects/5)
 
 ## Overview
 
-MahjongFlow connects the club's operational workflow:
+MahjongFlow 串联社团的协调工作流：
 
 ```text
 Meeting → Decision → Task → Event → Registration → Check-in → Dinner verification
 ```
 
-The delivered and integrated baseline currently includes:
+截至 2026-09-30，`main` 已集成：
 
-- protected committee authentication with predefined `committee` and `authorised` roles;
-- server-side authorisation, Supabase RLS, shared backoffice navigation, and safe UI feedback states;
-- validated meeting creation, detail, update, and deterministic history flows;
-- ordered discussion points and key decisions with atomic PostgreSQL persistence;
-- fictional local seed data, repeatable migrations, permission tests, and acceptance-test infrastructure.
+- `committee`／`authorised` 角色、账号管理、服务端授权、Supabase RLS 和受保护导航；
+- 会议、讨论点、决策及来源保留的任务转换；
+- 负责人、Sydney 截止日期、状态、Dashboard 跟进与活动筹备任务；
+- 授权报名、活动专属可撤销 QR、人工签到、重复提交保护和签到更正审计；
+- 根据有效签到推导的晚餐资格，普通委员会仅查看安全聚合；
+- 虚构 fixture、timestamped migrations、权限与并发回归及集成验收基础。
 
-Task management, event preparation, registration, QR check-in, attendance, and dinner eligibility
-remain approved MVP roadmap work; they are not yet part of the current delivered baseline.
-
-The approved scope and exclusions are defined in the [MVP project proposal](docs/project/MVP_PROJECT_PROPOSAL.md).
+批准范围与排除项见 [MVP 企划书](docs/project/MVP_PROJECT_PROPOSAL.md)。工程测试通过不等同于真人可用性、独立审查或最终交付批准。
 
 ## Canonical user stories
 
@@ -52,28 +50,13 @@ defines their Project field and Issue mappings.
 
 ## Current status
 
-Sprint 2 was merged to `main` through Sprint PR #52. It established the authenticated backoffice,
-the `committee` and `authorised` role model, protected route and service boundaries, the core MVP
-schema and RLS policies, shared loading/error/form states, repeatable local migrations, and the
-integrated quality pipeline.
+2026-09-30 验收基线为 `817c83fe7ce6156fa9a0b32e3b71dec51b82e330`：Sprint 7 总 PR #93 已合并，Quality 的 Lint、Typecheck、Test、Database、Build 五项成功，Vercel deployment 状态成功。该状态是当天读取结果，后续部署须重新核对。
 
-Sprint 3 meeting-management work packages #12, #13, #56, and #14 were merged to `main` through
-Sprint PR #60. The delivered baseline supports
-meeting creation, refresh-safe detail and update flows, ordered discussion points and decisions,
-deterministic meeting history, anonymous denial, and a non-destructive meeting boundary. Atomic
-meeting and agenda writes are delivered through timestamped Supabase migrations and authenticated
-security-invoker RPCs.
+开发第 8 周由 Joshua 单人收尾，完成跨模块 Chrome 走查、权限／SQL／并发验证，以及 #29 的隔离虚构活动清理脚本和恢复回归。交付主 Issue 为 [#94](https://github.com/Josscui516/MahjongFlow/issues/94)，代码与文档通过 `codex/94-m5-closeout` → `sprint/8-mvp-internal-acceptance` 交付；main 合并与部署仍需独立门禁。详见 [本周计划](docs/plans/week-8/WEEK_8_IMPLEMENTATION_PLAN.md)、[内部验收记录](docs/plans/week-8/MVP_INTERNAL_ACCEPTANCE_RECORD.md)和[清理 runbook](docs/operations/FICTIONAL_ACTIVITY_DATA_CLEANUP.md)。
 
-Sprint 4 work packages #15, #23, #24, and #25 are present on
-`sprint/4-decision-to-task`. The branch provides protected task CRUD, constrained status and one
-assignee, decision/discussion conversion with trusted source retention, and bidirectional meeting/task
-navigation. Its C-01–C-07 and T-01/T-02/T-08 technical acceptance passes, but Sprint delivery remains
-blocked on missing non-author review evidence, unsynchronised Project/Acceptance Gate fields, the
-Stakeholder stage review, and a non-empty local database drift result. See the
-[Sprint 4 acceptance record](docs/plans/week-4/US_02_ACCEPTANCE_RECORD.md).
+2026-09-30 Joshua 确认 M5 完成；真人走查与独立审查已由团队完成，相关资料由 Joshua 保存在电脑中，无需另向 Codex 提供或补录仓库。确认记录见[内部验收记录](docs/plans/week-8/MVP_INTERNAL_ACCEPTANCE_RECORD.md)。本周 Git 交付和[范围／历史验收协调](docs/plans/week-8/DEFECTS_AND_DECISIONS.md)继续单独跟踪；干净配置启动及正式演示环境交接在开发第 9 周继续验证。里程碑完成不代表新增文件已合并或部署。
 
-Production (current `main` / Sprint 3 baseline):
-[mahjong-flow.vercel.app](https://mahjong-flow.vercel.app)
+生产演示地址：[mahjong-flow.vercel.app](https://mahjong-flow.vercel.app)。本周未修改生产数据或执行新部署。
 
 ## Technology
 
