@@ -7,7 +7,7 @@ MahjongFlow 使用同一个
 作为项目执行的单一视图入口。Product Backlog、Sprint Backlog 和 Kanban
 不是三份互相复制的数据，而是同一批 GitHub Issues 的不同视图：
 
-- `Product Backlog`：展示全部 40 个正式 P0 项，并按 `Backlog Rank` 升序排列；
+- `Product Backlog`：展示正式 Backlog 与后续已批准的交付项；2026-09-30 共 43 项，并按 `Backlog Rank` 升序排列；
 - `Current Sprint`：按 `Sprint` 过滤当前承诺范围；
 - `Kanban by Status`：按 `Status` 展示实际执行进度；
 - `Priority Overview` 与 `Module Overview`：分别用于优先级和模块审查。
@@ -68,13 +68,13 @@ Foundation 与共享支撑 Epic #1 以及 Enabler #9–#11、#39–#41 映射 `U
 `Target Development Week` 是预测，`Sprint` 是承诺，两者不可互相替代。
 未完成 Sprint planning 的项目不预填未来 Sprint，以免把路线图错误表达为承诺。
 
-## 5. 当前 Sprint Backlog
+## 5. 历史 Sprint Backlog 快照
 
 ### 5.1 2026-09-08：Sprint 5 计划与分配
 
 本次按 Joshua 授权，手动将 #4、#16、#20、#21、#22 设为 Sprint 5，并分别指派 Joshua、Shiying、Li、Xuanwei、Yubo；状态保持原有 Backlog，Acceptance Gate 未提前更新。以[开发第 5 周统一计划及五份个人文档](../plans/week-5/WEEK_5_IMPLEMENTATION_PLAN.md)执行；实时成员与状态仍以 Project 为准。
 
-Dashboard 的活动占位与真实活动分阶段验收已由 Joshua 批准并同步相关 Issues。#20/#21 本周不再被后周 #17/#19 阻断；完整 T-05/T-06 由 Sprint 6 #18/#19 承接。下周文档见[开发第 6 周计划](../plans/week-6/WEEK_6_IMPLEMENTATION_PLAN.md)，其 Project 字段与分支尚未创建。
+Dashboard 的活动占位与真实活动分阶段验收已由 Joshua 批准并同步相关 Issues。#20/#21 本周不再被后周 #17/#19 阻断；完整 T-05/T-06 由 Sprint 6 #18/#19 承接。下周文档见[开发第 6 周计划](../plans/week-6/WEEK_6_IMPLEMENTATION_PLAN.md)，该日期的 Project 字段与分支尚未创建；Sprint 6 后续已完成，当前状态见第 8 节。
 
 ### 5.2 历史 Sprint 2 快照
 
@@ -121,7 +121,7 @@ Dashboard 的活动占位与真实活动分阶段验收已由 Joshua 批准并�
 - #41 的个人测试基础先通过成员 PR 进入 Sprint 分支，随后同一个 Issue 作为 Sprint 总 PR 的主要验收 Issue；
 - 当前分支、PR retarget 和 Project 字段仍需仓库管理员按本基线在 GitHub 完成。
 
-## 7. 当前审计快照
+## 7. 历史审计快照（2026-08-07）
 
 截至 2026-08-07：Project 包含 8 个 Epic 和 32 个实施／支撑 Issue，共 40 项；
 全部为 P0。步骤 9 补充验证后六项均为 `Ready`，其余项目保持 `Backlog`。
@@ -131,3 +131,7 @@ Dashboard 的活动占位与真实活动分阶段验收已由 Joshua 批准并�
 未分配，避免把路线图预测误写成个人承诺。Acceptance Gate 继续显示在 Product
 Backlog、Current Sprint 和 Kanban 卡片中，但自 Sprint 3 起由 Joshua 对照 Issue
 验收 checkbox 手动维护，不再由仓库或 Project workflow 派生。
+
+## 8. 2026-09-30 当前 Sprint 与审计
+
+Project 当前 43 项均为 Done／closed，Current Sprint 已从 Sprint 7 修正为 Sprint 8，成员仅 #94／#29，均 Passed。Sprint 9 没有已批准成员。Joshua 已逐项确认 Sprint 3 #2／#12／#13／#14／#56 通过，本轮同步 checkbox 与 Gate；#1／#6／#44 聚合 Gate 保持 Not checked。open 的 #62–#65 未加入 Project，本轮不扩大成员或关闭范围协调项。证据、质量检查、部署和剩余门槛见[当前项目状态](../project/CURRENT_PROJECT_STATUS.md)。

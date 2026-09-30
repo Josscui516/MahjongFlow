@@ -25,15 +25,15 @@ Next.js loads local environment files automatically. In development, a developer
 |---|---:|---:|---|
 | `NEXT_PUBLIC_SUPABASE_URL` | Yes | Yes | HTTPS URL of the selected Supabase development project |
 | `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | Yes | Yes | Low-privilege project key used by browser and user-session clients |
-| `SUPABASE_SECRET_KEY` | No | Never | Optional narrow server-only administration path that bypasses RLS |
-| `APP_BASE_URL` | When account management is enabled | Never | Canonical origin for invitation and password-recovery redirects; HTTPS outside local development |
+| `SUPABASE_SECRET_KEY` | 完整账号管理／token 管理／公开签到需要 | Never | server-only 窄管理客户端；不能用于普通用户请求或浏览器 |
+| `APP_BASE_URL` | 账号管理及签到管理客户端需要 | Never | 邀请／密码设置与活动 QR 的规范 origin；非本地使用 HTTPS |
 
 Only variables prefixed with `NEXT_PUBLIC_` may be read by Client Components. Next.js inlines
 those values into browser JavaScript at build time, so they must be treated as public.
 
 The publishable key does not grant unrestricted database access. Every exposed table must enable
 Row Level Security and use reviewed policies for `anon` and `authenticated`. The secret key bypasses
-RLS and must never be used for normal user requests, browser clients or public Route Handlers.
+RLS and must never be used for normal user-session data access or browser clients. Approved public check-in handlers use it only through the narrow validated gateway described in section 7.
 
 ## 3. Obtaining development values
 
@@ -73,7 +73,7 @@ output from `vercel env pull`.
 The team confirmed on 2026-08-06 that the Supabase development project has been created and the
 required project URL and publishable key have been added to the ignored `.env.local`. A safe local
 check confirmed that both values are present and have recognised hosted-project shapes without
-printing them. The optional server-only secret remains empty.
+printing them. At that historical audit, the optional server-only secret remained empty; this is not a current configuration assertion.
 
 Browser and request-scoped server clients are now configured with the publishable key. The
 server-only `GET /api/health/supabase` check reached the development project's Auth service and
@@ -103,3 +103,7 @@ Before sharing or committing changes:
 3. search tracked files for Supabase secret-key prefixes, service-role keys, tokens and passwords;
 4. inspect browser code and build output to ensure `SUPABASE_SECRET_KEY` is absent;
 5. confirm `.env.example` contains no real URL, key or project reference.
+
+## 7. 完整 MVP 配置与本轮核验边界（2026-09-30）
+
+源码 `getSupabaseAdminEnvironment()` 同时要求 `SUPABASE_SECRET_KEY` 和 `APP_BASE_URL`，账号管理、活动 token 管理与公开签到 gateway 会调用它。只提供两项 public 变量可做普通协调／健康检查，不能据此宣称完整签到可运行。环境值必须通过私密渠道配置于忽略文件或平台，本轮未读取或重写值。Production SHA／CI／部署状态已核实，历史 Preview 共用数据库、变量同步和 clean install 记录仍只代表原日期，M6 需要重新确认。见[当前项目状态](../project/CURRENT_PROJECT_STATUS.md)。

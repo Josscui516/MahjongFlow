@@ -10,8 +10,7 @@ All schema, type, table, constraint, index, trigger, function, grant and RLS cha
 represented by timestamped SQL in `supabase/migrations/`. Dashboard-only changes are prohibited
 because they create unreviewed environment drift.
 
-The Day 4 baseline is intentionally empty. It verifies the migration toolchain without introducing
-Week 2 business schema.
+Day 4 的首个 migration 是历史空基线。当前仓库已有 12 个 timestamped migrations，覆盖 MVP 表／约束／RLS、会议原子写入、账号管理、受保护删除、参与者名称校验、活动 token 管理及分布式限速。顺序以 `supabase/migrations/` 为准；Sprint 8 没有 schema 或生成类型改动。
 
 ## 2. Local commands
 
@@ -30,7 +29,7 @@ Expected results after a clean reset:
 - every local migration appears once and in timestamp order;
 - database lint reports no errors;
 - schema diff reports no unrecorded local drift;
-- no seed, business table, custom RLS policy or real participant data exists at the Day 4 baseline.
+- `--no-seed` 不载入虚构 seed，但仍建立全部当前业务 schema／RLS；常规带 seed 的 reset 会载入虚构开发数据，不得对已有工作数据做例行 reset。
 
 ## 3. Creating and reviewing a migration
 
@@ -143,3 +142,7 @@ migration 删除限速函数和私有计数表。不得删除 `attendance_record
 token 审计历史，不恢复已撤销的明文链接。2026-09-30 在隔离本地库以事务模拟撤销
 两项执行权，逐行比较签到数据不变，再 rollback 恢复权限；证据见
 [Sprint 7 验收记录](../plans/week-7/QR_CHECK_IN_DINNER_ACCEPTANCE_RECORD.md)。
+
+## 11. 2026-09-30 当前核验边界
+
+本轮核对仓库 12 个 migration 文件与 Sprint 8 的无 schema 变更合同；未读取 Supabase 远程 migration history、未运行远程 reset／push。此前隔离栈顺序、447 SQL 断言、并发、schema lint／diff 和恢复结果见[M5 验收](../plans/week-8/MVP_INTERNAL_ACCEPTANCE_RECORD.md)。虚构数据维护见[清理 runbook](FICTIONAL_ACTIVITY_DATA_CLEANUP.md)，不以 Git revert 代替数据恢复。

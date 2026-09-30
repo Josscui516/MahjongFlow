@@ -1,5 +1,8 @@
 # 开发第 8 周演示与交接
 
+> 当前状态（2026-09-30）：Sprint 8 PR #95／#96 均已合并，main `7e0c614` 的 Quality 五项和 Vercel 部署成功；#94／#29 Done／Passed／closed。本文较早的“待 PR／合并／授权”描述属于执行过程，最终状态以本节更新及[当前项目状态](../../project/CURRENT_PROJECT_STATUS.md)为准。
+
+
 负责人 Joshua；版本与结果见[内部验收记录](MVP_INTERNAL_ACCEPTANCE_RECORD.md)。仅使用虚构数据，禁止向观众展示环境值、token 明文、终端 status 输出或真实参与者。演示不是 S9 真人测试结果。
 
 ## 1. 本地启动与停止
@@ -47,10 +50,16 @@ node node_modules/supabase/dist/supabase.js stop --workdir D:/joshu/Documents/Pr
 
 Joshua 已确认真人走查和独立审查已与团队处理完毕，资料保存在电脑中，M5 已按其确认标记完成，无需 Codex 处理或要求补录。见[验收记录](MVP_INTERNAL_ACCEPTANCE_RECORD.md)；[目标用户任务卡](TARGET_USER_WALKTHROUGH.md)保留供未来复用，不代填详细结果。
 
-交给非作者一次集中审查：完整 diff、[清理 runbook](../../operations/FICTIONAL_ACTIVITY_DATA_CLEANUP.md)、清理回归、[验收记录](MVP_INTERNAL_ACCEPTANCE_RECORD.md)与截图。Joshua 单人实现不取消非作者 review，审查不能由本记录代替。必要时复验新缺陷，不用无关功能扩展填充本周。
+原计划安排的一次集中审查材料包括：完整 diff、[清理 runbook](../../operations/FICTIONAL_ACTIVITY_DATA_CLEANUP.md)、清理回归、[验收记录](MVP_INTERNAL_ACCEPTANCE_RECORD.md)与截图。本次 GitHub PR 的非作者批准已由 Joshua 单次明确豁免，PR #95／#96 已在五项 checks 通过后合并；团队内部审查与 GitHub approval 分别记录。必要时复验新缺陷，不用无关功能扩展填充本周。
 
 ## 4. 开发第 9 周输入与未完成项
 
 功能／schema 周初冻结，重复干净安装、顺序 migration／seed、环境变量安全、正式演示启动和部署回退；重跑受影响回归，完成 README／用户说明／隐私与交接。确认真实数据保留政策和范围决定，批准前不将必须 P0 默默转 Post-MVP。
 
-Joshua 已授权本周 GitHub 状态、分支、提交与推送；主 Issue #94、纳入 #29，实时 Project Sprint 8 成员与两者一致。交付分支 `codex/94-m5-closeout`，目标 `sprint/8-mvp-internal-acceptance`。后续 PR 创建尚未授权；PR review、required checks、Testing、合并和部署分别保留门禁。详细负责人、所需帮助与下次检查见[缺陷／待决事项](DEFECTS_AND_DECISIONS.md)。
+Joshua 已授权本周 GitHub 状态、分支、提交与推送；主 Issue #94、纳入 #29，实时 Project Sprint 8 成员与两者一致。交付分支 `codex/94-m5-closeout`，目标 `sprint/8-mvp-internal-acceptance`。PR #95／#96 已按后续授权与单次 review 例外完成两级合并，required checks 与部署成功，#94／#29 Done／Passed／closed。详细负责人、所需帮助与下次检查见[缺陷／待决事项](DEFECTS_AND_DECISIONS.md)。
+
+## 最终交付同步（2026-09-30）
+
+2026-09-30 实时复核：成员 PR [#95](https://github.com/Josscui516/MahjongFlow/pull/95) 已合入 `sprint/8-mvp-internal-acceptance`，Sprint 总 PR [#96](https://github.com/Josscui516/MahjongFlow/pull/96) 已合入 `main`，SHA `7e0c614b8a2f6e2bec06ab4df82cc2641858cdaa`。main 的 [Quality run 36673253441](https://github.com/Josscui516/MahjongFlow/actions/runs/36673253441) 五项全部成功；同 SHA 的 Vercel Production deployment `6752199649` 状态为 success。#94／#29 已关闭，Project 均 Done／Passed。非作者 PR 批准采用 Joshua 已明确授权的单次例外，未虚构 approval。
+
+Joshua 在本轮确认 Sprint 3 五项历史验收全部通过，已同步 Gate；M5 和本周 Git 交付均完成。S10／M6、真实保留政策及 #62–#65 仍为后续输入；#6 已 closed／Done，聚合 Gate 保留 Not checked，不再作为等待 #29 的未交付项。历史测试数量与原始记录不修改。
