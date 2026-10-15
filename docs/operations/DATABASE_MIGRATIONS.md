@@ -10,7 +10,7 @@ All schema, type, table, constraint, index, trigger, function, grant and RLS cha
 represented by timestamped SQL in `supabase/migrations/`. Dashboard-only changes are prohibited
 because they create unreviewed environment drift.
 
-Day 4 的首个 migration 是历史空基线。当前仓库已有 12 个 timestamped migrations，覆盖 MVP 表／约束／RLS、会议原子写入、账号管理、受保护删除、参与者名称校验、活动 token 管理及分布式限速。顺序以 `supabase/migrations/` 为准；Sprint 8 没有 schema 或生成类型改动。
+Day 4 的首个 migration 是历史空基线。当前仓库已有 14 个 timestamped migrations，覆盖 MVP 表／约束／RLS、会议原子写入、账号管理、受保护删除、参与者名称校验、活动 token 管理、分布式限速及用户确认的公开报名／独立晚餐名册及 Task 与 Meeting 多对多关联。顺序以 `supabase/migrations/` 为准；Sprint 8 没有 schema 或生成类型改动。2026-10-04 本地需求纠正的部署顺序、已有数据边界及回退见[需求决定](../project/REGISTRATION_AND_DINNER_CORRECTION.md)。
 
 ## 2. Local commands
 

@@ -1,78 +1,17 @@
-# #35–#37：晚餐资格、授权核验与刷新
+# 独立晚餐名册与授权核验
 
-覆盖 DINNER-01–04 的 Yubo 消费方实现。2026-09-28 用户明确要求修复 Docker、补真实测试，并在现有 PR #87 一并完成 #36/#37；本次按该指示覆盖个人计划原有的分开 PR／逐项等待门禁。主要 Issue 仍为 #35，关联 #36、#37；不替代非作者审查或改变 Project 状态。
+2026-10-04 用户纠正：晚餐不是签到奖励，使用管理员预录名册。完整决定、权限、迁移和回退见 [需求纠正](../../../docs/project/REGISTRATION_AND_DINNER_CORRECTION.md)。旧 evidence 和验收材料仅保留为原日期的历史实现证据。
 
-## 入口与数据边界
+## 入口与规则
 
-- `@/features/dinner-verification`：纯函数 `calculateDinnerEligibility(eventId, participantId, fact)`。同活动、同参与者的 confirmed 才是 Eligible；voided、缺失或不匹配为 Not Eligible Yet。报名本身不授予资格，人工现场确认无需额外报名。
-- `@/features/dinner-verification/server`：`readDinnerEligibility` 返回最小单人结果；`readDinnerVerification` 返回最小名单和同一快照推导的资格人数。每次调用重新读取，不缓存资格。
-- 唯一签到输入来自 `@/features/attendance/records/server` 的 `attendanceAuditService.listForEvent`，真实执行用户会话鉴权和 RLS；不导入私有 repository。
-- 核验 DTO 仅有活动 ID／名称、参与者 ID／姓名／邮箱、资格、人数和读取时间。不包含学号、操作人、签到方式、完整审计行或可编辑资格。
-- 列表展示有签到记录的人（含 voided），不是报名名单。没有签到记录的人不会出现，但其资格为 Not Eligible Yet；界面明确解释，不把搜索无匹配冒充某个身份的核验。
-- UUID 统一小写；跨活动、无效参与者 ID、重复当前记录安全失败。权限／读取失败不转换为零人数或不符合资格。
+活动详情 → Verify dinner eligibility → 晚餐核验页。管理员看到 Manage dinner roster，可用姓名／邮箱预录、恢复、移除；授权非管理员仅核验。每个活动独立维护名册，不自动导入报名／签到记录。
 
-## #36 页面与权限
+`roster.ts` 通过用户会话执行 authorised 鉴权与表级 RLS；管理员写还检查 canManageAccounts。`server.ts` 消费名册读端口，`calculateDinnerEligibility` 只接受同活动、同名册记录的 listed 状态。removed 或缺失不是资格；不会读取签到事实。
 
-`/dinner-verification` 提供授权活动选择，复用 events 公共入口；页面与 layout 分别鉴权，避免并行渲染绕过。`/dinner-verification/[eventId]` 提供核验、姓名／邮箱本地搜索、人数和空／错误状态。
+名单最小 DTO 不暴露学号、录入者或 Auth 资料。刷新逻辑保留旧值／过期提示、最新请求优先及失败时禁止依赖陈旧结果的约定。
 
-`refreshDinnerVerification` Server Action 每次经过相同 authorised provider 与 RLS，直接 POST 也不能绕过。现有 proxy 已保护整个 namespace。committee、无后台 profile 的参与者会话及匿名访问均被拒绝；浏览器和真实测试覆盖页面、action、明细与底层敏感行。
+## 验证
 
-共享导航及其他事件页挂载属于 Li / #34，本 PR 不改其文件；可直接进入本模块入口。没有 schema、migration、生成类型、RLS 或 seed 变更。
+`database.test.ts` 是 opt-in 的真实本地测试：使用忽略 .env.local 的本地连接，只创建随机虚构账号和限定资源，结束后清理自身数据；设置 ISSUE35_LIVE_DATABASE=1 运行。覆盖公开报名、签到不授予资格、预录不需要报名、移除、并发唯一性、窗口／撤销、隐私同意和三层权限。
 
-## #37 当前事实与陈旧视图
-
-- 按钮可随时刷新；重新获得焦点／从隐藏恢复时自动重查，跨页面更正后返回即可读取当前事实。
-- 刷新中禁用重复按钮，旧结果标为 Previous，提示等待后再发餐。60 秒未核验或离开页面后标记可能过期，要求成功刷新后再使用。
-- 只接受最新请求结果，旧响应不能覆盖新响应。系统失败保留旧值但明确标记过期；权限／会话失效清除旧名单；成功时同时重算名单和人数。
-- #90 合并后，真实数据库测试已通过 #33 公共 `manualAttendanceService` 执行新增、作废、恢复、重复提交、拒绝和并发 CAS，再调用本模块读取／刷新接口验证资格与人数。仅替换 Next cookie/client 传输边界，实际授权、写入、读取、PostgREST 和 RLS 均真实运行。生产浏览器证据仍使用 authorised JWT 数据库更正，不等于人工 UI 全链路已完成。
-
-## #32 合并后的边界修正
-
-PR #88（Shiying / #32）已审阅并合入 Sprint 7，合并 SHA `dcdbcdb`。按用户允许“小问题记录后合并，再统一修正”的要求，本 PR 补了 provider exact-count 完整性检查及两条回归：PostgREST `max_rows = 1000` 截断时安全失败，避免遗漏人员被误判为未签到或汇总不完整。归属仍为 #32 输出合同。
-
-没有实现大列表分页；超过上限时返回错误，由 provider 所有者后续扩展合同。
-
-## #85 合并后的参数校验修正
-
-2026-09-28 按用户相同审阅原则批准并合并 Li 的 #30 / PR #85，合并 SHA 为 `2c29a1b`。审阅时复跑原 head 的 628 个测试与 19 条 #30 数据库断言均通过，五项 CI 通过，无未解决审阅线程。当前分支已同步该 Sprint 基线。
-
-记录的小问题是 `validateCheckInWindow` 对空值／缺字段／非字符串日期抛出 TypeError，无法返回安全 VALIDATION 结果，但不触发数据库写入。按用户授权在合并后统一修复：仅修改 tokens 的 validation 及两个局部测试文件，补运行时类型校验和 8 条回归；归属仍为 Li / #30，本次作为已授权的跨所有权后续修正纳入 PR #87，不改 migration 或有效日期行为。
-
-## Docker 与本地环境
-
-2026-09-28：PR #90 / #33 已批准并合入 Sprint（`bb88002`），本分支已同步。独立审阅验证为 765 个测试、16 个 SQL 文件／438 条断言、14 项组件浏览器检查及真实双连接并发检查全部通过，没有阻断发现。#90 已包含 #89 的 #32 审计补充，无需重复合并。按用户最新要求，跨 PR 的后续小补丁统一放在现有 PR #87，逐项保留来源。
-
-Docker Desktop 因遗留 AF_UNIX socket 无法启动。已备份 `Docker/run` 的运行时 socket，以及只含 `engine.sock` 的 `docker-secrets-engine` 目录，再启动 Desktop；未重置 Docker、删除卷或原有容器。备份命名含 `stale-sprint7` / `sprint7-backup`。
-
-本地 MahjongFlow 栈位于 `http://127.0.0.1:45321`。保留数据，以 `supabase db push --local --yes` 补齐仓库已有 `20260827003049`、`20260908232400` 迁移，未新增迁移或修改远程库。
-
-## 可复跑验证
-
-在 Node 24 环境、仓库根运行：
-
-```text
-node node_modules/vitest/vitest.mjs run
-node --test .github/scripts/run-database-tests.test.mjs
-node node_modules/eslint/bin/eslint.js .
-node node_modules/typescript/bin/tsc --noEmit
-node .github/scripts/run-database-tests.mjs
-node src/features/dinner-verification/run-live-tests.mjs
-node src/features/dinner-verification/run-live-tests.mjs --browser
-```
-
-runner 在内存读取本地 CLI 配置，只向测试子进程传递，不打印／保存凭据，拒绝远端地址。数据库测试仅替换 Next cookie/client 边界，真实运行生产授权、provider、Auth、PostgREST、触发器和 RLS。管理员 key 仅管理虚构 Auth 用户；表 fixture 用本地容器 postgres 建立／按本次 UUID 清理，更正测试和生产读取使用用户 JWT；不更改 service_role 权限。
-
-浏览器脚本使用现有 Playwright；未安装在当前包时，用 `DINNER_PLAYWRIGHT_MODULE` 指向现有 `index.mjs`，不新增应用依赖。脚本构建 production 并启动 `127.0.0.1:4337`，完成后关闭本次 server、清理 fixture。`DINNER_EVIDENCE_DIR` 指定截图目录，默认忽略的 `tmp/dinner-evidence`。不写密码、session、storage-state 或网络 trace；Next 应用子进程不接收 fixture 管理员 key。
-
-## 结果与交接
-
-- 同步 #90 后全量 Vitest：838 通过、10 个 opt-in 跳过；其中本模块 7 个真实测试已另行显式运行通过，覆盖 #33 公共服务 → 当前签到 provider → dinner 刷新，另外 3 个为已有 Sprint 5 套件。token 局部测试 15 个通过。
-- 本模块纯规则、适配器、刷新、UI、路由：63 通过；真实 Auth／PostgREST／RLS：7 通过。
-- #90 基线全量 SQL：16 文件、438 条断言通过；同步后全量 ESLint、TypeScript 通过。此前 #87 与 #90 的 production build 和五项 CI 均通过；本轮仅升级本模块测试及交接文档，未修改运行时代码。数据库 runner 自测此前 5 个通过。
-- 虚构浏览器截图与结果见 `evidence/`：桌面、390px 手机、键盘、搜索、空／无效活动、加载、旧值、刷新失败、真实更正、页面／action 拒绝及撤权。
-
-分支 `codex/35-dinner-eligibility`，PR #87，base `sprint/7-qr-check-in-dinner`。Joshua 是唯一交接对象，负责非作者 review 和手动 Project 状态。
-
-剩余：#33 公共服务联调已通过；待 Li / #34 挂载真实人工操作页面后，由 Yubo 与 Joshua 复跑人工 UI → 核验页面及共享导航。记录开始于 2026-09-28，下次团队检查建议为 2026-09-29 10:00（Sydney），未设置提醒。PR 保留 Draft，等待完整页面联调及独立审查；不宣称 Issues 已进入 Testing/Done 或 Sprint 完成。
-
-回退：回退本 PR 的 dinner 功能／路由及可独立回退的 provider 完整性检查。没有资格持久化或数据恢复步骤。
+单元测试覆盖名册纯规则、适配器、刷新与界面，浏览器实测覆盖录入、移除、授权人员只读和扫码报名。旧 attendance 版浏览器脚本／截图不证明本版行为。

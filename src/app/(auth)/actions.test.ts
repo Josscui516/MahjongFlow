@@ -99,7 +99,7 @@ describe("loginAction", () => {
       ),
     ).rejects.toThrow("NEXT_REDIRECT");
 
-    expect(mocks.redirect).toHaveBeenCalledWith("/backoffice");
+    expect(mocks.redirect).toHaveBeenCalledWith("/dashboard");
   });
 });
 

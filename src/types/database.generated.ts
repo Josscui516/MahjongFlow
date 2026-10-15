@@ -149,6 +149,51 @@ export type Database = {
           },
         ]
       }
+      dinner_roster: {
+        Row: {
+          created_at: string
+          email: string
+          event_id: string
+          full_name: string
+          id: string
+          is_active: boolean
+          recorded_by: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          event_id: string
+          full_name: string
+          id?: string
+          is_active?: boolean
+          recorded_by?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          event_id?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          recorded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dinner_roster_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dinner_roster_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       discussion_points: {
         Row: {
           content: string
@@ -455,7 +500,7 @@ export type Database = {
           id: string
           participant_id: string
           privacy_notice_acknowledged_at: string | null
-          recorded_by: string
+          recorded_by: string | null
           registered_at: string
           registration_status: Database["public"]["Enums"]["registration_status"]
           updated_at: string
@@ -466,7 +511,7 @@ export type Database = {
           id?: string
           participant_id: string
           privacy_notice_acknowledged_at?: string | null
-          recorded_by: string
+          recorded_by?: string | null
           registered_at?: string
           registration_status?: Database["public"]["Enums"]["registration_status"]
           updated_at?: string
@@ -477,7 +522,7 @@ export type Database = {
           id?: string
           participant_id?: string
           privacy_notice_acknowledged_at?: string | null
-          recorded_by?: string
+          recorded_by?: string | null
           registered_at?: string
           registration_status?: Database["public"]["Enums"]["registration_status"]
           updated_at?: string
@@ -502,6 +547,39 @@ export type Database = {
             columns: ["recorded_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      task_meetings: {
+        Row: {
+          created_at: string
+          meeting_id: string
+          task_id: string
+        }
+        Insert: {
+          created_at?: string
+          meeting_id: string
+          task_id: string
+        }
+        Update: {
+          created_at?: string
+          meeting_id?: string
+          task_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "task_meetings_meeting_id_fkey"
+            columns: ["meeting_id"]
+            isOneToOne: false
+            referencedRelation: "meetings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "task_meetings_task_id_fkey"
+            columns: ["task_id"]
+            isOneToOne: false
+            referencedRelation: "tasks"
             referencedColumns: ["id"]
           },
         ]
@@ -699,6 +777,14 @@ export type Database = {
         }
         Returns: undefined
       }
+      save_task_with_meetings: {
+        Args: {
+          related_meeting_ids: string[]
+          target_task_id?: string
+          task_values: Json
+        }
+        Returns: string
+      }
       set_managed_profile_active: {
         Args: { target_is_active: boolean; target_profile_id: string }
         Returns: undefined
@@ -708,6 +794,16 @@ export type Database = {
           check_in_token: string
           participant_email: string
           participant_student_id?: string
+        }
+        Returns: string
+      }
+      submit_event_registration: {
+        Args: {
+          participant_email: string
+          participant_name: string
+          participant_student_id?: string
+          privacy_accepted: boolean
+          registration_token: string
         }
         Returns: string
       }

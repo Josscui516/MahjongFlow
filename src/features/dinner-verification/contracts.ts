@@ -5,7 +5,7 @@ export type DinnerFailure = Readonly<{
   code: "PERMISSION_DENIED" | "UNAUTHENTICATED" | "SYSTEM_ERROR" | "UNAVAILABLE" | "VALIDATION";
 }>;
 
-// Only identity needed to distinguish attendees and the derived current result.
+// Minimal roster identity and current eligibility; participantId is the roster entry ID.
 export type DinnerVerificationItem = Readonly<{
   participantId: string;
   participantName: string;

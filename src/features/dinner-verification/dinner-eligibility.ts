@@ -1,8 +1,8 @@
-/** The minimum current attendance fact needed by DIN-C01/02. */
-export type DinnerAttendanceFact = Readonly<{
+/** The current administrator-maintained membership for one activity. */
+export type DinnerRosterFact = Readonly<{
   eventId: string;
   participantId: string;
-  attendanceStatus: "confirmed" | "voided";
+  rosterStatus: "listed" | "removed";
 }>;
 
 export type DinnerEligibility = "Eligible" | "Not Eligible Yet";
@@ -10,18 +10,18 @@ export type DinnerEligibility = "Eligible" | "Not Eligible Yet";
 /**
  * Derives eligibility for one participant at one event, without storing it.
  * The caller must supply the current unique fact from the authorised read port.
- * A failed read must remain an error at that boundary, not become missing attendance.
+ * A failed read must remain an error, not become missing roster membership.
  */
 export function calculateDinnerEligibility(
   eventId: string,
   participantId: string,
-  attendance: DinnerAttendanceFact | null | undefined,
+  roster: DinnerRosterFact | null | undefined,
 ): DinnerEligibility {
   return eventId.trim().length > 0 &&
     participantId.trim().length > 0 &&
-    attendance?.eventId === eventId &&
-    attendance.participantId === participantId &&
-    attendance.attendanceStatus === "confirmed"
+    roster?.eventId === eventId &&
+    roster.participantId === participantId &&
+    roster.rosterStatus === "listed"
     ? "Eligible"
     : "Not Eligible Yet";
 }

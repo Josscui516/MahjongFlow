@@ -1,204 +1,96 @@
-import { randomUUID, randomBytes } from "node:crypto";
+import { randomUUID, randomBytes, createHash } from "node:crypto";
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import type { Database } from "@/types/database.generated";
-
 vi.mock("server-only", () => ({}));
 const session = vi.hoisted(() => ({ client: null as SupabaseClient<Database> | null }));
-// Only the Next cookie/session transport is substituted. The production public
-// provider, authorisation, HTTP, PostgREST joins and database RLS remain real.
-vi.mock("@/lib/supabase/server", () => ({
-  createServerSupabaseClient: async () => {
-    if (!session.client) throw new Error("Missing fixture session");
-    return session.client;
-  },
-}));
+vi.mock("@/lib/supabase/server", () => ({ createServerSupabaseClient: async () => { if (!session.client) throw new Error("Missing test session"); return session.client; } }));
+import { readDinnerVerification } from "./server";
+import { saveDinnerRosterEntry, removeDinnerRosterEntry } from "./roster";
 
-import { readDinnerEligibility, readDinnerVerification } from "./server";
-import { refreshDinnerVerification } from "./actions";
-import { manualAttendanceService } from "@/features/attendance/manual/server";
-import { attendanceAuditService } from "@/features/attendance/records/server";
-
-describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("#35 real public attendance provider", () => {
-  let admin: SupabaseClient<Database>;
-  let authorised: SupabaseClient<Database>;
-  let committee: SupabaseClient<Database>;
-  let outsider: SupabaseClient<Database>;
-  let anonymous: SupabaseClient<Database>;
-  const users: string[] = [];
-  const eventId = randomUUID();
-  const otherEventId = randomUUID();
-  const participantId = randomUUID();
-  const absentParticipantId = randomUUID();
-
-  function check(error: unknown) {
-    if (error) throw new Error("Fictional local database operation failed");
-  }
-
-  async function correction(targetStatus: "confirmed" | "voided") {
-    const audit = await attendanceAuditService.listForEvent(eventId);
-    if (!audit.ok) throw new Error("Expected authorised audit snapshot");
-    const record = audit.items.find((item) => item.participantId === participantId);
-    if (!record) throw new Error("Missing fictional attendance");
-    const form = new FormData();
-    form.set("operation", "correct");
-    form.set("recordId", record.id);
-    form.set("expectedUpdatedAt", record.updatedAt);
-    form.set("targetStatus", targetStatus);
-    form.set("confirmation", "confirmed");
-    return form;
-  }
-
-  function fixtureSql(sql: string) {
-    const container = process.env.ISSUE35_LOCAL_CONTAINER ?? "supabase_db_MahjongFlow";
-    if (!/^(supabase_db_MahjongFlow|supabase_db_mahjongflow-issue33-sprint7)$/.test(container)) {
-      throw new Error("Only the named local fixture containers are allowed");
+describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("independent public registration and dinner roster: real local RLS", () => {
+  const eventId=randomUUID(), token=randomBytes(32).toString("hex"), email=`registration-${randomUUID()}@example.test`, rosterEmail=`dinner-${randomUUID()}@example.test`;
+  const users:string[]=[];
+  const studentEvent=randomUUID(), studentToken=randomBytes(32).toString("hex"), studentEmail=`student-${randomUUID()}@example.test`;
+  let privileged:SupabaseClient<Database>, committee:SupabaseClient<Database>, authorised:SupabaseClient<Database>, manager:SupabaseClient<Database>, anonymous:SupabaseClient<Database>;
+  const sql=(query:string)=>execFileSync("docker",["exec","-i","supabase_db_MahjongFlow","psql","-U","postgres","-d","postgres","-At","-v","ON_ERROR_STOP=1"],{input:query,encoding:"utf8",stdio:["pipe","pipe","pipe"]}).trim();
+  beforeAll(async()=>{
+    const env=Object.fromEntries(readFileSync(".env.local","utf8").split(/\r?\n/).filter(Boolean).map(line=>{const i=line.indexOf("=");return[line.slice(0,i),line.slice(i+1)];}));
+    if(!/^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(env.NEXT_PUBLIC_SUPABASE_URL))throw new Error("Local-only test");
+    const options={auth:{persistSession:false}};
+    privileged=createClient<Database>(env.NEXT_PUBLIC_SUPABASE_URL,env.SUPABASE_SECRET_KEY,options);
+    anonymous=createClient<Database>(env.NEXT_PUBLIC_SUPABASE_URL,env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,options);
+    async function user(role:"committee"|"authorised",manages=false){
+      const password=randomBytes(24).toString("base64url"), address=`roster-test-${randomUUID()}@example.test`;
+      const r=await privileged.auth.admin.createUser({email:address,password,email_confirm:true});if(r.error||!r.data.user)throw new Error("Test account setup failed");
+      const id=r.data.user.id;users.push(id);sql(`insert into public.profiles(id,display_name,committee_role,can_manage_accounts)values('${id}','Fictional roster tester','${role}',${manages});`);
+      const c=createClient<Database>(env.NEXT_PUBLIC_SUPABASE_URL,env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,options);if((await c.auth.signInWithPassword({email:address,password})).error)throw new Error("Test login failed");return c;
     }
-    try {
-      execFileSync("docker", ["exec", "-i", container, "psql", "-U", "postgres", "-d", "postgres", "-v", "ON_ERROR_STOP=1"], {
-        input: sql, stdio: ["pipe", "pipe", "pipe"], timeout: 30000,
-      });
-    } catch { throw new Error("Local fictional SQL fixture operation failed"); }
-  }
-
-  beforeAll(async () => {
-    const url = process.env.ISSUE35_LOCAL_URL!;
-    if (!["http://127.0.0.1:45321", "http://127.0.0.1:46321"].includes(new URL(url).origin)) throw new Error("Local fixture database required");
-    const options = { auth: { persistSession: false, autoRefreshToken: false } };
-    admin = createClient<Database>(url, process.env.ISSUE35_LOCAL_FIXTURE_KEY!, options);
-    const client = () => createClient<Database>(url, process.env.ISSUE35_LOCAL_PUBLIC_KEY!, options);
-    [authorised, committee, outsider, anonymous] = [client(), client(), client(), client()];
-    for (const [db, role] of [[authorised, "authorised"], [committee, "committee"], [outsider, null]] as const) {
-      const email = `issue35-${randomUUID()}@example.test`;
-      const password = randomBytes(24).toString("hex");
-      const created = await admin.auth.admin.createUser({ email, password, email_confirm: true });
-      check(created.error);
-      if (!created.data.user) throw new Error("Missing fictional user");
-      const id = created.data.user.id;
-      users.push(id);
-      if (role) fixtureSql(`insert into public.profiles (id, display_name, committee_role) values ('${id}', 'Fictional Dinner Tester', '${role}');`);
-      check((await db.auth.signInWithPassword({ email, password })).error);
-    }
-    // SQL is fixture administration only. Repository migrations intentionally do
-    // not grant service_role table CRUD; production reads still use user JWTs.
-    fixtureSql(`begin;
-      insert into public.events (id,name,description,event_type,starts_at,location,created_by) values
-      ${[eventId, otherEventId].map((id) => `('${id}','Fictional Issue 35 Event','Disposable local verification','weekly_session','2026-09-28T08:00:00Z','Fictional Room','${users[0]}')`).join(",")};
-      insert into public.participants (id,full_name,email) values
-      ${[participantId, absentParticipantId].map((id) => `('${id}','Fictional Dinner Attendee','issue35-${id}@example.test')`).join(",")};
-      insert into public.registrations (event_id,participant_id,recorded_by) values
-      ${[participantId, absentParticipantId].map((id) => `('${eventId}','${id}','${users[0]}')`).join(",")};
-      insert into public.attendance_records (event_id,participant_id,check_in_method) values ('${eventId}','${participantId}','qr');
-      commit;`);
-    session.client = authorised;
-  }, 60000);
-
-  afterAll(async () => {
-    session.client = null;
-    if (!admin) return;
-    // Delete only UUID-scoped records created by this test, never reset the DB.
-    fixtureSql(`begin;
-      delete from public.attendance_records where event_id in ('${eventId}','${otherEventId}');
-      delete from public.registrations where event_id in ('${eventId}','${otherEventId}');
-      delete from public.events where id in ('${eventId}','${otherEventId}');
-      delete from public.participants where id in ('${participantId}','${absentParticipantId}');
-      ${users.length ? `delete from public.profiles where id in (${users.map((id) => `'${id}'`).join(",")});` : ""}
-      commit;`);
-    for (const id of users) check((await admin.auth.admin.deleteUser(id)).error);
-  }, 60000);
-
-  it("D-01/02: reads confirmed, registration-only and wrong-event facts through real Auth and PostgREST", async () => {
-    session.client = authorised;
-    expect(await readDinnerEligibility(eventId, participantId)).toEqual({ ok: true, eventId, participantId, eligibility: "Eligible" });
-    expect(await readDinnerEligibility(eventId.toUpperCase(), participantId.toUpperCase())).toMatchObject({ eligibility: "Eligible" });
-    expect(await readDinnerEligibility(eventId, absentParticipantId)).toMatchObject({ eligibility: "Not Eligible Yet" });
-    expect(await readDinnerEligibility(otherEventId, participantId)).toMatchObject({ eligibility: "Not Eligible Yet" });
+    committee=await user("committee");authorised=await user("authorised");manager=await user("authorised",true);
+    sql(`insert into public.events(id,name,event_type,location,description,starts_at,check_in_opens_at,check_in_closes_at,created_by)values('${eventId}','Fictional separated-flow test','weekly_session','Test room','Fictional test',now(),now()-interval '1 hour',now()+interval '1 hour','${users[2]}');insert into public.event_check_in_tokens(event_id,token_digest,created_by)values('${eventId}','${createHash("sha256").update(token).digest("hex")}','${users[2]}');`);
+    sql(`insert into public.events(id,name,event_type,location,description,starts_at,check_in_opens_at,check_in_closes_at,requires_student_id,created_by)values('${studentEvent}','Fictional student registration test','weekly_session','Test room','Fictional test',now(),now()-interval '1 hour',now()+interval '1 hour',true,'${users[2]}');insert into public.event_check_in_tokens(event_id,token_digest,created_by)values('${studentEvent}','${createHash("sha256").update(studentToken).digest("hex")}','${users[2]}');`);
+  },30000);
+  afterAll(async()=>{
+    session.client=null;if(!users.length||!privileged)return;
+    sql(`delete from public.dinner_roster where event_id='${eventId}';delete from public.attendance_records where event_id='${eventId}';delete from public.registrations where event_id='${eventId}';delete from public.events where id='${eventId}';delete from public.participants where email='${email}';`);
+    sql(`delete from public.registrations where event_id='${studentEvent}';delete from public.events where id='${studentEvent}';delete from public.participants where email='${studentEmail}';`);
+    for(const id of users){sql(`delete from public.profiles where id='${id}';`);await privileged.auth.admin.deleteUser(id);}
   });
-
-  it("D-04: re-reads real #33 void and restore results without an eligibility write", async () => {
-    session.client = authorised;
-    for (const [status, eligibility] of [["voided", "Not Eligible Yet"], ["confirmed", "Eligible"]] as const) {
-      expect(await manualAttendanceService.submit(eventId, await correction(status))).toMatchObject({ status: "success", eventId });
-      expect(await readDinnerEligibility(eventId, participantId)).toMatchObject({ eligibility });
-      expect(await refreshDinnerVerification(eventId)).toMatchObject({
-        ok: true, eligibleCount: status === "confirmed" ? 1 : 0,
-        items: [{ participantId, eligibility }],
-      });
-    }
+  it("creates a first registration from a new email without attendance or dinner entitlement",async()=>{
+    const args={registration_token:token,participant_name:"Fictional New Registrant",participant_email:email,privacy_accepted:true};
+    expect((await privileged.rpc("submit_event_registration",args)).data).toBe("success");
+    expect((await privileged.rpc("submit_event_registration",args)).data).toBe("already_processed");
+    expect(sql(`select count(*) from public.registrations where event_id='${eventId}';`)).toBe("1");
+    expect(sql(`select count(*) from public.attendance_records where event_id='${eventId}';`)).toBe("0");
+    session.client=authorised;expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:0,items:[]});
+    sql(`insert into public.attendance_records(event_id,participant_id,checked_in_at,check_in_method,attendance_status,recorded_by)select '${eventId}',id,now(),'manual','confirmed','${users[2]}' from public.participants where email='${email}';`);
+    expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:0,items:[]});
   });
-
-  it("denies committee, no-profile and anonymous reads at the real service and RLS boundaries", async () => {
-    for (const [db, code] of [[committee, "PERMISSION_DENIED"], [outsider, "PERMISSION_DENIED"], [anonymous, "UNAUTHENTICATED"]] as const) {
-      session.client = db;
-      expect(await readDinnerEligibility(eventId, participantId)).toEqual({ ok: false, code });
-      expect(await readDinnerVerification(eventId)).toEqual({ ok: false, code });
-      expect(await refreshDinnerVerification(eventId)).toEqual({ ok: false, code });
-      const rows = await db.from("attendance_records").select("participant_id").eq("event_id", eventId);
-      expect(rows.data ?? []).toEqual([]);
-      const participants = await db.from("participants").select("id").eq("id", participantId);
-      const registrations = await db.from("registrations").select("id").eq("participant_id", participantId);
-      expect(participants.data ?? []).toEqual([]);
-      expect(registrations.data ?? []).toEqual([]);
-    }
+  it("lets an administrator preload dinner independently of registration and remove membership",async()=>{
+    session.client=manager;expect(await saveDinnerRosterEntry(eventId,"Fictional Dinner Member",rosterEmail)).toEqual({ok:true});
+    expect(await saveDinnerRosterEntry(eventId,"Fictional Dinner Member",rosterEmail)).toEqual({ok:true});
+    expect(sql(`select count(*) from public.dinner_roster where event_id='${eventId}';`)).toBe("1");
+    session.client=authorised;const r=await readDinnerVerification(eventId);expect(r).toMatchObject({ok:true,eligibleCount:1});if(!r.ok)throw new Error("Roster read failed");
+    expect(r.items[0]).toMatchObject({participantEmail:rosterEmail,eligibility:"Eligible"});
+    session.client=manager;expect(await removeDinnerRosterEntry(eventId,r.items[0].participantId)).toEqual({ok:true});
+    expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:0});
   });
-
-  it("preserves the current eligibility when a committee correction cannot change attendance", async () => {
-    session.client = authorised;
-    const form = await correction("voided");
-    session.client = committee;
-    expect(await manualAttendanceService.submit(eventId, form)).toEqual({ status: "permission-denied" });
-    session.client = authorised;
-    expect(await readDinnerEligibility(eventId, participantId)).toMatchObject({ eligibility: "Eligible" });
-    expect(await refreshDinnerVerification(eventId)).toMatchObject({ ok: true, eligibleCount: 1 });
+  it("denies roster writes to an authorised nonadministrator at both boundaries",async()=>{
+    session.client=authorised;expect(await saveDinnerRosterEntry(eventId,"Fictional Denied","denied@example.test")).toMatchObject({ok:false,code:"PERMISSION_DENIED"});
+    expect((await authorised.from("dinner_roster").insert({event_id:eventId,full_name:"Fictional Denied",email:"denied@example.test"})).error).not.toBeNull();
   });
-
-  it("D-03: exposes only necessary identity and a matching current-event aggregate", async () => {
-    session.client = authorised;
-    const result = await readDinnerVerification(eventId);
-    expect(result).toMatchObject({ ok: true, eligibleCount: 1 });
-    if (!result.ok) throw new Error("Expected authorised verification");
-    expect(Object.keys(result.items[0]).sort()).toEqual(["eligibility", "participantEmail", "participantId", "participantName"]);
-    expect(await readDinnerVerification(otherEventId)).toMatchObject({ ok: true, items: [], eligibleCount: 0 });
+  it("denies committee and anonymous roster reads and direct privileged RPC calls",async()=>{
+    session.client=committee;expect(await readDinnerVerification(eventId)).toMatchObject({ok:false,code:"PERMISSION_DENIED"});
+    expect((await committee.from("dinner_roster").select("id").eq("event_id",eventId)).data).toEqual([]);
+    expect((await anonymous.from("dinner_roster").select("id")).error).not.toBeNull();
+    const args={registration_token:token,participant_name:"Fictional Probe",participant_email:"probe@example.test",privacy_accepted:true};
+    expect((await anonymous.rpc("submit_event_registration",args)).error).not.toBeNull();expect((await committee.rpc("submit_event_registration",args)).error).not.toBeNull();
   });
-
-  it("D-04: a concurrent correction is recalculated from the final database fact", async () => {
-    session.client = authorised;
-    const form = await correction("voided");
-    const changes = await Promise.all([
-      manualAttendanceService.submit(eventId, form),
-      manualAttendanceService.submit(eventId, form),
-    ]);
-    expect(changes.map((result) => result.status).sort()).toEqual(["conflict", "success"]);
-    const fact = await authorised.from("attendance_records").select("attendance_status").eq("event_id", eventId).eq("participant_id", participantId).single();
-    check(fact.error);
-    expect(await refreshDinnerVerification(eventId)).toMatchObject({
-      ok: true, eligibleCount: fact.data?.attendance_status === "confirmed" ? 1 : 0,
-      items: [{ eligibility: fact.data?.attendance_status === "confirmed" ? "Eligible" : "Not Eligible Yet" }],
-    });
-    // A stale restore cannot make the dinner consumer report eligibility.
-    form.set("targetStatus", "confirmed");
-    expect(await manualAttendanceService.submit(eventId, form)).toEqual({ status: "conflict" });
-    expect(await readDinnerEligibility(eventId, participantId)).toMatchObject({ eligibility: "Not Eligible Yet" });
-    expect(await manualAttendanceService.submit(eventId, await correction("confirmed"))).toMatchObject({ status: "success" });
-    expect(await refreshDinnerVerification(eventId)).toMatchObject({ ok: true, eligibleCount: 1 });
+  it("rejects missing consent and invalid tokens without changing registrations",async()=>{
+    expect((await privileged.rpc("submit_event_registration",{registration_token:token,participant_name:"Fictional Probe",participant_email:"probe@example.test",privacy_accepted:false})).data).toBe("unable_to_process");
+    expect((await privileged.rpc("submit_event_registration",{registration_token:"invalid",participant_name:"Fictional Probe",participant_email:"probe@example.test",privacy_accepted:true})).data).toBe("unavailable");
+    expect(sql(`select count(*) from public.registrations where event_id='${eventId}';`)).toBe("1");
   });
-
-  it("D-01/04: manual confirmation without registration grants eligibility with no separate write", async () => {
-    session.client = authorised;
-    fixtureSql(`delete from public.registrations where event_id='${eventId}' and participant_id='${absentParticipantId}';`);
-    const form = new FormData();
-    form.set("operation", "create");
-    form.set("email", `issue35-${absentParticipantId}@example.test`);
-    form.set("confirmation", "confirmed");
-    expect(await manualAttendanceService.submit(eventId, form)).toMatchObject({ status: "success", eventId });
-    expect(await manualAttendanceService.submit(eventId, form)).toEqual({ status: "duplicate" });
-    const before = await authorised.from("attendance_records").select("id,updated_at,attendance_status").eq("event_id", eventId).eq("participant_id", absentParticipantId).single();
-    check(before.error);
-    expect(await readDinnerEligibility(eventId, absentParticipantId)).toMatchObject({ eligibility: "Eligible" });
-    const result = await refreshDinnerVerification(eventId);
-    expect(result.ok && result.items.some((item) => item.participantId === absentParticipantId && item.eligibility === "Eligible")).toBe(true);
-    const after = await authorised.from("attendance_records").select("id,updated_at,attendance_status").eq("event_id", eventId).eq("participant_id", absentParticipantId).single();
-    expect(after.data).toEqual(before.data);
+  it("does not restore a staff-cancelled registration through a public resubmission",async()=>{
+    sql(`update public.registrations set registration_status='cancelled' where event_id='${eventId}';`);
+    expect((await privileged.rpc("submit_event_registration",{registration_token:token,participant_name:"Fictional New Registrant",participant_email:email,privacy_accepted:true})).data).toBe("unable_to_process");
+    expect(sql(`select registration_status from public.registrations where event_id='${eventId}';`)).toBe("cancelled");
+  });
+  it("requires the configured student ID and creates only one registration during concurrent submissions",async()=>{
+    const args={registration_token:studentToken,participant_name:"Fictional Student",participant_email:studentEmail,privacy_accepted:true};
+    expect((await privileged.rpc("submit_event_registration",args)).data).toBe("unable_to_process");
+    const results=await Promise.all([1,2,3].map(()=>privileged.rpc("submit_event_registration",{...args,participant_student_id:"FAKE-61004"})));
+    expect(results.map(result=>result.data).sort()).toEqual(["already_processed","already_processed","success"]);
+    expect(sql(`select count(*) from public.registrations where event_id='${studentEvent}';`)).toBe("1");
+    expect(sql(`select count(*) from public.attendance_records where event_id='${studentEvent}';`)).toBe("0");
+  });
+  it("rejects closed registration windows and revoked tokens",async()=>{
+    const args={registration_token:studentToken,participant_name:"Fictional Student",participant_email:studentEmail,participant_student_id:"FAKE-61004",privacy_accepted:true};
+    sql(`update public.events set check_in_closes_at=now()-interval '1 second' where id='${studentEvent}';`);
+    expect((await privileged.rpc("submit_event_registration",args)).data).toBe("unavailable");
+    sql(`update public.events set check_in_closes_at=now()+interval '1 hour' where id='${studentEvent}';update public.event_check_in_tokens set revoked_at=now() where event_id='${studentEvent}';`);
+    expect((await privileged.rpc("submit_event_registration",args)).data).toBe("unavailable");
   });
 });

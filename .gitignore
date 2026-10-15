@@ -117,3 +117,5 @@ supabase/.env.*
 *.tar.gz
 *.tgz
 
+# Generated local Docker runtime credentials (never commit).
+compose.local.env

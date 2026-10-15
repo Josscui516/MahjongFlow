@@ -4,12 +4,12 @@ import { useState, type FormEvent } from "react";
 import type { SelfCheckInOutcome } from "./contracts";
 
 const MESSAGES: Record<SelfCheckInOutcome, string> = {
-  already_processed: "Already processed. Contact staff if a correction is needed.",
+  already_processed: "Already registered. Contact staff if a correction is needed.",
   rate_limited: "Too many attempts. Please wait and try again.",
-  success: "Check-in successful.",
-  system_error: "Check-in could not be completed. Please try again.",
-  unable_to_process: "Unable to process check-in. Please check your details or contact staff.",
-  unavailable: "Check-in unavailable.",
+  success: "Registration successful. This does not confirm attendance or dinner eligibility.",
+  system_error: "Registration could not be completed. Please try again.",
+  unable_to_process: "Unable to process registration. Check your name, email, required student ID and privacy consent, or contact event staff.",
+  unavailable: "Registration unavailable.",
 };
 
 export function CheckInForm({ studentIdRequired, token }: Readonly<{ studentIdRequired: boolean; token: string }>) {
@@ -23,8 +23,8 @@ export function CheckInForm({ studentIdRequired, token }: Readonly<{ studentIdRe
     setOutcome(null);
     const form = new FormData(event.currentTarget);
     try {
-      const response = await fetch(`/api/check-in/${encodeURIComponent(token)}`, {
-        body: JSON.stringify({ email: form.get("email"), studentId: form.get("studentId") }),
+      const response = await fetch(`/api/register/${encodeURIComponent(token)}`, {
+        body: JSON.stringify({ fullName: form.get("fullName"), email: form.get("email"), studentId: form.get("studentId"), privacyAccepted: form.get("privacyAccepted") === "on" }),
         headers: { "Content-Type": "application/json" },
         method: "POST",
       });
@@ -39,9 +39,12 @@ export function CheckInForm({ studentIdRequired, token }: Readonly<{ studentIdRe
 
   return (
     <form className="mt-6 space-y-4" onSubmit={submit}>
+      <p className="text-sm text-slate-700">Register for this event using your details. You do not need a previous registration or a committee account. Dinner is managed using a separate administrator-preloaded roster.</p>
+      <div><label className="block text-sm font-semibold text-slate-800" htmlFor="fullName">Full name</label><input autoComplete="name" className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2" id="fullName" maxLength={120} name="fullName" required /></div>
       <div><label className="block text-sm font-semibold text-slate-800" htmlFor="email">Email</label><input autoComplete="email" className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2" id="email" maxLength={254} name="email" required type="email" /></div>
       {studentIdRequired ? <div><label className="block text-sm font-semibold text-slate-800" htmlFor="studentId">Student ID</label><input autoComplete="off" className="mt-1 w-full rounded-xl border border-slate-300 px-3 py-2" id="studentId" maxLength={32} name="studentId" required /></div> : null}
-      <button className="rounded-xl bg-emerald-700 px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60" disabled={pending} type="submit">{pending ? "Checking in…" : "Check in"}</button>
+      <label className="flex gap-3 text-sm text-slate-700"><input className="mt-1" name="privacyAccepted" required type="checkbox" />I agree that my name, email and required student ID will be used by authorised event staff to manage this registration.</label>
+      <button className="rounded-xl bg-emerald-700 px-4 py-2 font-semibold text-white disabled:cursor-not-allowed disabled:opacity-60" disabled={pending} type="submit">{pending ? "Registering…" : "Register for event"}</button>
       <p aria-live="polite" className={outcome === "success" ? "text-emerald-800" : "text-slate-700"} role={outcome && outcome !== "success" ? "alert" : "status"}>{outcome ? MESSAGES[outcome] : ""}</p>
     </form>
   );

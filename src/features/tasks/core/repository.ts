@@ -17,20 +17,50 @@ export type TaskRepository = Readonly<{
   complete?: (taskId: string) => Promise<TaskRecordDTO | null>;
   update: (taskId: string, input: TaskInput) => Promise<TaskRecordDTO | null>;
 }>;
-type TaskRow = Database["public"]["Tables"]["tasks"]["Row"];
-const select = "id, title, description, assignee_id, due_date, status, source_meeting_id, source_decision_id, source_discussion_point_id, event_id, created_by, created_at, updated_at";
+type TaskRow = Database["public"]["Tables"]["tasks"]["Row"] & {
+  task_meetings?: { meeting_id: string; meetings: { title: string } | null }[];
+};
+const select = "id, title, description, assignee_id, due_date, status, source_meeting_id, source_decision_id, source_discussion_point_id, event_id, created_by, created_at, updated_at, task_meetings(meeting_id, meetings(title))";
 function fail(error: { code?: string; message: string }): never { throw new TaskRepositoryError(error.code, error.message); }
-function map(row: TaskRow): TaskRecordDTO { return { assigneeId: row.assignee_id, createdAt: row.created_at, createdBy: row.created_by, description: row.description, dueDate: row.due_date, eventId: row.event_id, id: row.id, sourceDecisionId: row.source_decision_id, sourceDiscussionPointId: row.source_discussion_point_id, sourceMeetingId: row.source_meeting_id, status: row.status, title: row.title, updatedAt: row.updated_at }; }
+function map(row: TaskRow): TaskRecordDTO { return { assigneeId: row.assignee_id, createdAt: row.created_at, createdBy: row.created_by, description: row.description, dueDate: row.due_date, eventId: row.event_id, id: row.id, meetingIds: (row.task_meetings ?? []).map(link => link.meeting_id), relatedMeetings: (row.task_meetings ?? []).map(link => ({ id: link.meeting_id, title: link.meetings?.title ?? "Unavailable meeting" })).sort((a,b) => a.title.localeCompare(b.title)), sourceDecisionId: row.source_decision_id, sourceDiscussionPointId: row.source_discussion_point_id, sourceMeetingId: row.source_meeting_id, status: row.status, title: row.title, updatedAt: row.updated_at }; }
 function payload(input: TaskInput) { return { assignee_id: input.assigneeId, description: input.description, due_date: input.dueDate, event_id: input.eventId ?? null, source_decision_id: input.sourceDecisionId ?? null, source_discussion_point_id: input.sourceDiscussionPointId ?? null, source_meeting_id: input.sourceMeetingId ?? null, status: input.status, title: input.title }; }
 function escapePostgrestPattern(value: string) { return value.replace(/[\\%_]/g, "\\$&").replace(/[(),.]/g, " "); }
 export function createTaskRepository(getClient: () => Promise<SupabaseClient<Database>> = createServerSupabaseClient): TaskRepository {
+  async function saveWithMeetings(input: TaskInput, taskId?: string): Promise<TaskRecordDTO | null> {
+    const client = await getClient();
+    const result = await client.rpc("save_task_with_meetings", {
+      task_values: payload(input), related_meeting_ids: [...(input.meetingIds ?? [])],
+      ...(taskId ? { target_task_id: taskId } : {}),
+    });
+    if (result.error) fail(result.error);
+    if (!result.data) return null;
+    const saved = await client.from("tasks").select(select).eq("id", result.data).single();
+    if (saved.error) fail(saved.error);
+    return map(saved.data as TaskRow);
+  }
   return {
     async complete(taskId) {
       const result = await (await getClient()).from("tasks").update({ status: "completed" }).eq("id", taskId).select(select).maybeSingle();
       if (result.error) fail(result.error);
       return result.data ? map(result.data as TaskRow) : null;
     },
-    async create(actorId, input) { const result = await (await getClient()).from("tasks").insert({ ...payload(input), created_by: actorId }).select(select).single(); if (result.error) fail(result.error); return map(result.data as TaskRow); },
+    async create(actorId, input) {
+      if (input.meetingIds !== undefined) {
+        const saved = await saveWithMeetings(input);
+        if (!saved) throw new TaskRepositoryError(undefined);
+        return saved;
+      }
+      const client = await getClient();
+      const result = await client.from("tasks").insert({ ...payload(input), created_by: actorId }).select(select).single();
+      if (result.error) fail(result.error);
+      // PostgREST's insert projection cannot see associations added by an AFTER trigger.
+      if (result.data.source_meeting_id) {
+        const saved = await client.from("tasks").select(select).eq("id", result.data.id).single();
+        if (saved.error) fail(saved.error);
+        return map(saved.data as TaskRow);
+      }
+      return map(result.data as TaskRow);
+    },
     async delete(taskId) { const result = await (await getClient()).rpc("delete_task_record", { target_task_id: taskId }); if (result.error) fail(result.error); return result.data === "deleted" ? "deleted" : "not_found"; },
     async get(taskId) { const result = await (await getClient()).from("tasks").select(select).eq("id", taskId).maybeSingle(); if (result.error) fail(result.error); return result.data ? map(result.data as TaskRow) : null; },
     async list() { const result = await (await getClient()).from("tasks").select(select).order("due_date").order("id"); if (result.error) fail(result.error); return (result.data ?? []).map((row) => map(row as TaskRow)); },
@@ -50,6 +80,7 @@ export function createTaskRepository(getClient: () => Promise<SupabaseClient<Dat
       return { items: (result.data ?? []).map((row) => map(row as TaskRow)), total: result.count ?? 0 };
     },
     async update(taskId, input) {
+      if (input.meetingIds !== undefined) return saveWithMeetings(input, taskId);
       const mutable = { assignee_id: input.assigneeId, description: input.description, due_date: input.dueDate, event_id: input.eventId ?? null, status: input.status, title: input.title };
       const result = await (await getClient()).from("tasks").update(mutable).eq("id", taskId).select(select).maybeSingle();
       if (result.error) fail(result.error);

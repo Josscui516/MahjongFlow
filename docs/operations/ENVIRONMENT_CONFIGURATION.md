@@ -107,3 +107,15 @@ Before sharing or committing changes:
 ## 7. 完整 MVP 配置与本轮核验边界（2026-09-30）
 
 源码 `getSupabaseAdminEnvironment()` 同时要求 `SUPABASE_SECRET_KEY` 和 `APP_BASE_URL`，账号管理、活动 token 管理与公开签到 gateway 会调用它。只提供两项 public 变量可做普通协调／健康检查，不能据此宣称完整签到可运行。环境值必须通过私密渠道配置于忽略文件或平台，本轮未读取或重写值。Production SHA／CI／部署状态已核实，历史 Preview 共用数据库、变量同步和 clean install 记录仍只代表原日期，M6 需要重新确认。见[当前项目状态](../project/CURRENT_PROJECT_STATUS.md)。
+
+## 8. 同一局域网内的手机报名测试
+
+在忽略的 `.env.local` 中，`APP_BASE_URL` 保持本地规范 origin（例如 localhost 的端口 3000），然后使用 `npm run dev -- --hostname 0.0.0.0 --port 3000` 启动或重启前端。二维码的 origin 不固定为该 localhost：development 环境每次生成时读取当前物理网卡的 RFC 1918 私有 IPv4，排除 Docker／WSL 等虚拟网卡；如果访问活动页使用的 Host 是本机局域网地址，则优先使用这个网卡，否则选择检测到的第一个物理局域网地址。端口取自合法本地请求，缺失时取规范 origin 的端口。没有局域网地址时明确失败，不生成手机无法访问的 localhost 二维码。
+
+生产／预览部署使用各环境配置的 HTTPS `APP_BASE_URL`，不读取服务器内网 IP，不信任请求 Host 来改写正式链接。相同代码部署到不同机器／域名，无需修改源码中的 IP。邀请和密码恢复仍使用规范 origin，二维码的本地地址识别不改变它们。
+
+手机与电脑须在同一可互通局域网，Windows 防火墙须允许私有网络中该前端端口的入站连接。无需向手机暴露 Supabase 管理密钥或数据库端口；公开报名通过前端服务端入口访问本地数据库。
+
+在活动详情中生成新的二维码，其链接使用动态识别的局域网 origin。旧二维码仍包含旧 origin，更新配置不会重写已经保存的图片；轮换会撤销该活动的旧 token。开发电脑 IP 改变后重新生成即可；重启开发服务会刷新 Next.js 开发资源允许的 origin 列表。
+
+二维码用于新用户自助报名：填写姓名、邮箱、活动要求的学号及隐私同意后创建报名，无需先由工作人员登记。报名不会产生签到或晚餐资格。晚餐独立使用管理员预录名册。业务决定和部署／回退见[需求纠正](../project/REGISTRATION_AND_DINNER_CORRECTION.md)。

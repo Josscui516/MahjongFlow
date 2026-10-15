@@ -114,7 +114,8 @@ describe("role-aware navigation", () => {
 
     expect(html).not.toContain("Sensitive operations");
     expect(html).not.toContain('href="/registrations"');
-    expect(html).toContain('href="/backoffice"');
+    expect(html).toContain('href="/dashboard"');
+    expect(html).not.toContain('href="/backoffice"');
     expect(html).toContain('href="/meetings"');
     expect(html).toContain('href="/tasks"');
     expect(html).toContain('href="/events"');

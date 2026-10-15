@@ -2,6 +2,9 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, test, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
+vi.mock("next/navigation", () => ({
+  redirect: (path: string) => { throw new Error(`NEXT_REDIRECT:${path}`); },
+}));
 vi.mock("@/features/events/core/service", () => ({ listEvents: async () => ({ ok: true, items: [] }) }));
 
 const authMocks = vi.hoisted(() => ({
@@ -27,6 +30,7 @@ vi.mock("@/app/(auth)/backoffice/logout-form", () => ({
 }));
 
 import BackofficePage from "@/app/(auth)/backoffice/page";
+import DashboardLayout from "@/app/(dashboard)/dashboard/layout";
 import RegistrationsPage from "@/app/(auth)/registrations/page";
 import { AuthorizationError } from "@/lib/auth/authorization";
 
@@ -36,6 +40,9 @@ beforeEach(() => {
 });
 
 describe("integrated role-aware pages", () => {
+  test("sends the old committee dashboard entry to the single Dashboard", () => {
+    expect(() => BackofficePage()).toThrow("NEXT_REDIRECT:/dashboard");
+  });
   test.each(["committee", "authorised"] as const)(
     "renders the trusted %s role in the back-office shell",
     async (role) => {
@@ -46,10 +53,10 @@ describe("integrated role-aware pages", () => {
         userId: "fictional-user-id",
       });
 
-      const html = renderToStaticMarkup(await BackofficePage());
+      const html = renderToStaticMarkup(await DashboardLayout({ children: <h1>Dashboard</h1> }));
 
       expect(html).toContain(`Role: ${role === "authorised" ? "Authorised" : "Committee"}`);
-      expect(html).toContain("Committee dashboard");
+      expect(html).toContain("Dashboard");
       expect(html).toContain("Fictional committee member");
       expect(html.includes('href="/registrations"')).toBe(role === "authorised");
     },

@@ -82,6 +82,30 @@ lockfile.
 
 ## Quick start
 
+后台首页统一为 `/dashboard`：登录后的任务跟进、近期活动和快捷操作集中在同一页，品牌链接也返回该页。旧 `/backoffice` 书签会跳转到 Dashboard，不再展示独立的 Committee dashboard。
+
+Task 创建和编辑支持关联多场 Meeting；会议详情显示全部关联任务，原始决策／讨论点来源独立保留。数据关系、迁移和回退见[Task 与 Meeting 关联](docs/project/TASK_MEETING_ASSOCIATIONS.md)。
+
+### 已配置的本地 Docker 环境
+
+前端现在作为 `mahjongflow-frontend` 与现有本地 Supabase 容器一起运行。完成配置后，启动 Docker Desktop 即可自动恢复完整本地服务。访问 http://localhost:3000，无需另外启动 `npm run dev`。现有数据库卷和账号保留。
+
+需要主动启动服务或更换网络后重新检测局域网 IP 时，在仓库目录的 Windows PowerShell 运行：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\start-local.ps1
+```
+
+修改应用代码后，增加 `-Build` 重建前端镜像：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\start-local.ps1 -Build
+```
+
+脚本使用现有 `supabase_network_MahjongFlow` 和本地 Supabase CLI；数据库不存在时明确拒绝创建或重置。脚本私下生成被忽略的 `compose.local.env`，不要提交或分享该文件。浏览器通过当前 origin 的 `/supabase` 请求 API，服务端通过 Docker 内部网关访问。Docker 二维码使用启动脚本识别的宿主机局域网地址；正式托管部署继续使用配置的可信 HTTPS 应用 origin。
+
+扫码报名及管理员独立维护的晚餐名册规则见[需求纠正](docs/project/REGISTRATION_AND_DINNER_CORRECTION.md)。本轮提交与验证范围见[补丁交付记录](docs/project/POST_SPRINT_PATCH_DELIVERY.md)。
+
 ### First local setup
 
 Before starting, install the Node.js and npm versions listed in Prerequisites, install Docker

@@ -15,6 +15,7 @@ vi.mock("@supabase/ssr", () => ({
   createServerClient: mocks.createServerClient,
 }));
 vi.mock("@/lib/supabase/env", () => ({
+  getSupabaseAuthOptions: () => ({}),
   getSupabasePublicEnvironment: () => ({
     publishableKey: "fictional-publishable-key",
     url: "https://fictional-project.supabase.test",

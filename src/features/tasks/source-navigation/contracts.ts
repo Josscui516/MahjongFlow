@@ -4,7 +4,7 @@ export type SourceKindView = "decision" | "discussion";
 
 export type RelatedTaskSummary = Readonly<{
   id: string;
-  sourceKind: SourceKindView;
+  sourceKind: SourceKindView | null;
   sourceId?: string;
   status?: TaskStatus;
   title: string;

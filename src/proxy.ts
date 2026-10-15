@@ -4,7 +4,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { resolveAuthenticatedUser } from "@/lib/auth/authenticated-user";
 import { AUTH_ERROR_CODES } from "@/lib/auth/contracts";
 import { getSafeBackofficeRedirectPath } from "@/lib/auth/redirect";
-import { getSupabasePublicEnvironment } from "@/lib/supabase/env";
+import { getSupabasePublicEnvironment, getSupabaseAuthOptions } from "@/lib/supabase/env";
 
 const AUTH_CACHE_HEADERS = ["cache-control", "expires", "pragma"] as const;
 
@@ -76,6 +76,7 @@ export async function proxy(request: NextRequest) {
   const authentication = await resolveAuthenticatedUser(async () => {
     const { publishableKey, url } = getSupabasePublicEnvironment();
     const supabase = createServerClient(url, publishableKey, {
+      auth: getSupabaseAuthOptions(),
       cookies: {
         getAll() {
           return request.cookies.getAll();

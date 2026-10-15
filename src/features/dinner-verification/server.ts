@@ -1,16 +1,12 @@
 import "server-only";
 
-import {
-  attendanceAuditService,
-  type AttendanceAuditResult,
-  type AttendanceReadPort,
-} from "@/features/attendance/records/server";
+import { dinnerRosterService, type DinnerRosterResult, type DinnerRosterReadPort } from "./roster";
 
 import { calculateDinnerEligibility, type DinnerEligibility } from "./index";
 import type { DinnerVerificationResult } from "./contracts";
 
 export type DinnerEligibilityResult =
-  | Extract<AttendanceAuditResult, { ok: false }>
+  | Extract<DinnerRosterResult, { ok: false }>
   | Readonly<{
       ok: true;
       eventId: string;
@@ -20,7 +16,7 @@ export type DinnerEligibilityResult =
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-export function createDinnerEligibilityReader(attendance: AttendanceReadPort) {
+export function createDinnerEligibilityReader(roster: DinnerRosterReadPort) {
   return async function readDinnerEligibility(
     eventId: string,
     participantId: string,
@@ -28,7 +24,7 @@ export function createDinnerEligibilityReader(attendance: AttendanceReadPort) {
     try {
       // The public provider authorises before validating or querying the event.
       // Never turn a failed/denied read into a successful "not eligible" result.
-      const result = await attendance.listForEvent(eventId);
+      const result = await roster.listForEvent(eventId);
       if (!result.ok) return { ok: false, code: result.code };
       if (typeof participantId !== "string" || !UUID.test(participantId)) {
         return { ok: false, code: "VALIDATION" };
@@ -57,7 +53,7 @@ export function createDinnerEligibilityReader(attendance: AttendanceReadPort) {
           current ? {
             eventId: current.eventId.toLowerCase(),
             participantId: current.participantId.toLowerCase(),
-            attendanceStatus: current.status,
+            rosterStatus: current.status,
           } : null,
         ),
       };
@@ -67,15 +63,15 @@ export function createDinnerEligibilityReader(attendance: AttendanceReadPort) {
   };
 }
 
-export const readDinnerEligibility = createDinnerEligibilityReader(attendanceAuditService);
+export const readDinnerEligibility = createDinnerEligibilityReader(dinnerRosterService);
 
 export function createDinnerVerificationReader(
-  attendance: AttendanceReadPort,
+  roster: DinnerRosterReadPort,
   now: () => Date = () => new Date(),
 ) {
   return async function readDinnerVerification(eventId: string): Promise<DinnerVerificationResult> {
     try {
-      const result = await attendance.listForEvent(eventId);
+      const result = await roster.listForEvent(eventId);
       if (!result.ok) return { ok: false, code: result.code };
       if (typeof eventId !== "string" || !UUID.test(eventId)) return { ok: false, code: "VALIDATION" };
       const currentEventId = eventId.toLowerCase();
@@ -95,7 +91,7 @@ export function createDinnerVerificationReader(
         eligibility: calculateDinnerEligibility(currentEventId, item.participantId.toLowerCase(), {
           eventId: currentEventId,
           participantId: item.participantId.toLowerCase(),
-          attendanceStatus: item.status,
+          rosterStatus: item.status,
         }),
       }));
       return {
@@ -109,4 +105,4 @@ export function createDinnerVerificationReader(
   };
 }
 
-export const readDinnerVerification = createDinnerVerificationReader(attendanceAuditService);
+export const readDinnerVerification = createDinnerVerificationReader(dinnerRosterService);

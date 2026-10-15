@@ -3,7 +3,7 @@ import type { SelfCheckInOutcome } from "./contracts";
 import { createSelfCheckInService, requestFingerprint } from "./service";
 
 const token = "a".repeat(64);
-const body = { email: "fictional@example.test", studentId: "TEST-0031" };
+const body = { fullName: "Fictional Person", privacyAccepted: true, email: "fictional@example.test", studentId: "TEST-0031" };
 
 function dependencies() {
   return {

@@ -40,6 +40,13 @@ export default async function TaskPage({ params, searchParams }: Readonly<{ para
         <div><dt className="text-xs font-bold uppercase tracking-wide text-slate-500">Due date</dt><dd className="mt-2 font-semibold text-slate-950"><time dateTime={task.dueDate}>{taskDateLabel(task.dueDate)}</time><DueRiskReminder compact risk={classifyTaskDueRisk({...task,now})} taskTitle={task.title} dueDate={task.dueDate} now={now} /></dd></div>
         <div><dt className="text-xs font-bold uppercase tracking-wide text-slate-500">Status</dt><dd className="mt-2"><span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700 ring-1 ring-inset ring-slate-200">{STATUS_LABELS[task.status]}</span></dd></div>
       </dl>
+      <section className="mt-5 rounded-2xl border border-slate-200 bg-white p-5 sm:p-6" aria-labelledby="related-meetings-title">
+        <h2 id="related-meetings-title" className="text-lg font-semibold text-slate-950">Related meetings</h2>
+        {task.relatedMeetings?.length ? <ul className="mt-3 space-y-2">{task.relatedMeetings.map(meeting => <li key={meeting.id}>
+          <Link href={`/meetings/${encodeURIComponent(meeting.id)}`} className="inline-flex min-h-11 items-center font-semibold text-emerald-900 underline underline-offset-4">{meeting.title}</Link>
+          {meeting.id === task.sourceMeetingId ? <span className="ml-2 text-xs text-slate-500">Original source</span> : null}
+        </li>)}</ul> : <p className="mt-2 text-sm text-slate-600">No related meetings. Edit this task to link a meeting.</p>}
+      </section>
       <div className="mt-5">{sourceResult.ok && !sourceResult.source ? <p className="text-sm text-slate-600">Source: Direct task</p> : <SourceTraceabilityPanel result={sourceResult} />}</div>
     </PageFrame>
   );

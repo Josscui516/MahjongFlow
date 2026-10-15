@@ -8,6 +8,7 @@ import {
   createSourceTraceabilityFixture,
   FIXTURE_MEETING_ID,
   FIXTURE_SOURCE_ID,
+  FIXTURE_TASK_ID,
 } from "./source-navigation.fixture";
 import {
   SourceTraceabilityPanel,
@@ -15,6 +16,12 @@ import {
 } from "./SourceTraceabilityPanel";
 
 describe("RelatedTasksPanel", () => {
+  it("displays manually associated tasks without claiming a decision or discussion source", () => {
+    const html = renderToStaticMarkup(<RelatedTasksPanel result={{ ok: true, items: [{ id: FIXTURE_TASK_ID, title: "Fictional linked follow-up", sourceKind: null }] }} />);
+    expect(html).toContain("Linked meeting");
+    expect(html).toContain("linked to this meeting");
+    expect(html).not.toContain("Discussion point source");
+  });
   it("renders decision and discussion tasks with descriptive links", () => {
     const html = renderToStaticMarkup(
       <RelatedTasksPanel result={createRelatedTasksFixture()} />,
@@ -33,7 +40,7 @@ describe("RelatedTasksPanel", () => {
     );
 
     expect(html).toContain('data-feedback-state="empty"');
-    expect(html).toContain("No sourced tasks yet");
+    expect(html).toContain("No related tasks yet");
   });
 
   it("does not distinguish missing and forbidden resources in its unavailable state", () => {
