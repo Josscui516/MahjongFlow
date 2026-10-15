@@ -1,5 +1,7 @@
 # MahjongFlow MVP 项目企划书
 
+> 2026-10-16 用户确认活跃管理员具有二维码管理权限，即使其参与者数据角色仍为 committee；该能力不自动授予参与者明细访问。缺陷、迁移与验证见[管理员二维码修复](ADMIN_QR_MANAGEMENT_FIX.md)。
+
 > 2026-10-15 用户确认 Task 与 Meeting 为多对多关联，任务创建／编辑支持会议多选，原始决策来源独立保留；见[关联关系决定](TASK_MEETING_ASSOCIATIONS.md)。
 
 > 2026-10-04 用户已纠正业务范围：QR 用于自助报名，晚餐由管理员预录名册独立决定。本文下方与此冲突的旧签到／S8 约定已被[需求纠正](REGISTRATION_AND_DINNER_CORRECTION.md)替代。其余角色与隐私边界继续适用。

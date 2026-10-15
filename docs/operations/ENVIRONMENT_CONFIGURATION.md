@@ -114,6 +114,8 @@ Before sharing or committing changes:
 
 生产／预览部署使用各环境配置的 HTTPS `APP_BASE_URL`，不读取服务器内网 IP，不信任请求 Host 来改写正式链接。相同代码部署到不同机器／域名，无需修改源码中的 IP。邀请和密码恢复仍使用规范 origin，二维码的本地地址识别不改变它们。
 
+本机运行生产构建（`npm run build` 后 `npm start`）时，`APP_BASE_URL` 仍可使用 `http://localhost:3000`。只有配置指向 HTTP loopback，且请求 Host 为 loopback 或本机已识别的物理局域网地址时，才按本地预览处理并生成 LAN 二维码；不能仅凭 `NODE_ENV=production` 将这种本机运行误判为正式部署。公开域名或外部 Host 不触发此例外。Docker 同源模式仍要求启动脚本提供宿主机 IP，不会把容器内部地址用作二维码目标。
+
 手机与电脑须在同一可互通局域网，Windows 防火墙须允许私有网络中该前端端口的入站连接。无需向手机暴露 Supabase 管理密钥或数据库端口；公开报名通过前端服务端入口访问本地数据库。
 
 在活动详情中生成新的二维码，其链接使用动态识别的局域网 origin。旧二维码仍包含旧 origin，更新配置不会重写已经保存的图片；轮换会撤销该活动的旧 token。开发电脑 IP 改变后重新生成即可；重启开发服务会刷新 Next.js 开发资源允许的 origin 列表。

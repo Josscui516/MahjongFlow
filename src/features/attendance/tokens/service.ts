@@ -6,11 +6,11 @@ import QRCode from "qrcode";
 
 import {
   AuthorizationError,
-  requireAuthorised,
   type AccessContext,
 } from "@/lib/auth/authorization";
 import { getSupabaseAdminEnvironment } from "@/lib/supabase/env";
-import { isPrivateIPv4, localNetworkHosts, resolveCheckInOrigin } from "@/lib/network/check-in-origin";
+import { requireQrManager } from "./authorization";
+import { isLocalPreviewRequest, isPrivateIPv4, localNetworkHosts, resolveCheckInOrigin } from "@/lib/network/check-in-origin";
 
 import type {
   CheckInTokenRepository,
@@ -26,15 +26,19 @@ import {
 } from "./repository";
 import { isEventId, validateCheckInWindow } from "./validation";
 
-type AuthorisedAccess = AccessContext & Readonly<{ role: "authorised" }>;
 type Dependencies = Readonly<{
   applicationUrl: () => string | Promise<string>;
-  authorise: () => Promise<AuthorisedAccess>;
+  authorise: () => Promise<AccessContext>;
   createQr: (value: string) => Promise<string>;
   repository: CheckInTokenRepository;
 }>;
 
-function failure(error: unknown): Readonly<{ code: "PERMISSION_DENIED" | "SYSTEM_ERROR"; ok: false }> {
+function failure(error: unknown): Readonly<{ code: "PERMISSION_DENIED" | "SYSTEM_ERROR" | "EVENT_NOT_SCHEDULED" | "WINDOW_REQUIRED" | "NOT_FOUND"; ok: false }> {
+  if (error instanceof CheckInTokenPersistenceError) {
+    if (error.code === "PQR01") return { code: "EVENT_NOT_SCHEDULED", ok: false };
+    if (error.code === "PQR02") return { code: "WINDOW_REQUIRED", ok: false };
+    if (error.code === "P0002") return { code: "NOT_FOUND", ok: false };
+  }
   if (error instanceof AuthorizationError || (error instanceof CheckInTokenPersistenceError && error.code === "42501")) {
     return { code: "PERMISSION_DENIED", ok: false };
   }
@@ -95,15 +99,21 @@ export function createCheckInTokenService({ applicationUrl, authorise, createQr,
 export const checkInTokenService = createCheckInTokenService({
   applicationUrl: async () => {
     const dockerHost = process.env.LOCAL_DOCKER_HOST_IP;
-    const local = process.env.NODE_ENV === "development" || Boolean(dockerHost && isPrivateIPv4(dockerHost));
+    const canonicalOrigin = getSupabaseAdminEnvironment().applicationUrl;
+    const hosts = dockerHost && isPrivateIPv4(dockerHost) ? [dockerHost] : localNetworkHosts(networkInterfaces());
+    const requestHost = (await headers()).get("host");
+    const local = process.env.NODE_ENV === "development" || Boolean(dockerHost && isPrivateIPv4(dockerHost))
+      // Docker must supply its host address; never use a container's private interface as the LAN destination.
+      || (process.env.NEXT_PUBLIC_SUPABASE_SAME_ORIGIN !== "true"
+        && isLocalPreviewRequest({ canonicalOrigin, requestHost, hosts }));
     return resolveCheckInOrigin({
-    canonicalOrigin: getSupabaseAdminEnvironment().applicationUrl,
+    canonicalOrigin,
     development: local,
-    requestHost: local ? (await headers()).get("host") : null,
-    hosts: dockerHost && isPrivateIPv4(dockerHost) ? [dockerHost] : localNetworkHosts(networkInterfaces()),
+    requestHost: local ? requestHost : null,
+    hosts,
     });
   },
-  authorise: requireAuthorised,
+  authorise: requireQrManager,
   createQr: (value) => QRCode.toDataURL(value, { errorCorrectionLevel: "M", margin: 2, width: 320 }),
   repository: checkInTokenRepository,
 });

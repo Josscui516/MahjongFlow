@@ -29,6 +29,8 @@ function localDateTime(value: string | null) {
 }
 
 function safeMessage(code: string) {
+  if (code === "EVENT_NOT_SCHEDULED") return "QR registration is available only for Scheduled events. Check this event's status.";
+  if (code === "WINDOW_REQUIRED") return "Save the registration opening and closing times before generating a QR link.";
   return code === "PERMISSION_DENIED"
     ? "You do not have permission to manage event registration."
     : code === "NOT_FOUND"
@@ -90,7 +92,7 @@ export function TokenManager({ configureWindow, initialStatus, revokeToken, rota
 
   return <section aria-labelledby="registration-token-heading" className="space-y-5 rounded-xl border border-slate-200 bg-white p-5 sm:p-6">
     <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800">Authorised access</p>
+      <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800">Administrator or authorised access</p>
       <h2 className="mt-1 text-xl font-bold text-slate-950" id="registration-token-heading">QR registration entry</h2>
       <p className="mt-2 text-sm leading-6 text-slate-600">Configure the Sydney-time window, then generate a revocable event-only link. The plaintext link is displayed once.</p>
     </div>

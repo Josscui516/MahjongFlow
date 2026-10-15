@@ -19,6 +19,8 @@ export type CheckInWindowError = Readonly<{
 export type TokenManagementErrorCode =
   | "NOT_FOUND"
   | "PERMISSION_DENIED"
+  | "EVENT_NOT_SCHEDULED"
+  | "WINDOW_REQUIRED"
   | "SYSTEM_ERROR"
   | "VALIDATION";
 

@@ -1,9 +1,32 @@
 import { describe, expect, it } from "vitest";
-import { localNetworkHosts, resolveCheckInOrigin } from "./check-in-origin";
+import { isLocalPreviewRequest, localNetworkHosts, resolveCheckInOrigin } from "./check-in-origin";
 
 describe("check-in origin", () => {
   const defaults = { canonicalOrigin: "http://localhost:3000", development: true,
     requestHost: "localhost:3000", hosts: ["192.168.1.8"] };
+
+  it.each(["localhost:3000", "127.0.0.1:3100", "192.168.1.8:3000"])(
+    "allows a local production preview at %s to generate a LAN QR", requestHost => {
+      const input = { ...defaults, requestHost };
+      const local = isLocalPreviewRequest(input);
+      expect(local).toBe(true);
+      expect(resolveCheckInOrigin({ ...input, development: local })).toBe(
+        `http://192.168.1.8:${requestHost.endsWith(":3100") ? "3100" : "3000"}`,
+      );
+    },
+  );
+
+  it.each(["production.example.test", "192.168.9.99:3000", "user@localhost:3000", "localhost:3000/path", "localhost:3000?query", null])(
+    "never treats a public, foreign or malformed request as local preview: %s", requestHost => {
+      expect(isLocalPreviewRequest({ ...defaults, requestHost })).toBe(false);
+    },
+  );
+
+  it("never enables local preview for a deployed domain even when its request Host is loopback", () => {
+    for (const canonicalOrigin of ["https://production.example.test", "http://production.example.test"]) {
+      expect(isLocalPreviewRequest({ ...defaults, canonicalOrigin })).toBe(false);
+    }
+  });
 
   it("detects physical private interfaces and excludes loopback and virtual adapters", () => {
     expect(localNetworkHosts({
