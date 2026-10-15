@@ -3,6 +3,9 @@ import { describe, expect, test } from "vitest";
 import { getSafeBackofficeRedirectPath } from "@/lib/auth/redirect";
 
 describe("getSafeBackofficeRedirectPath", () => {
+  test("defaults a new login to the unified Dashboard", () => {
+    expect(getSafeBackofficeRedirectPath(undefined)).toBe("/dashboard");
+  });
   test.each([
     ["/backoffice", "/backoffice"],
     [
@@ -38,6 +41,6 @@ describe("getSafeBackofficeRedirectPath", () => {
     "backoffice",
     null,
   ])("rejects an unsafe redirect value", (value) => {
-    expect(getSafeBackofficeRedirectPath(value)).toBe("/backoffice");
+    expect(getSafeBackofficeRedirectPath(value)).toBe("/dashboard");
   });
 });

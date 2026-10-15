@@ -60,6 +60,11 @@ export function DashboardView({ snapshot, upcomingEvents }: Readonly<{ snapshot:
       <div><h1 className="text-3xl font-bold tracking-tight text-slate-950">Dashboard</h1><p className="mt-1 text-sm text-slate-600">Upcoming events and work that needs your attention.</p></div>
       <Link href="/tasks" className="inline-flex min-h-11 shrink-0 items-center rounded-lg border border-emerald-800 px-3 text-sm font-semibold text-emerald-950 focus-visible:outline-2 focus-visible:outline-offset-2">Open tasks</Link>
     </header>
+    <nav aria-label="Quick actions" className="mt-5 flex flex-wrap gap-2">
+      <Link href="/meetings/new" className="inline-flex min-h-11 items-center rounded-lg bg-emerald-900 px-4 text-sm font-semibold text-white hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-2">New meeting</Link>
+      <Link href="/tasks/new" className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2">New task</Link>
+      <Link href="/events/new" className="inline-flex min-h-11 items-center rounded-lg border border-slate-300 bg-white px-4 text-sm font-semibold text-slate-900 hover:bg-slate-100 focus-visible:outline-2 focus-visible:outline-offset-2">New event</Link>
+    </nav>
     <nav aria-label="Task summaries" className="mt-5 grid grid-cols-2 gap-2 sm:grid-cols-4">
       {sections.map(result => { const key = keyOf(result); return <a key={key} href={`#dashboard-${key}`} className={`flex min-h-20 flex-col justify-between rounded-lg border p-3 focus-visible:outline-2 focus-visible:outline-offset-2 ${key === "overdue" ? "border-rose-200 bg-rose-50 text-rose-950" : "border-slate-200 bg-white text-slate-900"}`}><span className="text-xs font-medium">{SECTION_COPY[key].title}</span><span className="mt-1 text-2xl font-semibold tabular-nums">{result.ok ? result.section.total : "Unavailable"}</span></a>; })}
     </nav>

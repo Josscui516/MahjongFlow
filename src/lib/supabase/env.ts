@@ -1,3 +1,5 @@
+import { isPrivateIPv4 } from "@/lib/network/check-in-origin";
+
 export type SupabasePublicEnvironment = Readonly<{
   publishableKey: string;
   url: string;
@@ -21,10 +23,14 @@ function requirePublicEnvironmentValue(
 }
 
 export function getSupabasePublicEnvironment(): SupabasePublicEnvironment {
-  const url = requirePublicEnvironmentValue(
+  const configuredUrl = requirePublicEnvironmentValue(
     "NEXT_PUBLIC_SUPABASE_URL",
     process.env.NEXT_PUBLIC_SUPABASE_URL,
   );
+  const sameOrigin = process.env.NEXT_PUBLIC_SUPABASE_SAME_ORIGIN === "true";
+  const url = sameOrigin
+    ? typeof window === "undefined" ? "http://kong:8000" : `${window.location.origin}/supabase`
+    : configuredUrl;
   const publishableKey = requirePublicEnvironmentValue(
     "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY",
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
@@ -42,13 +48,19 @@ export function getSupabasePublicEnvironment(): SupabasePublicEnvironment {
     parsedUrl.hostname,
   );
 
-  if (parsedUrl.protocol !== "https:" && !isLoopbackHost) {
+  if (parsedUrl.protocol !== "https:" && !isLoopbackHost && !sameOrigin) {
     throw new Error(
       "NEXT_PUBLIC_SUPABASE_URL must use HTTPS outside local development.",
     );
   }
 
   return { publishableKey, url: parsedUrl.toString().replace(/\/$/, "") };
+}
+
+// Same-origin Docker transport must use the same cookie name in browser and server.
+export function getSupabaseAuthOptions() {
+  return process.env.NEXT_PUBLIC_SUPABASE_SAME_ORIGIN === "true"
+    ? { storageKey: "mahjongflow-local-auth" } : {};
 }
 
 function requireServerEnvironmentValue(
@@ -75,7 +87,10 @@ function parseApplicationUrl(value: string) {
     parsedUrl.hostname,
   );
 
-  if (parsedUrl.protocol !== "https:" && !isLoopbackHost) {
+  const isLocalDevelopment = process.env.NODE_ENV === "development" && isPrivateIPv4(parsedUrl.hostname);
+
+  if (parsedUrl.protocol !== "https:" && !isLoopbackHost
+    && !(parsedUrl.protocol === "http:" && isLocalDevelopment)) {
     throw new Error("APP_BASE_URL must use HTTPS outside local development.");
   }
 

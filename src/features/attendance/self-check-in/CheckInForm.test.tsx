@@ -9,6 +9,8 @@ describe("self check-in form", () => {
     expect(html).not.toContain('name="studentId"');
     expect(html).not.toContain('name="eventId"');
     expect(html).not.toContain("participantId");
+    expect(html).toContain("You do not need a previous registration");
+    expect(html).toContain('name="fullName"');
   });
 
   it("requires the conditional student ID and exposes safe outcome messages", () => {
@@ -16,6 +18,7 @@ describe("self check-in form", () => {
     expect(html).toContain('name="studentId"');
     expect(html).toContain("required");
     expect(checkInMessages.unable_to_process).not.toContain("exists");
+    expect(checkInMessages.unable_to_process).toContain("contact event staff");
     expect(checkInMessages.already_processed).not.toContain("confirmed");
     expect(checkInMessages.already_processed).not.toContain("voided");
   });

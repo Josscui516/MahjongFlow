@@ -6,6 +6,7 @@ export type TaskInput = Readonly<{
   description: string;
   dueDate: string;
   eventId?: string | null;
+  meetingIds?: readonly string[];
   sourceDecisionId?: string | null;
   sourceDiscussionPointId?: string | null;
   sourceMeetingId?: string | null;
@@ -17,6 +18,7 @@ export type TaskRecordDTO = Readonly<TaskInput & {
   createdAt: string;
   createdBy: string;
   id: string;
+  relatedMeetings?: readonly Readonly<{ id: string; title: string }>[];
   updatedAt: string;
 }>;
 

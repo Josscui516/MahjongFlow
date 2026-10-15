@@ -12,8 +12,8 @@ export function SourceNavigationLoading({ subject }: Readonly<{ subject: "relate
 export function SourceNavigationEmpty({ subject }: Readonly<{ subject: "related tasks" | "source details" }>) {
   return subject === "related tasks" ? (
     <EmptyFeedback
-      description="Tasks created from this meeting will appear here."
-      title="No sourced tasks yet"
+      description="Tasks linked to this meeting will appear here. Choose this meeting when creating or editing a task."
+      title="No related tasks yet"
     />
   ) : (
     <EmptyFeedback

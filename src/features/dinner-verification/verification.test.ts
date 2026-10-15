@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
-import type { AttendanceAuditRecord, AttendanceAuditResult } from "@/features/attendance/records";
+import type { DinnerRosterRecord, DinnerRosterResult } from "./roster";
 import { createDinnerVerificationReader } from "./server";
 import { initialVerificationState, verificationReducer } from "./refresh-state";
 import type { DinnerVerificationResult } from "./contracts";
@@ -8,18 +8,17 @@ import type { DinnerVerificationResult } from "./contracts";
 const eventId = "36000000-0000-4000-8000-000000000001";
 const participantId = "36000000-0000-4000-8000-000000000002";
 const readAt = "2026-09-28T05:00:00.000Z";
-const row: AttendanceAuditRecord = {
-  id: "36000000-0000-4000-8000-000000000003", eventId, participantId,
+const row: DinnerRosterRecord = { eventId, participantId,
   participantName: "Fictional Casey", participantEmail: "casey@example.test",
-  method: "qr", status: "confirmed", recordedBy: null, checkedInAt: readAt, updatedAt: readAt,
+  status: "listed",
 };
-const snapshot = (items: readonly AttendanceAuditRecord[]): AttendanceAuditResult => ({ ok: true, event: { id: eventId, name: "Fictional Dinner" }, items });
+const snapshot = (items: readonly DinnerRosterRecord[]): DinnerRosterResult => ({ ok: true, event: { id: eventId, name: "Fictional Dinner" }, items });
 const latest: DinnerVerificationResult = { ok: true, event: { id: eventId, name: "Fictional Dinner" }, items: [], eligibleCount: 0, readAt };
 
 describe("D-03 minimal verification list", () => {
   it("projects only necessary identity, result and one consistent aggregate", async () => {
     const result = await createDinnerVerificationReader({ listForEvent: async () => snapshot([
-      row, { ...row, participantId: "36000000-0000-4000-8000-000000000004", status: "voided", recordedBy: { displayName: "Private operator" } },
+      row, { ...row, participantId: "36000000-0000-4000-8000-000000000004", status: "removed" },
     ]) }, () => new Date(readAt))(eventId);
     expect(result).toEqual({ ok: true, event: { id: eventId, name: "Fictional Dinner" }, readAt, eligibleCount: 1, items: [
       { participantId, participantName: row.participantName, participantEmail: row.participantEmail, eligibility: "Eligible" },
@@ -42,13 +41,13 @@ describe("D-03 minimal verification list", () => {
     snapshot([{ ...row, participantId: "invalid" }]),
     { ...snapshot([]), event: { id: "wrong", name: "Wrong event" } },
   ])("fails closed on invalid provider scope or duplicate facts", async (result) => {
-    expect(await createDinnerVerificationReader({ listForEvent: async () => result as AttendanceAuditResult })(eventId)).toEqual({ ok: false, code: "SYSTEM_ERROR" });
+    expect(await createDinnerVerificationReader({ listForEvent: async () => result as DinnerRosterResult })(eventId)).toEqual({ ok: false, code: "SYSTEM_ERROR" });
   });
   it("maps thrown errors safely", async () => {
     expect(await createDinnerVerificationReader({ listForEvent: async () => { throw new Error("private failure"); } })(eventId)).toEqual({ ok: false, code: "SYSTEM_ERROR" });
   });
   it("reads each request anew and recalculates counts after a correction", async () => {
-    const port = { listForEvent: vi.fn().mockResolvedValueOnce(snapshot([row])).mockResolvedValueOnce(snapshot([{ ...row, status: "voided", recordedBy: { displayName: "Fictional operator" } }])) };
+    const port = { listForEvent: vi.fn().mockResolvedValueOnce(snapshot([row])).mockResolvedValueOnce(snapshot([{ ...row, status: "removed" }])) };
     const read = createDinnerVerificationReader(port);
     expect(await read(eventId)).toMatchObject({ eligibleCount: 1 });
     expect(await read(eventId)).toMatchObject({ eligibleCount: 0, items: [{ eligibility: "Not Eligible Yet" }] });

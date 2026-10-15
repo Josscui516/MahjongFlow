@@ -89,7 +89,7 @@ export function AppNavigation({
       <aside className="fixed inset-y-0 left-0 z-20 hidden w-72 border-r border-slate-200 bg-white px-5 py-7 md:block">
         <Link
           className="mb-10 block rounded-lg px-3 py-1 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
-          href="/backoffice"
+          href="/dashboard"
         >
           <span className="block text-xl font-bold tracking-tight text-emerald-950">
             MahjongFlow
@@ -112,7 +112,7 @@ export function AppNavigation({
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
           <Link
             className="rounded-lg font-bold tracking-tight text-emerald-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
-            href="/backoffice"
+            href="/dashboard"
           >
             MahjongFlow
           </Link>

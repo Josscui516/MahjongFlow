@@ -15,6 +15,16 @@ const snapshot: DashboardSnapshot = {
 };
 
 describe("DashboardView", () => {
+  it("combines workspace actions with task and event summaries in one dashboard", () => {
+    const html = renderToStaticMarkup(<DashboardView snapshot={snapshot} upcomingEvents={{ events: [], state: "ready" }} />);
+    expect(html).toContain('aria-label="Quick actions"');
+    expect(html).toContain('href="/meetings/new"');
+    expect(html).toContain('href="/tasks/new"');
+    expect(html).toContain('href="/events/new"');
+    expect(html).toContain("My unfinished tasks");
+    expect(html).toContain("No upcoming events.");
+    expect(html).not.toContain("Committee dashboard");
+  });
   it("renders independent empty, unavailable, and error states without invented counts", () => {
     const html = renderToStaticMarkup(<DashboardView snapshot={snapshot} upcomingEvents={{ state: "not_connected" }} />);
     expect(html).toContain("You have no unfinished tasks.");

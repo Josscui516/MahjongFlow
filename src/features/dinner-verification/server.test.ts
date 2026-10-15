@@ -2,18 +2,16 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import type { AttendanceAuditRecord, AttendanceAuditResult } from "@/features/attendance/records";
+import type { DinnerRosterRecord, DinnerRosterResult } from "./roster";
 import { createDinnerEligibilityReader } from "./server";
 
 const eventId = "35000000-0000-4000-8000-00000000000a";
 const participantId = "35000000-0000-4000-8000-00000000000b";
-const record: AttendanceAuditRecord = {
-  id: "35000000-0000-4000-8000-00000000000c",
-  eventId, participantId, status: "confirmed", method: "qr", recordedBy: null,
+const record: DinnerRosterRecord = {
+  eventId, participantId, status: "listed",
   participantName: "Fictional Dinner Attendee", participantEmail: "dinner@example.test",
-  checkedInAt: "2026-09-28T01:00:00Z", updatedAt: "2026-09-28T01:00:00Z",
 };
-const snapshot = (items: readonly AttendanceAuditRecord[]): AttendanceAuditResult => ({
+const snapshot = (items: readonly DinnerRosterRecord[]): DinnerRosterResult => ({
   ok: true, event: { id: eventId, name: "Fictional Dinner Event" }, items,
 });
 
@@ -52,7 +50,7 @@ describe("dinner eligibility public provider adapter", () => {
   it("does not retain confirmed eligibility after the supplied current fact changes", async () => {
     const listForEvent = vi.fn()
       .mockResolvedValueOnce(snapshot([record]))
-      .mockResolvedValueOnce(snapshot([{ ...record, status: "voided", recordedBy: { displayName: "Fictional Corrector" } }]))
+      .mockResolvedValueOnce(snapshot([{ ...record, status: "removed" }]))
       .mockResolvedValueOnce(snapshot([]));
     const read = createDinnerEligibilityReader({ listForEvent });
     expect(await read(eventId, participantId)).toMatchObject({ eligibility: "Eligible" });

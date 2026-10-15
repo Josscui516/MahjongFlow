@@ -1,5 +1,5 @@
 export { calculateDinnerEligibility } from "./dinner-eligibility";
 export type {
-  DinnerAttendanceFact,
+  DinnerRosterFact,
   DinnerEligibility,
 } from "./dinner-eligibility";

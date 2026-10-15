@@ -1,5 +1,7 @@
 # MahjongFlow 当前项目状态
 
+> 2026-10-15 后续状态：用户已批准扫码报名／独立晚餐名册、Dashboard 合并、Docker 包装及 Task–Meeting 多对多补丁，并授权单个 PR 直接指向 `main`。补丁由 [#99](https://github.com/Josscui516/MahjongFlow/issues/99) 跟踪，交付记录见[补丁说明](POST_SPRINT_PATCH_DELIVERY.md)。以下 2026-09-30 状态仍为历史基线，不代表这些补丁已合并或部署。
+
 核验日期：2026-09-30（Australia/Sydney）。本文件汇总实时交付结果；范围与成功标准仍以 [MVP 企划书](MVP_PROJECT_PROPOSAL.md)为准，历史计划与原测试记录保留其日期口径。
 
 ## 1. 当前交付基线

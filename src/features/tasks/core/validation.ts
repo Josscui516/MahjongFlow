@@ -17,6 +17,10 @@ export function validateTaskInput(input: TaskInput) {
   for (const field of optionalIds) if (input[field] && !UUID.test(input[field]!)) errors.push({ field, message: "Select a valid linked record." });
   if ((input.sourceDecisionId || input.sourceDiscussionPointId) && !input.sourceMeetingId) errors.push({ field: "sourceMeetingId", message: "A source meeting is required for a decision or discussion point." });
   if (input.sourceDecisionId && input.sourceDiscussionPointId) errors.push({ field: "sourceDecisionId", message: "Choose either a decision or a discussion point, not both." });
+  if (input.meetingIds !== undefined && (!Array.isArray(input.meetingIds)
+    || input.meetingIds.length > 100 || input.meetingIds.some(id => typeof id !== "string" || !UUID.test(id)))) {
+    errors.push({ field: "meetingIds", message: "Choose up to 100 valid meetings." });
+  }
   if (errors.length) return { errors, ok: false as const };
-  return { ok: true as const, value: { ...input, description, title } };
+  return { ok: true as const, value: { ...input, description, title, ...(input.meetingIds !== undefined ? { meetingIds: [...new Set(input.meetingIds)] } : {}) } };
 }

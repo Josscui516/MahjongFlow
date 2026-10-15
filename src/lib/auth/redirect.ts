@@ -1,8 +1,8 @@
-const FALLBACK_BACKOFFICE_PATH = "/backoffice";
+const FALLBACK_BACKOFFICE_PATH = "/dashboard";
 const REDIRECT_ORIGIN = "https://mahjongflow.invalid";
 const PROTECTED_BACKOFFICE_PATH_PREFIXES = [
   FALLBACK_BACKOFFICE_PATH,
-  "/dashboard",
+  "/backoffice",
   "/meetings",
   "/tasks",
   "/events",

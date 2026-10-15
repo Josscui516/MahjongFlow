@@ -43,9 +43,11 @@ export function createSelfCheckInGateway(): SelfCheckInGateway {
       } satisfies CheckInContextResult;
     },
     async submit(input) {
-      const { data, error } = await client.rpc("submit_event_check_in", {
-        check_in_token: input.token,
+      const { data, error } = await client.rpc("submit_event_registration", {
+        registration_token: input.token,
+        participant_name: input.fullName,
         participant_email: input.email,
+        privacy_accepted: input.privacyAccepted,
         participant_student_id: input.studentId ?? undefined,
       });
       if (error || typeof data !== "string" || !OUTCOMES.has(data as SelfCheckInOutcome)) return "system_error";

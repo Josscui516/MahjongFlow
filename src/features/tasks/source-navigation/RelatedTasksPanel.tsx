@@ -43,7 +43,7 @@ export function RelatedTasksPanel({ result }: RelatedTasksPanelProps) {
             Related tasks
           </h2>
           <p className="mt-1 text-sm leading-6 text-slate-600">
-            All tasks created from this meeting, with their current status.
+            All tasks linked to this meeting, with their current status.
           </p>
         </div>
         <p className="text-sm font-semibold text-emerald-800">
@@ -56,10 +56,10 @@ export function RelatedTasksPanel({ result }: RelatedTasksPanelProps) {
           <li className="min-w-0 p-4 sm:flex sm:items-center sm:justify-between sm:gap-4" key={task.id}>
             <div className="min-w-0">
               <p className="break-words font-semibold text-slate-950">{task.title}</p>
-              <p className="mt-1 text-sm text-slate-600">{getSourceKindLabel(task.sourceKind)}{task.status ? ` · ${TASK_STATUS_LABELS[task.status]}` : ""}</p>
+              <p className="mt-1 text-sm text-slate-600">{task.sourceKind ? getSourceKindLabel(task.sourceKind) : "Linked meeting"}{task.status ? ` · ${TASK_STATUS_LABELS[task.status]}` : ""}</p>
             </div>
             <Link
-              aria-label={`Open task ${task.title} from this ${task.sourceKind === "decision" ? "decision" : "discussion point"}`}
+              aria-label={task.sourceKind ? `Open task ${task.title} from this ${task.sourceKind === "decision" ? "decision" : "discussion point"}` : `Open task ${task.title} linked to this meeting`}
               className="mt-3 inline-flex min-h-11 shrink-0 items-center justify-center rounded-lg border border-emerald-800 px-3 py-2 text-sm font-semibold text-emerald-900 transition hover:bg-emerald-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 sm:mt-0"
               href={getTaskHref(task.id)}
             >

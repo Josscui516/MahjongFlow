@@ -10,6 +10,8 @@ export type CheckInContextResult =
   | Readonly<{ code: "UNAVAILABLE" | "SYSTEM_ERROR"; ok: false }>;
 
 export type SelfCheckInInput = Readonly<{
+  fullName: string;
+  privacyAccepted: true;
   email: string;
   studentId: string | null;
   token: string;

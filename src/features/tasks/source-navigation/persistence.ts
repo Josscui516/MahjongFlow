@@ -37,26 +37,21 @@ export function createSourceNavigationRepository(
   return {
     async listRelatedTasks(meetingId) {
       const supabase = await getClient();
-      const { data, error } = await supabase
-        .from("tasks")
-        .select("id, title, status, source_decision_id, source_discussion_point_id")
-        .eq("source_meeting_id", meetingId)
-        .order("title")
-        .order("id");
-
-      if (error) fail(error.code);
-
-      return (data ?? []).flatMap((task) => {
-        const sourceKind = task.source_decision_id
-          ? "decision"
-          : task.source_discussion_point_id
-            ? "discussion"
-            : null;
-
-        return sourceKind
-          ? [{ id: task.id, sourceKind, title: task.title, sourceId: task.source_decision_id ?? task.source_discussion_point_id ?? undefined, status: task.status }]
-          : [];
-      });
+      const items: RelatedTaskSummary[] = [];
+      for (let start = 0; ; start += 250) {
+        const { data, error } = await supabase.from("task_meetings")
+          .select("tasks!inner(id, title, status, source_meeting_id, source_decision_id, source_discussion_point_id)")
+          .eq("meeting_id", meetingId).order("task_id").range(start, start + 249);
+        if (error) fail(error.code);
+        for (const { tasks: task } of data ?? []) {
+          const isSourceMeeting = task.source_meeting_id === meetingId;
+          const sourceKind = isSourceMeeting && task.source_decision_id ? "decision"
+            : isSourceMeeting && task.source_discussion_point_id ? "discussion" : null;
+          items.push({ id: task.id, sourceKind, title: task.title, status: task.status,
+            sourceId: sourceKind ? task.source_decision_id ?? task.source_discussion_point_id ?? undefined : undefined });
+        }
+        if ((data?.length ?? 0) < 250) return items.sort((a,b) => a.title.localeCompare(b.title) || a.id.localeCompare(b.id));
+      }
     },
 
     async readSource(meetingId, sourceKind, sourceId) {

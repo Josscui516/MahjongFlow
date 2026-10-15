@@ -16,7 +16,7 @@ it("renders an authorised, accessible token manager without secret database fiel
     revokeToken={vi.fn()}
     rotateToken={vi.fn()}
   />);
-  expect(html).toContain("QR check-in entry");
+  expect(html).toContain("QR registration entry");
   expect(html).toContain("Opens (Sydney time)");
   expect(html).toContain("Rotate QR link");
   expect(html).toContain("Revoke active link");

@@ -34,6 +34,28 @@ function service(repo = repository(), authorise = async () => ({ canManageAccoun
 }
 
 describe("event check-in token service", () => {
+  it("awaits a dynamically resolved origin before generating the QR", async () => {
+    const result = await createCheckInTokenService({
+      applicationUrl: async () => "http://10.0.0.23:3100",
+      authorise: async () => ({ canManageAccounts: false, role: "authorised" as const, userId: actorId }),
+      createQr: async (value) => value,
+      repository: repository(),
+    }).rotate(eventId);
+    expect(result).toMatchObject({ ok: true, url: `http://10.0.0.23:3100/register/${token}` });
+  });
+
+  it("preserves the current token if origin detection fails", async () => {
+    const repo = repository();
+    const result = await createCheckInTokenService({
+      applicationUrl: async () => { throw new Error("No LAN interface"); },
+      authorise: async () => ({ canManageAccounts: false, role: "authorised" as const, userId: actorId }),
+      createQr: async (value) => value,
+      repository: repo,
+    }).rotate(eventId);
+    expect(result).toEqual({ ok: false, code: "SYSTEM_ERROR" });
+    expect(repo.rotate).not.toHaveBeenCalled();
+  });
+
   it("returns validation feedback for a malformed direct action argument without writing", async () => {
     const repo = repository();
     await expect(service(repo).configureWindow(eventId, null as unknown as CheckInWindowInput))
@@ -45,7 +67,7 @@ describe("event check-in token service", () => {
     const result = await service().rotate(eventId);
     expect(result.ok).toBe(true);
     if (!result.ok) return;
-    expect(result.url).toBe(`https://mahjong.example.test/check-in/${token}`);
+    expect(result.url).toBe(`https://mahjong.example.test/register/${token}`);
     const png = PNG.sync.read(Buffer.from(result.qrDataUrl.split(",")[1], "base64"));
     const decoded = jsQR(new Uint8ClampedArray(png.data), png.width, png.height);
     expect(decoded?.data).toBe(result.url);

@@ -1,5 +1,7 @@
 import "server-only";
 
+import { networkInterfaces } from "node:os";
+import { headers } from "next/headers";
 import QRCode from "qrcode";
 
 import {
@@ -8,6 +10,7 @@ import {
   type AccessContext,
 } from "@/lib/auth/authorization";
 import { getSupabaseAdminEnvironment } from "@/lib/supabase/env";
+import { isPrivateIPv4, localNetworkHosts, resolveCheckInOrigin } from "@/lib/network/check-in-origin";
 
 import type {
   CheckInTokenRepository,
@@ -25,7 +28,7 @@ import { isEventId, validateCheckInWindow } from "./validation";
 
 type AuthorisedAccess = AccessContext & Readonly<{ role: "authorised" }>;
 type Dependencies = Readonly<{
-  applicationUrl: () => string;
+  applicationUrl: () => string | Promise<string>;
   authorise: () => Promise<AuthorisedAccess>;
   createQr: (value: string) => Promise<string>;
   repository: CheckInTokenRepository;
@@ -76,9 +79,10 @@ export function createCheckInTokenService({ applicationUrl, authorise, createQr,
       if (!isEventId(eventId)) return { code: "NOT_FOUND", ok: false };
       try {
         const access = await authorise();
+        const origin = await applicationUrl();
         const generated = await repository.rotate(eventId, access.userId);
         if (!generated) return { code: "NOT_FOUND", ok: false };
-        const url = `${applicationUrl()}/check-in/${generated.token}`;
+        const url = `${origin}/register/${generated.token}`;
         const qrDataUrl = await createQr(url);
         return { createdAt: generated.createdAt, ok: true, qrDataUrl, url };
       } catch (error) {
@@ -89,7 +93,16 @@ export function createCheckInTokenService({ applicationUrl, authorise, createQr,
 }
 
 export const checkInTokenService = createCheckInTokenService({
-  applicationUrl: () => getSupabaseAdminEnvironment().applicationUrl,
+  applicationUrl: async () => {
+    const dockerHost = process.env.LOCAL_DOCKER_HOST_IP;
+    const local = process.env.NODE_ENV === "development" || Boolean(dockerHost && isPrivateIPv4(dockerHost));
+    return resolveCheckInOrigin({
+    canonicalOrigin: getSupabaseAdminEnvironment().applicationUrl,
+    development: local,
+    requestHost: local ? (await headers()).get("host") : null,
+    hosts: dockerHost && isPrivateIPv4(dockerHost) ? [dockerHost] : localNetworkHosts(networkInterfaces()),
+    });
+  },
   authorise: requireAuthorised,
   createQr: (value) => QRCode.toDataURL(value, { errorCorrectionLevel: "M", margin: 2, width: 320 }),
   repository: checkInTokenRepository,

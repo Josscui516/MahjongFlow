@@ -43,6 +43,7 @@ describe("D-03 dinner routes", () => {
     expect(renderToStaticMarkup(await DinnerEventsPage())).toContain("No events available");
   });
   it("uses the protected reader for a direct detail request and refresh action", async () => {
+    mocks.auth.mockResolvedValue({ role: "authorised", canManageAccounts: false });
     mocks.read.mockResolvedValue({ ok: false, code: "PERMISSION_DENIED" });
     const html = renderToStaticMarkup(await DinnerEventPage({ params: Promise.resolve({ eventId: "private-event" }) }));
     expect(html).toContain('role="alert"');
