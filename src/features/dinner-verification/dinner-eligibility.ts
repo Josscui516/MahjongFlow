@@ -1,4 +1,4 @@
-/** The current administrator-maintained membership for one activity. */
+/** A current attendance/registration/email match supplied by the authorised read port. */
 export type DinnerRosterFact = Readonly<{
   eventId: string;
   participantId: string;

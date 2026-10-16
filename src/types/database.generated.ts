@@ -754,6 +754,15 @@ export type Database = {
           registration_count: number
         }[]
       }
+      list_matched_dinner_attendees: {
+        Args: { target_event_id: string }
+        Returns: {
+          email: string
+          event_id: string
+          full_name: string
+          participant_id: string
+        }[]
+      }
       record_account_recovery_sent: {
         Args: { target_profile_id: string }
         Returns: undefined

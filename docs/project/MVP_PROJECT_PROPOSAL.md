@@ -1,5 +1,7 @@
 # MahjongFlow MVP 项目企划书
 
+> 2026-10-16 晚餐规则更新：仅本活动有效报名、已确认签到且邮箱匹配活跃内部名册的人员显示在晚餐核验页。内部名册仍独立预录；见[签到邮箱匹配决定](DINNER_CHECK_IN_EMAIL_MATCHING.md)。
+
 > 2026-10-15 用户确认 Task 与 Meeting 为多对多关联，任务创建／编辑支持会议多选，原始决策来源独立保留；见[关联关系决定](TASK_MEETING_ASSOCIATIONS.md)。
 
 > 2026-10-04 用户已纠正业务范围：QR 用于自助报名，晚餐由管理员预录名册独立决定。本文下方与此冲突的旧签到／S8 约定已被[需求纠正](REGISTRATION_AND_DINNER_CORRECTION.md)替代。其余角色与隐私边界继续适用。

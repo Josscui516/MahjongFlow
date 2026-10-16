@@ -1,6 +1,7 @@
 import "server-only";
 
-import { dinnerRosterService, type DinnerRosterResult, type DinnerRosterReadPort } from "./roster";
+import { type DinnerRosterResult, type DinnerRosterReadPort } from "./roster";
+import { matchedDinnerAttendance } from "./matched-attendance";
 
 import { calculateDinnerEligibility, type DinnerEligibility } from "./index";
 import type { DinnerVerificationResult } from "./contracts";
@@ -63,7 +64,7 @@ export function createDinnerEligibilityReader(roster: DinnerRosterReadPort) {
   };
 }
 
-export const readDinnerEligibility = createDinnerEligibilityReader(dinnerRosterService);
+export const readDinnerEligibility = createDinnerEligibilityReader(matchedDinnerAttendance);
 
 export function createDinnerVerificationReader(
   roster: DinnerRosterReadPort,
@@ -84,7 +85,7 @@ export function createDinnerVerificationReader(
         }
         seen.add(id);
       }
-      const items = result.items.map((item) => ({
+      const items = result.items.filter((item) => item.status === "listed").map((item) => ({
         participantId: item.participantId.toLowerCase(),
         participantName: item.participantName,
         participantEmail: item.participantEmail,
@@ -105,4 +106,4 @@ export function createDinnerVerificationReader(
   };
 }
 
-export const readDinnerVerification = createDinnerVerificationReader(dinnerRosterService);
+export const readDinnerVerification = createDinnerVerificationReader(matchedDinnerAttendance);

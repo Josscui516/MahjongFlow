@@ -2,6 +2,8 @@
 
 > A lightweight meeting, task, event, and attendance coordination system for the Monash Mahjong Club.
 
+> 2026-10-16 晚餐规则修复：内部名册保留独立预录，核验页只显示有效报名、已确认签到且邮箱匹配的人员。部署前须应用新增 migration，见[需求与部署记录](docs/project/DINNER_CHECK_IN_EMAIL_MATCHING.md)。下方 2026-09-30 状态为历史基线。
+
 - **Course:** FIT3162 Computer Science Project
 - **Team:** S1_CS_01
 - **Stage:** Sprint 8 merged into `main`; M5 complete; S10/M6 formal handoff pending

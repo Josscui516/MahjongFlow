@@ -8,7 +8,7 @@ vi.mock("server-only", () => ({}));
 const session = vi.hoisted(() => ({ client: null as SupabaseClient<Database> | null }));
 vi.mock("@/lib/supabase/server", () => ({ createServerSupabaseClient: async () => { if (!session.client) throw new Error("Missing test session"); return session.client; } }));
 import { readDinnerVerification } from "./server";
-import { saveDinnerRosterEntry, removeDinnerRosterEntry } from "./roster";
+import { dinnerRosterService, saveDinnerRosterEntry, removeDinnerRosterEntry } from "./roster";
 
 describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("independent public registration and dinner roster: real local RLS", () => {
   const eventId=randomUUID(), token=randomBytes(32).toString("hex"), email=`registration-${randomUUID()}@example.test`, rosterEmail=`dinner-${randomUUID()}@example.test`;
@@ -34,7 +34,7 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("independent public r
   },30000);
   afterAll(async()=>{
     session.client=null;if(!users.length||!privileged)return;
-    sql(`delete from public.dinner_roster where event_id='${eventId}';delete from public.attendance_records where event_id='${eventId}';delete from public.registrations where event_id='${eventId}';delete from public.events where id='${eventId}';delete from public.participants where email='${email}';`);
+    sql(`delete from public.dinner_roster where event_id='${eventId}';delete from public.attendance_records where event_id='${eventId}';delete from public.registrations where event_id='${eventId}';delete from public.events where id='${eventId}';delete from public.participants where email in ('${email}','${rosterEmail}');`);
     sql(`delete from public.registrations where event_id='${studentEvent}';delete from public.events where id='${studentEvent}';delete from public.participants where email='${studentEmail}';`);
     for(const id of users){sql(`delete from public.profiles where id='${id}';`);await privileged.auth.admin.deleteUser(id);}
   });
@@ -48,14 +48,31 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("independent public r
     sql(`insert into public.attendance_records(event_id,participant_id,checked_in_at,check_in_method,attendance_status,recorded_by)select '${eventId}',id,now(),'manual','confirmed','${users[2]}' from public.participants where email='${email}';`);
     expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:0,items:[]});
   });
-  it("lets an administrator preload dinner independently of registration and remove membership",async()=>{
-    session.client=manager;expect(await saveDinnerRosterEntry(eventId,"Fictional Dinner Member",rosterEmail)).toEqual({ok:true});
+  it("matches an independently preloaded email only after registration and confirmed check-in, recalculating corrections",async()=>{
+    session.client=manager;expect(await saveDinnerRosterEntry(eventId,"Fictional Dinner Member",`  ${rosterEmail.toUpperCase()}  `)).toEqual({ok:true});
     expect(await saveDinnerRosterEntry(eventId,"Fictional Dinner Member",rosterEmail)).toEqual({ok:true});
     expect(sql(`select count(*) from public.dinner_roster where event_id='${eventId}';`)).toBe("1");
-    session.client=authorised;const r=await readDinnerVerification(eventId);expect(r).toMatchObject({ok:true,eligibleCount:1});if(!r.ok)throw new Error("Roster read failed");
+    const internal=await dinnerRosterService.listForEvent(eventId);expect(internal).toMatchObject({ok:true,items:[{participantEmail:rosterEmail,status:"listed"}]});
+    session.client=authorised;expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:0,items:[]});
+    expect((await privileged.rpc("submit_event_registration",{registration_token:token,participant_name:"Fictional Registered Attendee",participant_email:` ${rosterEmail.toUpperCase()} `,privacy_accepted:true})).data).toBe("success");
+    expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:0,items:[]});
+    sql(`insert into public.attendance_records(event_id,participant_id,check_in_method,recorded_by)select '${eventId}',id,'manual','${users[2]}' from public.participants where email='${rosterEmail}';`);
+    const r=await readDinnerVerification(eventId);expect(r).toMatchObject({ok:true,eligibleCount:1});if(!r.ok||!internal.ok)throw new Error("Roster read failed");
     expect(r.items[0]).toMatchObject({participantEmail:rosterEmail,eligibility:"Eligible"});
-    session.client=manager;expect(await removeDinnerRosterEntry(eventId,r.items[0].participantId)).toEqual({ok:true});
-    expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:0});
+    expect(r.items[0].participantName).toBe("Fictional Registered Attendee");
+    expect(r.items[0].participantId).not.toBe(internal.items[0].participantId);
+    sql(`update public.attendance_records set attendance_status='voided' where event_id='${eventId}' and participant_id='${r.items[0].participantId}';`);
+    expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:0,items:[]});
+    sql(`update public.attendance_records set attendance_status='confirmed' where event_id='${eventId}' and participant_id='${r.items[0].participantId}';`);
+    expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:1});
+    sql(`update public.registrations set registration_status='cancelled' where event_id='${eventId}' and participant_id='${r.items[0].participantId}';`);
+    expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:0,items:[]});
+    sql(`update public.registrations set registration_status='registered' where event_id='${eventId}' and participant_id='${r.items[0].participantId}';`);
+    session.client=manager;expect(await removeDinnerRosterEntry(eventId,internal.items[0].participantId)).toEqual({ok:true});
+    expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:0,items:[]});
+    expect(await saveDinnerRosterEntry(eventId,"Fictional Dinner Member",rosterEmail)).toEqual({ok:true});
+    expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:1});
+    sql(`delete from public.attendance_records where event_id='${eventId}' and participant_id='${r.items[0].participantId}';delete from public.registrations where event_id='${eventId}' and participant_id='${r.items[0].participantId}';`);
   });
   it("denies roster writes to an authorised nonadministrator at both boundaries",async()=>{
     session.client=authorised;expect(await saveDinnerRosterEntry(eventId,"Fictional Denied","denied@example.test")).toMatchObject({ok:false,code:"PERMISSION_DENIED"});

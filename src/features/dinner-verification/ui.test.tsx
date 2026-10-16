@@ -6,18 +6,17 @@ import type { DinnerVerificationResult } from "./contracts";
 const eventId = "36000000-0000-4000-8000-000000000001";
 const result: DinnerVerificationResult = { ok: true, event: { id: eventId, name: "Fictional Dinner Event" }, readAt: "2026-09-28T05:00:00Z", eligibleCount: 1, items: [
   { participantId: "one", participantName: "Fictional Casey", participantEmail: "casey@example.test", eligibility: "Eligible" },
-  { participantId: "two", participantName: "Fictional Jamie", participantEmail: "jamie@example.test", eligibility: "Not Eligible Yet" },
 ] };
 const render = (initialResult: DinnerVerificationResult) => renderToStaticMarkup(<DinnerVerification eventId={eventId} initialResult={initialResult} refreshAction={vi.fn()} />);
 describe("dinner verification UI", () => {
   it("shows current-event identity, eligibility, summary and refresh guidance", () => {
     const html = render(result);
-    for (const text of ["Fictional Dinner Event", "Fictional Casey", "casey@example.test", "Not Eligible Yet", "of 2 roster entries", "Refresh eligibility", "Refresh after any dinner roster change", "Sydney"]) expect(html).toContain(text);
+    for (const text of ["Fictional Dinner Event", "Fictional Casey", "casey@example.test", "matched attendees", "Refresh eligibility", "Refresh after any check-in, registration or internal roster change", "Sydney"]) expect(html).toContain(text);
     expect(html).not.toContain("student_id");
     expect(html).not.toContain("<select");
   });
   it("explains an empty current-event list", () => {
-    expect(render({ ...result, items: [], eligibleCount: 0 })).toContain("administrator has not added any dinner roster entries");
+    expect(render({ ...result, items: [], eligibleCount: 0 })).toContain("No confirmed check-ins match the active internal dinner roster");
   });
   it.each(["PERMISSION_DENIED", "UNAUTHENTICATED", "VALIDATION", "UNAVAILABLE", "SYSTEM_ERROR"] as const)("renders safe %s without identities", (code) => {
     const html = render({ ok: false, code });

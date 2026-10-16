@@ -22,7 +22,6 @@ describe("D-03 minimal verification list", () => {
     ]) }, () => new Date(readAt))(eventId);
     expect(result).toEqual({ ok: true, event: { id: eventId, name: "Fictional Dinner" }, readAt, eligibleCount: 1, items: [
       { participantId, participantName: row.participantName, participantEmail: row.participantEmail, eligibility: "Eligible" },
-      { participantId: "36000000-0000-4000-8000-000000000004", participantName: row.participantName, participantEmail: row.participantEmail, eligibility: "Not Eligible Yet" },
     ] });
     expect(JSON.stringify(result)).not.toMatch(/recordedBy|checkedInAt|updatedAt|Private operator|method|student/i);
   });
@@ -50,7 +49,7 @@ describe("D-03 minimal verification list", () => {
     const port = { listForEvent: vi.fn().mockResolvedValueOnce(snapshot([row])).mockResolvedValueOnce(snapshot([{ ...row, status: "removed" }])) };
     const read = createDinnerVerificationReader(port);
     expect(await read(eventId)).toMatchObject({ eligibleCount: 1 });
-    expect(await read(eventId)).toMatchObject({ eligibleCount: 0, items: [{ eligibility: "Not Eligible Yet" }] });
+    expect(await read(eventId)).toMatchObject({ eligibleCount: 0, items: [] });
     expect(port.listForEvent).toHaveBeenCalledTimes(2);
   });
 });
