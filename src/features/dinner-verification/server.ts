@@ -85,10 +85,11 @@ export function createDinnerVerificationReader(
         }
         seen.add(id);
       }
-      const items = result.items.filter((item) => item.status === "listed").map((item) => ({
+      const items = result.items.filter((item) => item.status === "listed" || item.issuedAt).map((item) => ({
         participantId: item.participantId.toLowerCase(),
         participantName: item.participantName,
         participantEmail: item.participantEmail,
+        ...(item.issuedAt !== undefined ? { issuedAt: item.issuedAt } : {}),
         eligibility: calculateDinnerEligibility(currentEventId, item.participantId.toLowerCase(), {
           eventId: currentEventId,
           participantId: item.participantId.toLowerCase(),

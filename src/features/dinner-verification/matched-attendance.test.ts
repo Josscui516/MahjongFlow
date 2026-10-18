@@ -24,7 +24,7 @@ it.each([null, { message: "private failure" }])("preserves unavailable or failed
   expect(await matchedDinnerAttendance.listForEvent(eventId)).toEqual({ ok: false, code: error ? "SYSTEM_ERROR" : "UNAVAILABLE" });
 });
 it.each([false, true])("paginates matched identities and never returns partial results on a failed later page: %s", async failed => {
-  const first = Array.from({ length: 250 }, (_, i) => ({ event_id: eventId, participant_id: `fixture-${i}`, full_name: "Fictional Attendee", email: `dinner-${i}@example.test` }));
+  const first = Array.from({ length: 250 }, (_, i) => ({ event_id: eventId, participant_id: `fixture-${i}`, full_name: "Fictional Attendee", eligible: true, issued_at: null, email: `dinner-${i}@example.test` }));
   const range = vi.fn().mockResolvedValueOnce({ data: first, error: null })
     .mockResolvedValueOnce(failed ? { data: null, error: { message: "private failure" } } : { data: [], error: null });
   const rpc = vi.fn(() => ({ order: () => ({ range }) }));
@@ -32,11 +32,11 @@ it.each([false, true])("paginates matched identities and never returns partial r
     from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: eventId, name: "Fictional event" }, error: null }) }) }) }), rpc,
   });
   const result = await matchedDinnerAttendance.listForEvent(eventId);
-  expect(rpc).toHaveBeenCalledWith("list_matched_dinner_attendees", { target_event_id: eventId });
+  expect(rpc).toHaveBeenCalledWith("list_event_dinner_service", { target_event_id: eventId });
   expect(range.mock.calls).toEqual([[0, 249], [250, 499]]);
   if (failed) expect(result).toEqual({ ok: false, code: "SYSTEM_ERROR" });
   else {
     expect(result.ok && result.items).toHaveLength(250);
-    expect(result.ok && result.items[0]).toEqual({ eventId, participantId: "fixture-0", participantName: "Fictional Attendee", participantEmail: "dinner-0@example.test", status: "listed" });
+    expect(result.ok && result.items[0]).toEqual({ eventId, participantId: "fixture-0", participantName: "Fictional Attendee", participantEmail: "dinner-0@example.test", status: "listed", issuedAt: null });
   }
 });

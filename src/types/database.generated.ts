@@ -149,6 +149,41 @@ export type Database = {
           },
         ]
       }
+      dinner_eligibility_roster: {
+        Row: {
+          created_at: string
+          email: string
+          full_name: string
+          id: string
+          is_active: boolean
+          recorded_by: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          full_name: string
+          id?: string
+          is_active?: boolean
+          recorded_by?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          full_name?: string
+          id?: string
+          is_active?: boolean
+          recorded_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dinner_eligibility_roster_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       dinner_roster: {
         Row: {
           created_at: string
@@ -267,6 +302,62 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_dinner_issuance: {
+        Row: {
+          event_id: string
+          issued_at: string | null
+          issued_by: string | null
+          participant_id: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          event_id: string
+          issued_at?: string | null
+          issued_by?: string | null
+          participant_id: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          event_id?: string
+          issued_at?: string | null
+          issued_by?: string | null
+          participant_id?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_dinner_issuance_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_dinner_issuance_issued_by_fkey"
+            columns: ["issued_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_dinner_issuance_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "event_dinner_issuance_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -754,6 +845,17 @@ export type Database = {
           registration_count: number
         }[]
       }
+      list_event_dinner_service: {
+        Args: { target_event_id: string }
+        Returns: {
+          eligible: boolean
+          email: string
+          event_id: string
+          full_name: string
+          issued_at: string
+          participant_id: string
+        }[]
+      }
       list_matched_dinner_attendees: {
         Args: { target_event_id: string }
         Returns: {
@@ -791,6 +893,15 @@ export type Database = {
           related_meeting_ids: string[]
           target_task_id?: string
           task_values: Json
+        }
+        Returns: string
+      }
+      set_event_dinner_issued: {
+        Args: {
+          desired_issued: boolean
+          expected_issued: boolean
+          target_event_id: string
+          target_participant_id: string
         }
         Returns: string
       }

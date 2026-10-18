@@ -2,6 +2,8 @@
 
 > A lightweight meeting, task, event, and attendance coordination system for the Monash Mahjong Club.
 
+> 2026-10-18 晚餐功能：`/dinner-roster` 维护所有活动共用的持续资格，活动晚餐页显示本场可领取人员并保存已发放状态；见[当前需求与部署](docs/project/DINNER_CHECK_IN_EMAIL_MATCHING.md)。
+
 > 2026-10-16 晚餐规则修复：内部名册保留独立预录，核验页只显示有效报名、已确认签到且邮箱匹配的人员。部署前须应用新增 migration，见[需求与部署记录](docs/project/DINNER_CHECK_IN_EMAIL_MATCHING.md)。下方 2026-09-30 状态为历史基线。
 
 - **Course:** FIT3162 Computer Science Project

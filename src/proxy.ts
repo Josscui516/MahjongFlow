@@ -126,6 +126,7 @@ export const config = {
     "/attendance/:path*",
     "/admin/:path*",
     "/dinner-verification/:path*",
+    "/dinner-roster/:path*",
     "/api/backoffice/:path*",
   ],
 };

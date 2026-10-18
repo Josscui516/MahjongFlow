@@ -19,12 +19,12 @@ export const matchedDinnerAttendance: DinnerRosterReadPort = {
       if (!event.data) return { ok: false, code: "UNAVAILABLE" };
       const items: DinnerRosterRecord[] = [];
       for (let offset = 0; ; offset += 250) {
-        const result = await client.rpc("list_matched_dinner_attendees", { target_event_id: eventId })
+        const result = await client.rpc("list_event_dinner_service", { target_event_id: eventId })
           .order("participant_id").range(offset, offset + 249);
         if (result.error) return { ok: false, code: "SYSTEM_ERROR" };
-        items.push(...result.data.map((row: Database["public"]["Functions"]["list_matched_dinner_attendees"]["Returns"][number]): DinnerRosterRecord => ({
+        items.push(...result.data.map((row: Database["public"]["Functions"]["list_event_dinner_service"]["Returns"][number]): DinnerRosterRecord => ({
           eventId: row.event_id, participantId: row.participant_id,
-          participantName: row.full_name, participantEmail: row.email, status: "listed",
+          participantName: row.full_name, participantEmail: row.email, status: row.eligible ? "listed" : "removed", issuedAt: row.issued_at,
         })));
         if (result.data.length < 250) break;
       }

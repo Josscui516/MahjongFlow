@@ -3,10 +3,10 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { addDinnerRosterEntry, removeDinnerRosterMember } from "./actions";
-import type { DinnerRosterRecord } from "./roster";
+import type { GlobalDinnerRosterRecord } from "./roster";
 
-export function DinnerRosterManager({ eventId, items }: Readonly<{
-  eventId: string; items: readonly DinnerRosterRecord[];
+export function DinnerRosterManager({ items }: Readonly<{
+  items: readonly GlobalDinnerRosterRecord[];
 }>) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
@@ -18,7 +18,7 @@ export function DinnerRosterManager({ eventId, items }: Readonly<{
     const data = new FormData(form);
     setPending(true); setMessage("");
     try {
-      const result = await addDinnerRosterEntry(eventId, String(data.get("fullName") ?? ""), String(data.get("email") ?? ""));
+      const result = await addDinnerRosterEntry(String(data.get("fullName") ?? ""), String(data.get("email") ?? ""));
       if (result.ok) { form.reset(); setMessage("Dinner roster entry saved."); router.refresh(); }
       else setMessage(result.code === "VALIDATION" ? "Check the name and email, then retry." : "The roster could not be changed. Check your access or try again.");
     } catch { setMessage("The update could not be confirmed. Refresh before retrying."); }
@@ -28,15 +28,15 @@ export function DinnerRosterManager({ eventId, items }: Readonly<{
     if (pending || !window.confirm("Remove this person from the dinner roster?")) return;
     setPending(true); setMessage("");
     try {
-      const result = await removeDinnerRosterMember(eventId, entryId);
+      const result = await removeDinnerRosterMember(entryId);
       if (result.ok) { setMessage("Dinner roster entry removed."); router.refresh(); }
       else setMessage("The roster could not be changed. Check your access or try again.");
     } catch { setMessage("The update could not be confirmed. Refresh before retrying."); }
     finally { setPending(false); }
   }
   return <section className="space-y-4 rounded-xl border border-slate-200 bg-white p-5" aria-labelledby="roster-management-heading">
-    <h2 className="text-xl font-semibold" id="roster-management-heading">Manage dinner roster</h2>
-    <p className="text-sm text-slate-600">Administrator only. Preload the internal dinner list using the email each person will register with. Entries below include people who have not checked in. Only registered, confirmed attendees with a matching active entry appear in dinner verification.</p>
+    <h2 className="text-xl font-semibold" id="roster-management-heading">Manage standing dinner eligibility</h2>
+    <p className="text-sm text-slate-600">This is the shared dinner eligibility roster for every event. Add each person once using their registration email. Eligibility continues across events and is not consumed when dinner is issued. Removing a member disables their eligibility for all events.</p>
     <form className="flex flex-wrap items-end gap-3" onSubmit={add}>
       <label className="text-sm font-semibold">Full name<input className="mt-1 block min-h-11 rounded-lg border border-slate-300 p-2" name="fullName" maxLength={120} required disabled={pending} /></label>
       <label className="text-sm font-semibold">Email<input className="mt-1 block min-h-11 rounded-lg border border-slate-300 p-2" name="email" type="email" maxLength={254} required disabled={pending} /></label>

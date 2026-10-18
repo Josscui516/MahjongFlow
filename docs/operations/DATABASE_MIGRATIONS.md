@@ -1,5 +1,7 @@
 # Database migration operations
 
+> 2026-10-18 晚餐补丁增加两个顺序迁移：先建立签到匹配函数，再建立通用资格名册和活动发放记录。通用资格由旧活跃邮箱去重转入，原名册保留；部署顺序、权限、验证和回退见[当前决定](../project/DINNER_CHECK_IN_EMAIL_MATCHING.md)。下方旧迁移计数属于历史基线，实际顺序以仓库文件为准；已有工作数据库禁止用 reset 更新。
+
 > Implementation source: [Day 3 migration and anonymised seed plan](../plans/week-1/artifacts/day-3/DAY_3_STEP_7_MIGRATION_AND_ANONYMISED_SEED_PLAN.md)
 > Project setup: [Root README](../../README.md)
 > Last checked: 2026-08-06 with Supabase CLI `2.111.0`

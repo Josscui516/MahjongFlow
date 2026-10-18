@@ -1,42 +1,48 @@
-# 晚餐内部名册与签到邮箱匹配
+# 通用晚餐资格名册与活动发放记录
 
-## 需求与独立交付
+## 当前需求与交付
 
-2026-10-16 用户确认：管理员提前维护内部晚餐名册；注册者使用相同邮箱完成签到后，与名册比对，通过者才显示在晚餐核验页面。这一决定替代 2026-10-04「活跃名册成员无需报名或签到即有资格」的实现。报名二维码继续用于报名，不自动记录签到或加入内部名册。
+2026-10-18 用户明确纠正：有晚餐资格的人员进入独立的通用名册，资格持续有效，各活动共用；活动的晚餐页面列出本场可领取人员，并支持勾选已发放。此前按活动预录名册的解释已被本决定替代。扫码报名仍只报名，工作人员仍通过 Attendance 确认本场签到。
 
-用户授权新建 [Issue #102](https://github.com/Josscui516/MahjongFlow/issues/102)，使用独立分支 `codex/102-match-dinner-check-ins` 和单个直接指向 `main` 的 Sprint 后补丁 PR。分支从 `main` 建立，不包含二维码权限 [PR #101](https://github.com/Josscui516/MahjongFlow/pull/101) 的代码或迁移；无技术依赖。此次授权不包括合并、Project 更新、关闭 Issue 或远程数据库操作。
+继续在用户已授权的 [Issue #102](https://github.com/Josscui516/MahjongFlow/issues/102)、分支 `codex/102-match-dinner-check-ins` 和 [PR #103](https://github.com/Josscui516/MahjongFlow/pull/103) 内修正。补丁仍直接指向 main，不包含二维码权限 PR #101，不依赖其迁移。没有合并、Project 修改、关闭 Issue 或远程数据库操作授权。
 
-## 当前规则
+## 用户入口与规则
 
-对同一个活动，同时满足以下条件才显示在晚餐核验名单：
+- 管理员从侧栏 **Dinner eligibility roster** 或活动晚餐页的 **Manage shared dinner eligibility roster** 进入 `/dinner-roster`。名册录入不需要选择活动；按标准化邮箱唯一，添加一次即可持续用于所有活动。
+- 名册资格不因报名、签到、活动结束或领取晚餐而失效。管理员显式移除会停用通用资格，再次录入同邮箱可恢复；这用于更正或撤销资格，不是每场重录。
+- 活动详情 → **Verify dinner eligibility**，进入 `/dinner-verification/[eventId]`。本场有效报名、已确认签到且邮箱匹配活跃通用名册的人员显示为 **Ready to collect**。
+- 工作人员实际发放后勾选 **Issued**；服务器保存活动、参与者、发放时间和真实操作者。刷新后保留，其他工作人员看到同一状态。另一场活动独立从未发放开始，通用资格不被消耗。
+- 同场同人只有一个当前发放状态。重复发放请求幂等，不能重复生成发放记录。取消勾选需要确认，仅用于纠正录错。
+- 如果实际已经发放，之后撤销签到、取消报名或停用资格，该发放记录仍显示为已发放并提示资格已变化；不会隐藏已发饭的事实。显式清除误勾后，若当前不符合领取条件，则不再显示在本场待领取列表。
 
-1. 存在当前状态为 `registered` 的报名；
-2. 对应参与者的签到状态为 `confirmed`；
-3. 参与者邮箱与本活动内部名册的活跃条目匹配。
+通用名册管理继续要求活跃 authorised 且具备账号管理能力；授权工作人员可以核验和记录活动发放。普通委员、停用用户和匿名不能访问敏感名单或写发放状态。邮箱标准化为去首尾空格并转小写；姓名不作为匹配键。
 
-录入和报名边界统一去除邮箱首尾空格并转小写；查询再次使用 `lower(btrim(participants.email))` 比对名册邮箱。姓名无需相同，核验页显示实际报名参与者的姓名与邮箱。内部名册 ID 与参与者 ID 分别使用，移除名册操作不会误用参与者 ID。
+## 数据与迁移
 
-报名和签到仍是独立事实。当前签到入口为活动的 Attendance 页面，授权工作人员核对身份后按邮箱添加／纠正签到；本修复不把 `/register/[token]` 或旧报名别名改回签到入口。未匹配人员、尚未签到人员、撤销签到、取消报名、失活名册条目和其他活动记录均不显示在核验名单。刷新时重新计算，不复制资格或自动修改内部名册，也不记录实际领餐次数。
+在原匹配迁移 `20261016001507_match_dinner_roster_with_confirmed_attendance.sql` 之后应用 `20261018001952_global_dinner_roster_and_event_issuance.sql`，再发布前端。已有库不能 reset；拉代码、重启 Docker 或重建镜像均不会自动执行迁移。
 
-管理员区域保留完整活跃内部名册，因此尚未报名／签到的预录人员仍可维护。核验页的名单与计数只来自匹配结果。授权非管理员只能核验；普通委员、停用用户和匿名请求不能读取明细。名册写入继续要求活跃 `authorised` 且具备账号管理能力，本修复没有扩大参与者资料权限。
+新增 `dinner_eligibility_roster`：无 event_id，email 唯一，身份字段与原名册同样有长度／格式约束，记录录入者和时间，默认拒绝 RLS，仅授权人员可读，管理员可维护受限列。迁移将旧活动名册中仍活跃的邮箱去重转入通用名册；同邮箱选择最新活跃条目的姓名和录入审计值；全部失活的邮箱不恢复。原 `dinner_roster` 和原数据保留，撤销应用会话的列写权限，不再作为资格来源。
 
-## 实现、迁移与回退
+新增 `event_dinner_issuance`：活动与参与者联合主键，外键 restrict，发放时间／操作者必须同时为空或同时存在，另存最后修改者和时间。仅 authorised 可读，authenticated 无直接写权限，必须调用 `set_event_dinner_issued`。新 RPC 以真实 auth.uid 为操作者，拒绝传入伪造操作者，显式检查活跃 authorised 权限，锁定活动以序列化并发操作，首次发放还锁定并核对通用资格、报名和签到事实。取消勾选保留该行及最后修改审计，不是删除身份或报名数据。
 
-新增 `20261016001507_match_dinner_roster_with_confirmed_attendance.sql`，建立 `list_matched_dinner_attendees(uuid)`。函数为 `SECURITY INVOKER`，使用当前用户会话、显式 authorised 检查及既有表级 RLS；匿名调用被撤销。查询在数据库中按活动、报名、签到和名册邮箱关联，只返回必要身份列。既有活动／参与者唯一约束、邮箱唯一约束和相关索引保证单人单活动不重复，不新增表、索引、外键或写策略。
+读函数保持 SECURITY INVOKER 与原表 RLS，活动列表同时保留当前合格人员与已发放历史。旧匹配函数签名保留，来源改为通用名册；新 `list_event_dinner_service` 提供当前资格和发放状态。新写函数为固定 search_path 的 SECURITY DEFINER，仅 authenticated 可执行，内部权限和资格检查完整，匿名 execute 撤销。生成类型由 CLI 更新。
 
-`matched-attendance.ts` 读取匹配结果，供 `server.ts` 的资格和核验入口使用。`roster.ts` 保留内部名册维护；页面只为管理员读取该完整列表，并与核验名单分别渲染。数据库类型由 Supabase CLI 重新生成，新增的函数类型随代码提交。
+不新增猜测的发放历史：迁移后全部活动初始未发放，只有工作人员勾选才写记录。已有报名、签到、QR token 不变。
 
-先在目标数据库应用本迁移，再发布／重建前端镜像。已有数据库不要 reset；Git 更新和镜像重建不会自动执行数据库迁移。现有报名、签到、名册及 token 均保留，不做导入或回填。既有已报名、已签到且邮箱匹配的人员在升级后自然出现在核验页。
+## 回退
 
-回退应用提交即可恢复之前的页面行为；新增只读函数可以保留。需要撤下函数时，应在旧应用已发布后，通过前向 migration 撤销 execute、删除函数，并恢复旧表注释；不删除名册或签到数据。回退会恢复「名册成员未签到也显示有资格」的旧规则，须由业务负责人决定。
+先撤下新前端和发放入口，再决定数据库回退。可保留新表／记录而回退应用；这会恢复旧的按活动名册解释，不能视为符合当前需求。必须保留通用资格和发放记录，不能 reset、删除记录或把已发放记录当作未领取。
 
-## 验证证据
+需要停用新结构时，通过前向 migration 撤销新 RPC 的 execute，恢复旧读取函数／旧名册列权限；先导出受保护的数据备份并经业务负责人决定如何保留已发放事实。不能只用 Git revert 或 drop table 代替数据恢复。
 
-- 应用全量 Vitest：917 passed、3 skipped，含真实本地报名／晚餐和 Task–Meeting 用例；数据库测试运行器的 5 项测试通过。
-- 新 SQL 回归 15 项断言：匹配、实际参与者身份、姓名不同但邮箱相同、完整名册保留、跨活动、缺失活动、后续签到、撤销签到、移除／恢复名册、取消报名、普通委员／停用管理员／匿名拒绝。
-- 干净隔离库重放本分支全部 migration 与虚构 seed，18 个 SQL 文件／462 项断言通过；不依赖 PR #101 迁移，隔离库已清理。
-- ESLint、TypeScript、数据库 schema lint 和 Docker 生产构建通过。
-- Chrome 浏览器实际执行：管理员预录两人 → 新参与者通过公开报名入口提交 → 报名后核验仍空 → 工作人员确认签到 → 只出现一名匹配人员 → 撤销签到后刷新移除 → 恢复签到后出现 → 管理员移除内部成员后消失。桌面和 390px 手机布局无运行时错误或横向溢出，临时账号与记录已清理。
-- Browser 插件及其 browser skill 在本会话未提供，按 frontend-testing-debugging 指引使用本机 Playwright／Chrome 验证。历史 evidence 不作为本版验收。
+## 验证
 
-虚构资料截图：[桌面](../../src/features/dinner-verification/evidence/dinner-email-match-desktop.png)、[手机](../../src/features/dinner-verification/evidence/dinner-email-match-mobile.png)。
+- 全量应用：928 passed、3 skipped（含真实本地报名／签到／晚餐和 Task–Meeting 用例）；新增服务端权限／错误映射、独立页面、导航及发放状态显示测试。
+- 真实本地 API 并发提交同一发放请求，返回同一发放时间且只有一行；恢复未发放后仍可按当前资格重新核验。
+- 干净隔离库重放本分支全部迁移、虚构 seed 与 18 个 SQL 文件，477 项断言通过，其中晚餐匹配／通用资格／发放回归 30 项。不依赖二维码权限补丁。
+- 独立迁移验证：旧活动名册相同邮箱去重、保留最新活跃姓名、纯失活人员不恢复、旧记录保留、迁移不虚构发放记录。
+- ESLint、TypeScript、数据库 schema lint、Docker 生产构建通过。
+- Chrome／Playwright：独立通用名册录入 → 扫码报名 → 工作人员签到 → 勾选发放 → 刷新保留 → 同人在第二活动无需重复录入资格且发放状态独立 → 撤销签到仍显示已发放 → 确认清除误勾 → 非管理员可以发放但不能维护资格。390px 手机无横向溢出，未发现运行时错误，测试资料均为虚构并已清理。
+- 本会话未提供 Browser 插件及其 browser skill，按 frontend-testing-debugging 指引使用 Playwright／Chrome。旧按活动名册截图与原日期测试数字不代表当前规则。
+
+截图：[独立名册](../../src/features/dinner-verification/evidence/dinner-global-roster-desktop.png)、[活动已发放](../../src/features/dinner-verification/evidence/dinner-global-event-desktop.png)、[手机名册](../../src/features/dinner-verification/evidence/dinner-global-roster-mobile.png)。

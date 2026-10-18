@@ -8,6 +8,12 @@ import {
 } from "./navigation";
 
 describe("role-aware navigation", () => {
+  it("shows the shared dinner roster only to authorised administrators", () => {
+    for (const role of ["committee", "authorised"] as const) for (const administrator of [false,true]) {
+      expect(getNavigationSections(role,administrator).some(section=>section.items.some(item=>item.href==="/dinner-roster")))
+        .toBe(role==="authorised"&&administrator);
+    }
+  });
   it("keeps section identities unique and stable across roles and capabilities", () => {
     for (const role of ["committee", "authorised"] as const) {
       for (const canManageAccounts of [false, true]) {

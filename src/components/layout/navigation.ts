@@ -49,6 +49,9 @@ export function getNavigationSections(
 
   if (canManageAccounts) {
     sections.push(ACCOUNT_ADMINISTRATION_SECTION);
+    if (role === "authorised") sections.push({
+      id: "dinner-roster", items: [{ href: "/dinner-roster", label: "Dinner eligibility roster" }],
+    });
   }
 
   return sections;

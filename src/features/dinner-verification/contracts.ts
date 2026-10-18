@@ -11,6 +11,7 @@ export type DinnerVerificationItem = Readonly<{
   participantName: string;
   participantEmail: string;
   eligibility: DinnerEligibility;
+  issuedAt?: string | null;
 }>;
 
 export type DinnerVerificationResult = DinnerFailure | Readonly<{
