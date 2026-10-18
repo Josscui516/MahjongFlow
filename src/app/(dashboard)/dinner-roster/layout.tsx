@@ -18,4 +18,3 @@ export default async function DinnerRosterLayout({ children }: Readonly<{ childr
     {children}
   </BackofficeShell>;
 }
-
