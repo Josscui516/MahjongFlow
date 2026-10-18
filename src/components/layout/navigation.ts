@@ -43,15 +43,15 @@ export function getNavigationSections(
   if (role === "authorised") {
     sections.push({
       id: "registrations",
-      items: [{ href: "/registrations", label: "Registrations" }],
+      items: [
+        { href: "/registrations", label: "Registrations" },
+        ...(canManageAccounts ? [{ href: "/dinner-roster", label: "Dinner eligibility roster" }] : []),
+      ],
     });
   }
 
   if (canManageAccounts) {
     sections.push(ACCOUNT_ADMINISTRATION_SECTION);
-    if (role === "authorised") sections.push({
-      id: "dinner-roster", items: [{ href: "/dinner-roster", label: "Dinner eligibility roster" }],
-    });
   }
 
   return sections;

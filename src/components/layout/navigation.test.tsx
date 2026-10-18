@@ -13,6 +13,8 @@ describe("role-aware navigation", () => {
       expect(getNavigationSections(role,administrator).some(section=>section.items.some(item=>item.href==="/dinner-roster")))
         .toBe(role==="authorised"&&administrator);
     }
+    expect(getNavigationSections("authorised",true).find(section=>section.id==="registrations")?.items.map(item=>item.href))
+      .toEqual(["/registrations","/dinner-roster"]);
   });
   it("keeps section identities unique and stable across roles and capabilities", () => {
     for (const role of ["committee", "authorised"] as const) {
