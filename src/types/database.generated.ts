@@ -927,6 +927,16 @@ export type Database = {
         }
         Returns: string
       }
+      submit_event_self_check_in: {
+        Args: {
+          participant_email: string
+          participant_name: string
+          participant_student_id?: string
+          privacy_accepted: boolean
+          registration_token: string
+        }
+        Returns: string
+      }
       update_managed_profile: {
         Args: {
           target_can_manage_accounts?: boolean

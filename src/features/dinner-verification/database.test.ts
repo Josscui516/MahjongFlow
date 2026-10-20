@@ -38,7 +38,7 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("independent public r
     sql(`delete from public.registrations where event_id='${studentEvent}';delete from public.events where id='${studentEvent}';delete from public.participants where email='${studentEmail}';`);
     for(const id of users){sql(`delete from public.profiles where id='${id}';`);await privileged.auth.admin.deleteUser(id);}
   });
-  it("creates a first registration from a new email without attendance or dinner entitlement",async()=>{
+  it("keeps the internal registration-only primitive independent from attendance and dinner entitlement",async()=>{
     const args={registration_token:token,participant_name:"Fictional New Registrant",participant_email:email,privacy_accepted:true};
     expect((await privileged.rpc("submit_event_registration",args)).data).toBe("success");
     expect((await privileged.rpc("submit_event_registration",args)).data).toBe("already_processed");
@@ -56,7 +56,9 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("independent public r
     session.client=authorised;expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:0,items:[]});
     expect((await privileged.rpc("submit_event_registration",{registration_token:token,participant_name:"Fictional Registered Attendee",participant_email:` ${rosterEmail.toUpperCase()} `,privacy_accepted:true})).data).toBe("success");
     expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:0,items:[]});
-    sql(`insert into public.attendance_records(event_id,participant_id,check_in_method,recorded_by)select '${eventId}',id,'manual','${users[2]}' from public.participants where email='${rosterEmail}';`);
+    const scanned=await Promise.all([1,2].map(()=>privileged.rpc("submit_event_self_check_in",{registration_token:token,participant_name:"Fictional Registered Attendee",participant_email:rosterEmail,privacy_accepted:true})));
+    expect(scanned.map(result=>result.data).sort()).toEqual(["already_processed","success"]);
+    expect(sql(`select count(*) from public.attendance_records a join public.participants p on p.id=a.participant_id where a.event_id='${eventId}' and p.email='${rosterEmail}' and a.check_in_method='qr' and a.recorded_by is null;`)).toBe("1");
     const r=await readDinnerVerification(eventId);expect(r).toMatchObject({ok:true,eligibleCount:1});if(!r.ok||!internal.ok)throw new Error("Roster read failed");
     expect(r.items[0]).toMatchObject({participantEmail:rosterEmail,eligibility:"Eligible"});
     expect(r.items[0].participantName).toBe("Fictional Registered Attendee");
@@ -67,7 +69,7 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("independent public r
     expect(served[0].data).toBe(served[1].data);
     expect(sql(`select count(*) from public.event_dinner_issuance where event_id='${eventId}' and participant_id='${r.items[0].participantId}';`)).toBe("1");
     expect((await authorised.rpc("set_event_dinner_issued",{...servingArgs,desired_issued:false,expected_issued:true})).error).toBeNull();
-    sql(`update public.attendance_records set attendance_status='voided' where event_id='${eventId}' and participant_id='${r.items[0].participantId}';`);
+    expect((await authorised.from("attendance_records").update({attendance_status:"voided"}).eq("event_id",eventId).eq("participant_id",r.items[0].participantId)).error).toBeNull();
     expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:0,items:[]});
     sql(`update public.attendance_records set attendance_status='confirmed' where event_id='${eventId}' and participant_id='${r.items[0].participantId}';`);
     expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:1});
