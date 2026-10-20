@@ -9,6 +9,7 @@ import { AuthorizationError } from "@/lib/auth/authorization";
 
 import type { CheckInTokenRepository, CheckInWindowInput } from "./contracts";
 import { createCheckInTokenService } from "./service";
+import { CheckInTokenPersistenceError } from "./repository";
 
 const eventId = "94000000-0000-4000-8000-000000000001";
 const actorId = "91000000-0000-4000-8000-000000000001";
@@ -34,6 +35,14 @@ function service(repo = repository(), authorise = async () => ({ canManageAccoun
 }
 
 describe("event check-in token service", () => {
+  it.each([
+    ["PQR01", "EVENT_NOT_SCHEDULED"], ["PQR02", "WINDOW_REQUIRED"],
+    ["P0002", "NOT_FOUND"], ["42501", "PERMISSION_DENIED"],
+  ])("distinguishes database failure %s as %s", async (sqlCode, code) => {
+    const repo = repository();
+    vi.mocked(repo.rotate).mockRejectedValue(new CheckInTokenPersistenceError({ code: sqlCode }));
+    expect(await service(repo).rotate(eventId)).toEqual({ ok: false, code });
+  });
   it("awaits a dynamically resolved origin before generating the QR", async () => {
     const result = await createCheckInTokenService({
       applicationUrl: async () => "http://10.0.0.23:3100",

@@ -7,3 +7,4 @@ export type {
   WindowMutationResult,
 } from "./contracts";
 export { EventCheckInTokenSection } from "./EventCheckInTokenSection";
+export { canManageEventQr } from "./permissions";

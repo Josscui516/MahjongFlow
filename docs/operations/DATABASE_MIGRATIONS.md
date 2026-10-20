@@ -10,7 +10,7 @@ All schema, type, table, constraint, index, trigger, function, grant and RLS cha
 represented by timestamped SQL in `supabase/migrations/`. Dashboard-only changes are prohibited
 because they create unreviewed environment drift.
 
-Day 4 的首个 migration 是历史空基线。当前仓库已有 14 个 timestamped migrations，覆盖 MVP 表／约束／RLS、会议原子写入、账号管理、受保护删除、参与者名称校验、活动 token 管理、分布式限速及用户确认的公开报名／独立晚餐名册及 Task 与 Meeting 多对多关联。顺序以 `supabase/migrations/` 为准；Sprint 8 没有 schema 或生成类型改动。2026-10-04 本地需求纠正的部署顺序、已有数据边界及回退见[需求决定](../project/REGISTRATION_AND_DINNER_CORRECTION.md)。
+Day 4 的首个 migration 是历史空基线。当前仓库已有 15 个 timestamped migrations，覆盖 MVP 表／约束／RLS、会议原子写入、账号管理、受保护删除、参与者名称校验、活动 token 管理、分布式限速及用户确认的公开报名／独立晚餐名册及 Task 与 Meeting 多对多关联。顺序以 `supabase/migrations/` 为准；Sprint 8 没有 schema 或生成类型改动。2026-10-04 本地需求纠正的部署顺序、已有数据边界及回退见[需求决定](../project/REGISTRATION_AND_DINNER_CORRECTION.md)。
 
 ## 2. Local commands
 
@@ -146,3 +146,7 @@ token 审计历史，不恢复已撤销的明文链接。2026-09-30 在隔离本
 ## 11. 2026-09-30 当前核验边界
 
 本轮核对仓库 12 个 migration 文件与 Sprint 8 的无 schema 变更合同；未读取 Supabase 远程 migration history、未运行远程 reset／push。此前隔离栈顺序、447 SQL 断言、并发、schema lint／diff 和恢复结果见[M5 验收](../plans/week-8/MVP_INTERNAL_ACCEPTANCE_RECORD.md)。虚构数据维护见[清理 runbook](FICTIONAL_ACTIVITY_DATA_CLEANUP.md)，不以 Git revert 代替数据恢复。
+
+## 管理员二维码权限修复（2026-10-16）
+
+新增 migration 20261015231742_fix_admin_qr_management_permissions.sql，发布顺序、权限边界及回退见[管理员二维码修复](../project/ADMIN_QR_MANAGEMENT_FIX.md)。已有数据库须应用迁移，不能用 reset 代替升级。
