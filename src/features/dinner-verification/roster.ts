@@ -42,8 +42,7 @@ export async function readGlobalDinnerRoster(): Promise<GlobalDinnerRosterResult
 
 export async function saveDinnerRosterEntry(fullName: string, email: string) {
   try {
-    const access = await requireAuthorised();
-    if (!access.canManageAccounts) return { ok: false, code: "PERMISSION_DENIED" } as const;
+    await requireAuthorised();
     const name = fullName.trim();
     const normalized = email.trim().toLowerCase();
     if (!name || name.length > 120 || /[\u0000-\u001f\u007f]/.test(name)
@@ -63,8 +62,7 @@ export async function saveDinnerRosterEntry(fullName: string, email: string) {
 
 export async function removeDinnerRosterEntry(entryId: string) {
   try {
-    const access = await requireAuthorised();
-    if (!access.canManageAccounts) return { ok: false, code: "PERMISSION_DENIED" } as const;
+    await requireAuthorised();
     if (!UUID.test(entryId)) return { ok: false, code: "VALIDATION" } as const;
     const client = await createServerSupabaseClient();
     const result = await client.from("dinner_eligibility_roster").update({ is_active: false })

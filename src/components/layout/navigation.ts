@@ -35,12 +35,12 @@ const ACCOUNT_ADMINISTRATION_SECTION = {
  * boundary and must be paired with route checks and RLS.
  */
 export function getNavigationSections(
-  role: BackofficeRole,
+  _role: BackofficeRole,
   canManageAccounts = false,
 ): readonly NavigationSection[] {
   const sections: NavigationSection[] = [SHARED_NAVIGATION_SECTION];
 
-  if (role === "authorised") {
+  {
     sections.push({
       id: "registrations",
       items: [

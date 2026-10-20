@@ -1,5 +1,7 @@
 # 第 3 天步骤 5：可实施权限矩阵与控制点
 
+> 2026-10-20 最新写入例外：committee 可以通过不返回记录的受控函数按已知邮箱新增／取消报名、维护晚餐资格；完整名单仍仅 authorised 可读，原表读取 RLS 不放宽。安全员维护不再额外要求开发者能力，见[当前决定](../../../../project/MEMBER_WRITE_PRIVATE_READ.md)。
+
 > 2026-10-20 用户批准晚餐操作例外：活跃 committee 也可通过目标活动的最小投影核验和发放；完整资格名册仍仅 authorised 可读，参与者／报名／签到原表权限不扩大，见[当前边界](../../../../project/DINNER_PERMISSION_BOUNDARIES.md)。下方原日期的晚餐 authorised-only 限制已被替代。
 
 > 所属计划：[第 3 天：数据库、权限与隐私设计](../../DAY_3_DATA_SECURITY_AND_PRIVACY.md)

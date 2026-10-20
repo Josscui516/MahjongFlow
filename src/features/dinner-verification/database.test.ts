@@ -34,7 +34,7 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("independent public r
   },30000);
   afterAll(async()=>{
     session.client=null;if(!users.length||!privileged)return;
-    sql(`delete from public.event_dinner_issuance where event_id='${eventId}';delete from public.dinner_eligibility_roster where email in ('${email}','${rosterEmail}');delete from public.attendance_records where event_id='${eventId}';delete from public.registrations where event_id='${eventId}';delete from public.events where id='${eventId}';delete from public.participants where email in ('${email}','${rosterEmail}');`);
+    sql(`delete from public.event_dinner_issuance where event_id='${eventId}';delete from public.dinner_eligibility_roster where recorded_by in (${users.map(id=>`'${id}'`).join(',')});delete from public.attendance_records where event_id='${eventId}';delete from public.registrations where event_id='${eventId}';delete from public.events where id='${eventId}';delete from public.participants where email in ('${email}','${rosterEmail}');`);
     sql(`delete from public.registrations where event_id='${studentEvent}';delete from public.events where id='${studentEvent}';delete from public.participants where email='${studentEmail}';`);
     for(const id of users){sql(`delete from public.profiles where id='${id}';`);await privileged.auth.admin.deleteUser(id);}
   });
@@ -82,9 +82,9 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("independent public r
     expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:1});
     sql(`delete from public.attendance_records where event_id='${eventId}' and participant_id='${r.items[0].participantId}';delete from public.registrations where event_id='${eventId}' and participant_id='${r.items[0].participantId}';`);
   });
-  it("denies roster writes to an authorised nonadministrator at both boundaries",async()=>{
-    session.client=authorised;expect(await saveDinnerRosterEntry("Fictional Denied","denied@example.test")).toMatchObject({ok:false,code:"PERMISSION_DENIED"});
-    expect((await authorised.from("dinner_eligibility_roster").insert({full_name:"Fictional Denied",email:"denied@example.test"})).error).not.toBeNull();
+  it("allows safety staff to maintain membership without developer privileges",async()=>{
+    session.client=authorised;expect(await saveDinnerRosterEntry("Fictional Safety Writer",`safety-${eventId}@example.test`)).toEqual({ok:true});
+    expect((await authorised.from("dinner_eligibility_roster").insert({full_name:"Fictional Denied",email:`direct-${eventId}@example.test`})).error).toBeNull();
   });
   it("allows committee distribution while denying full roster reads and direct elevated RPC calls",async()=>{
     session.client=committee;expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:0,items:[]});

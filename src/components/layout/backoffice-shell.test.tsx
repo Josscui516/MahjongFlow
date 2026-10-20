@@ -59,7 +59,7 @@ describe("BackofficeShell", () => {
     expect(html).toContain("Sign out");
     expect(html).toContain("<h1>Dashboard</h1>");
     expect(html).not.toContain(COMMITTEE_CONTEXT.userId);
-    expect(html).not.toContain("Registrations");
+    expect(html).toContain("Registrations");
   });
 
   it("exposes registration navigation for the trusted authorised role", () => {

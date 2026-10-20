@@ -10,12 +10,20 @@ import { ParticipationSummary } from "@/features/registrations/attendance-summar
 import { participationSummaryService } from "@/features/registrations/attendance-summary/service";
 import { registrationErrors } from "@/features/registrations/records/messages";
 import { isRegistrationId } from "@/features/registrations/records/validation";
+import { requireBackendUser } from "@/lib/auth/authorization";
+import { MemberSubmissionForm } from "@/features/registrations/records/MemberSubmissionForm";
 
 export default async function RegistrationsPage({ params, searchParams }: Readonly<{
   params: Promise<{ eventId: string }>;
   searchParams: Promise<{ page?: string | string[] }>;
 }>) {
   const { eventId } = await params;
+  const access=await requireBackendUser();
+  if(access.role!=="authorised"){
+    const event=await getEvent(eventId);
+    if(!event.ok)return <p role="alert">Event unavailable.</p>;
+    return <div className="space-y-5"><Link href="/registrations" className="text-emerald-900 underline">Choose another event</Link><h1 className="text-3xl font-bold">{event.record.name}</h1><MemberSubmissionForm list="registration" eventId={eventId} requiresStudentId={event.record.requiresStudentId}/></div>;
+  }
   const query = await searchParams;
   const page = query.page === undefined ? 1 : typeof query.page === "string" && /^[1-9]\d*$/.test(query.page) ? Number(query.page) : NaN;
   const list = await registrationService.list(eventId, page);

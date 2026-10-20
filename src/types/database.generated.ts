@@ -937,6 +937,17 @@ export type Database = {
         }
         Returns: string
       }
+      submit_member_list_change: {
+        Args: {
+          entry_email: string
+          entry_name?: string
+          entry_student_id?: string
+          operation: string
+          target_event_id?: string
+          target_list: string
+        }
+        Returns: undefined
+      }
       update_managed_profile: {
         Args: {
           target_can_manage_accounts?: boolean

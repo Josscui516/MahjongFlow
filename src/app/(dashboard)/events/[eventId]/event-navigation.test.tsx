@@ -11,7 +11,7 @@ it.each(["authorised", "committee"])("limits the event registration shortcut for
   mocks.access.mockResolvedValue({ role });
   mocks.event.mockResolvedValue({ ok: true, record: { id: "fictional-event", name: "Fictional session", eventType: "weekly_session", status: "scheduled", startsAt: "2026-09-15T08:00:00Z", location: "Test room", description: "Fictional", requiresStudentId: false } });
   const html = renderToStaticMarkup(await Page({ params: Promise.resolve({ eventId: "fictional-event" }), searchParams: Promise.resolve({}) }));
-  expect(html.includes('href="/registrations/fictional-event"')).toBe(role === "authorised");
+  expect(html).toContain('href="/registrations/fictional-event"');
   expect(html.includes('href="/attendance/fictional-event"')).toBe(role === "authorised");
   expect(html).toContain('href="/dinner-verification/fictional-event"');
   expect(html).toContain("Starts (Sydney time)");

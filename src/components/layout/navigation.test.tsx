@@ -8,10 +8,10 @@ import {
 } from "./navigation";
 
 describe("role-aware navigation", () => {
-  it("shows the complete dinner roster only to safety staff", () => {
+  it("shows submission entry points to both business roles without exposing records", () => {
     for (const role of ["committee", "authorised"] as const) for (const administrator of [false,true]) {
       expect(getNavigationSections(role,administrator).some(section=>section.items.some(item=>item.href==="/dinner-roster")))
-        .toBe(role==="authorised");
+        .toBe(true);
     }
     expect(getNavigationSections("authorised",true).find(section=>section.id==="registrations")?.items.map(item=>item.href))
       .toEqual(["/registrations","/dinner-roster"]);
@@ -34,7 +34,7 @@ describe("role-aware navigation", () => {
     }
   });
 
-  it("returns only shared destinations for committee members", () => {
+  it("returns shared and private-submission destinations for committee members", () => {
     expect(getNavigationSections("committee")).toEqual([
       {
         id: "primary",
@@ -45,10 +45,11 @@ describe("role-aware navigation", () => {
           { href: "/events", label: "Events" },
         ],
       },
+      { id: "registrations", items: [{ href: "/registrations", label: "Registrations" },{ href: "/dinner-roster", label: "Dinner eligibility roster" }] },
     ]);
   });
 
-  it("exposes registration workflows only to authorised members", () => {
+  it("exposes registration entry points to authorised members", () => {
     expect(getNavigationSections("authorised")).toEqual([
       {
         id: "primary",
@@ -121,7 +122,7 @@ describe("role-aware navigation", () => {
     );
 
     expect(html).not.toContain("Sensitive operations");
-    expect(html).not.toContain('href="/registrations"');
+    expect(html).toContain('href="/registrations"');
     expect(html).toContain('href="/dashboard"');
     expect(html).not.toContain('href="/backoffice"');
     expect(html).toContain('href="/meetings"');

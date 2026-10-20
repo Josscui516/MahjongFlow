@@ -13,7 +13,7 @@ beforeEach(() => {
 it.each([true,false])("uses a separate global roster page; administrator=%s", async canManageAccounts => {
   mocks.access.mockResolvedValue({ canManageAccounts,role:canManageAccounts ? "authorised":"committee" });
   const html = renderToStaticMarkup(await Page({ params: Promise.resolve({ eventId: "fixture" }) }));
-  expect(html.includes('href="/dinner-roster"')).toBe(canManageAccounts);
+  expect(html).toContain('href="/dinner-roster"');
   expect(html).not.toContain('name="fullName"');
   expect(html).not.toContain("Add to dinner roster");
 });
