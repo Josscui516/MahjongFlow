@@ -14,19 +14,19 @@ it.each(["authorised", "committee"])("limits the event registration shortcut for
   mocks.access.mockResolvedValue({ role });
   mocks.event.mockResolvedValue({ ok: true, record: { id: "fictional-event", name: "Fictional session", eventType: "weekly_session", status: "scheduled", startsAt: "2026-09-15T08:00:00Z", location: "Test room", description: "Fictional", requiresStudentId: false } });
   const html = renderToStaticMarkup(await Page({ params: Promise.resolve({ eventId: "fictional-event" }), searchParams: Promise.resolve({}) }));
-  expect(html.includes('href="/registrations/fictional-event"')).toBe(role === "authorised");
+  expect(html).toContain('href="/registrations/fictional-event"');
   expect(html.includes('href="/attendance/fictional-event"')).toBe(role === "authorised");
-  expect(html.includes('href="/dinner-verification/fictional-event"')).toBe(role === "authorised");
+  expect(html).toContain('href="/dinner-verification/fictional-event"');
   expect(html).toContain("Starts (Sydney time)");
   expect(html).toContain("Safe event totals");
   expect(html.includes("Secure check-in settings")).toBe(role === "authorised");
 });
 
-it("allows an account administrator to manage QR without exposing participant detail shortcuts", async () => {
+it("allows an account administrator to manage QR and submit registrations without attendance detail access", async () => {
   mocks.access.mockResolvedValue({ role: "committee", canManageAccounts: true });
   const html = renderToStaticMarkup(await Page({ params: Promise.resolve({ eventId: "fictional-event" }), searchParams: Promise.resolve({}) }));
   expect(html).toContain("Secure check-in settings");
-  expect(html).not.toContain('href="/registrations/fictional-event"');
+  expect(html).toContain('href="/registrations/fictional-event"');
   expect(html).not.toContain('href="/attendance/fictional-event"');
 });
 

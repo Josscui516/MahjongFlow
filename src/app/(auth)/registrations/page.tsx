@@ -11,7 +11,7 @@ import {
 import { BackofficeShell, PageFrame } from "@/components/layout";
 import {
   AuthorizationError,
-  requireAuthorised,
+  requireBackendUser,
 } from "@/lib/auth/authorization";
 
 const eventDateFormatter = new Intl.DateTimeFormat("en-AU", { dateStyle: "medium", timeStyle: "short", timeZone: "Australia/Sydney" });
@@ -43,10 +43,11 @@ function RegistrationAccessFailure({
 
 export default async function RegistrationsPage() {
   let canManageAccounts = false;
+  let role: "committee"|"authorised"="committee";
 
   try {
-    const context = await requireAuthorised();
-    canManageAccounts = context.canManageAccounts;
+    const context = await requireBackendUser();
+    canManageAccounts = context.canManageAccounts;role=context.role;
   } catch (error) {
     if (error instanceof AuthorizationError) {
       if (error.code === "UNAUTHENTICATED") {
@@ -65,7 +66,7 @@ export default async function RegistrationsPage() {
       accountSlot={<span>Signed in</span>}
       canManageAccounts={canManageAccounts}
       currentPath="/registrations"
-      role="authorised"
+      role={role}
       signOutSlot={<LogoutForm />}
     >
       <PageFrame

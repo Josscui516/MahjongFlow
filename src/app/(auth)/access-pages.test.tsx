@@ -35,7 +35,7 @@ import RegistrationsPage from "@/app/(auth)/registrations/page";
 import { AuthorizationError } from "@/lib/auth/authorization";
 
 beforeEach(() => {
-  authMocks.requireAuthorised.mockReset();
+  authMocks.requireBackendUser.mockReset();
   authMocks.requireBackendUser.mockReset();
 });
 
@@ -58,12 +58,12 @@ describe("integrated role-aware pages", () => {
       expect(html).toContain(`Role: ${role === "authorised" ? "Authorised" : "Committee"}`);
       expect(html).toContain("Dashboard");
       expect(html).toContain("Fictional committee member");
-      expect(html.includes('href="/registrations"')).toBe(role === "authorised");
+      expect(html).toContain('href="/registrations"');
     },
   );
 
-  test("denies a committee user before rendering registration content", async () => {
-    authMocks.requireAuthorised.mockRejectedValue(
+  test("denies inactive or missing-profile users before rendering registration content", async () => {
+    authMocks.requireBackendUser.mockRejectedValue(
       new AuthorizationError("FORBIDDEN"),
     );
 
@@ -74,7 +74,7 @@ describe("integrated role-aware pages", () => {
   });
 
   test("shows only a fictional empty state to an authorised user", async () => {
-    authMocks.requireAuthorised.mockResolvedValue({
+    authMocks.requireBackendUser.mockResolvedValue({
       role: "authorised",
       userId: "fictional-authorised-id",
     });

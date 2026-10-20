@@ -9,6 +9,7 @@ const PROTECTED_BACKOFFICE_PATH_PREFIXES = [
   "/registrations",
   "/attendance",
   "/dinner-verification",
+  "/dinner-roster",
   "/admin",
 ] as const;
 

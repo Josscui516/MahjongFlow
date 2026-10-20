@@ -1,17 +1,15 @@
-# 独立晚餐名册与授权核验
+# 通用晚餐资格与活动发放
 
-2026-10-04 用户纠正：晚餐不是签到奖励，使用管理员预录名册。完整决定、权限、迁移和回退见 [需求纠正](../../../docs/project/REGISTRATION_AND_DINNER_CORRECTION.md)。旧 evidence 和验收材料仅保留为原日期的历史实现证据。
+2026-10-20 [最新权限](../../../docs/project/DINNER_PERMISSION_BOUNDARIES.md)：所有活跃后台成员可核验和记录本场发放，只有 authorised 可看完整名册，名册维护继续额外要求管理员能力。下方旧权限描述按原日期理解。
 
-## 入口与规则
+通用资格与发放以[2026-10-18 决定](../../../docs/project/DINNER_CHECK_IN_EMAIL_MATCHING.md)为准；扫码已按[2026-10-20 修正](../../../docs/project/QR_SELF_CHECK_IN_CORRECTION.md)同时完成报名和确认签到，无需工作人员再手动确认。
 
-活动详情 → Verify dinner eligibility → 晚餐核验页。管理员看到 Manage dinner roster，可用姓名／邮箱预录、恢复、移除；授权非管理员仅核验。每个活动独立维护名册，不自动导入报名／签到记录。
+`/dinner-roster` 是独立的通用资格录入页面，无活动参数；管理员录入一次，持续用于所有活动。`roster.ts` 维护通用表，不消耗资格。原活动名册数据只保留历史，活跃邮箱由迁移去重转入通用表。
 
-`roster.ts` 通过用户会话执行 authorised 鉴权与表级 RLS；管理员写还检查 canManageAccounts。`server.ts` 消费名册读端口，`calculateDinnerEligibility` 只接受同活动、同名册记录的 listed 状态。removed 或缺失不是资格；不会读取签到事实。
+`/dinner-verification/[eventId]` 是本场可领取与已发放列表。`matched-attendance.ts` 通过真实会话读取 SECURITY INVOKER 函数，合并当前报名／确认签到／通用资格与本场发放记录。`server.ts` 投影最小 DTO，不泄漏学号、操作者或 Auth 信息。撤销签到后已发放记录仍可见，避免丢失已服务事实。
 
-名单最小 DTO 不暴露学号、录入者或 Auth 资料。刷新逻辑保留旧值／过期提示、最新请求优先及失败时禁止依赖陈旧结果的约定。
+`issuance.ts` 和 `issuance-action.ts` 执行 authorised 鉴权、输入校验及安全错误映射。原子写函数检查活跃身份，锁定当前活动和首次发放的资格事实，同活动同人联合主键保证幂等。发放时间／操作者由数据库生成；浏览器勾选在服务器确认和刷新成功后显示，失败不假报成功。清除误勾需要确认，修改审计保留。
 
-## 验证
+刷新期间禁用发放操作，过期／失败结果明确提示，权限丢失清空身份；请求序号防止旧结果覆盖新结果。资格管理仅管理员，授权工作人员可以记录活动发放，普通委员／匿名／停用用户拒绝。
 
-`database.test.ts` 是 opt-in 的真实本地测试：使用忽略 .env.local 的本地连接，只创建随机虚构账号和限定资源，结束后清理自身数据；设置 ISSUE35_LIVE_DATABASE=1 运行。覆盖公开报名、签到不授予资格、预录不需要报名、移除、并发唯一性、窗口／撤销、隐私同意和三层权限。
-
-单元测试覆盖名册纯规则、适配器、刷新与界面，浏览器实测覆盖录入、移除、授权人员只读和扫码报名。旧 attendance 版浏览器脚本／截图不证明本版行为。
+`database.test.ts` 使用 ISSUE35_LIVE_DATABASE=1 运行真实本地回归，包括重复并发发放。`supabase/tests/rls/dinner_check_in_matching.sql` 覆盖通用资格跨活动、已发放保留、明确更正、权限和不允许直接表写入。evidence 下 dinner-global 三张截图为当前版本，其余旧截图按原日期理解。

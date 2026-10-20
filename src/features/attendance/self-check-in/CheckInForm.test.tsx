@@ -3,7 +3,7 @@ import { describe, expect, it } from "vitest";
 import { CheckInForm, checkInMessages } from "./CheckInForm";
 
 describe("self check-in form", () => {
-  it("collects only email when the event does not require a student ID", () => {
+  it("collects identity and explains that submission confirms attendance without another staff step", () => {
     const html = renderToStaticMarkup(<CheckInForm studentIdRequired={false} token={"a".repeat(64)} />);
     expect(html).toContain('name="email"');
     expect(html).not.toContain('name="studentId"');
@@ -11,6 +11,9 @@ describe("self check-in form", () => {
     expect(html).not.toContain("participantId");
     expect(html).toContain("You do not need a previous registration");
     expect(html).toContain('name="fullName"');
+    expect(html).toContain("No additional staff check-in is required");
+    expect(html).toContain("Confirm check-in");
+    expect(checkInMessages.success).toContain("Your attendance is confirmed");
   });
 
   it("requires the conditional student ID and exposes safe outcome messages", () => {
