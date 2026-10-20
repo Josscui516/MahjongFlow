@@ -1,6 +1,26 @@
 type InterfaceAddress = Readonly<{ address: string; family: string | number; internal: boolean }>;
 type Interfaces = Readonly<Record<string, readonly InterfaceAddress[] | undefined>>;
 
+const LOOPBACK_HOSTS = ["localhost", "127.0.0.1", "[::1]"];
+
+/** A local production build is still local when both configuration and request agree. */
+export function isLocalPreviewRequest({ canonicalOrigin, requestHost, hosts }: Readonly<{
+  canonicalOrigin: string;
+  requestHost: string | null;
+  hosts: readonly string[];
+}>): boolean {
+  try {
+    const canonical = new URL(canonicalOrigin);
+    if (canonical.protocol !== "http:" || !LOOPBACK_HOSTS.includes(canonical.hostname) || !requestHost) return false;
+    const requested = new URL(`http://${requestHost}`);
+    return !requested.username && !requested.password && requested.pathname === "/"
+      && !requested.search && !requested.hash
+      && (LOOPBACK_HOSTS.includes(requested.hostname) || hosts.includes(requested.hostname));
+  } catch {
+    return false;
+  }
+}
+
 export function isPrivateIPv4(host: string): boolean {
   const octets = host.split(".").map(Number);
   return /^\d{1,3}(\.\d{1,3}){3}$/.test(host)
@@ -40,7 +60,7 @@ export function resolveCheckInOrigin({ canonicalOrigin, development, requestHost
   }
   const requestIsLocal = requested && !requested.username && !requested.password
     && requested.pathname === "/" && !requested.search && !requested.hash
-    && (["localhost", "127.0.0.1", "[::1]"].includes(requested.hostname)
+    && (LOOPBACK_HOSTS.includes(requested.hostname)
       || hosts.includes(requested.hostname));
   const localRequest = requestIsLocal ? requested : null;
   const host = localRequest && hosts.includes(localRequest.hostname)

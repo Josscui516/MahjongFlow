@@ -1,5 +1,7 @@
 # Sprint 结束后的网站补丁交付
 
+> 2026-10-16 后续补丁：[管理员二维码权限与错误提示修复](ADMIN_QR_MANAGEMENT_FIX.md)，继续关联 #99；独立管理员能力纳入 QR 管理，同时保留参与者数据角色边界。原记录中的测试数字仅代表其原日期版本。
+
 日期：2026-10-15，Australia/Sydney。对应 [Issue #99](https://github.com/Josscui516/MahjongFlow/issues/99)。
 
 ## 路由授权与范围
