@@ -6,10 +6,13 @@ vi.mock("@/features/dinner-verification/roster",()=>({readGlobalDinnerRoster:moc
 vi.mock("@/features/dinner-verification/actions",()=>({addDinnerRosterEntry:vi.fn(),removeDinnerRosterMember:vi.fn()}));
 vi.mock("next/navigation",()=>({useRouter:()=>({refresh:vi.fn()})}));
 import Page from "./page";
-it("denies nonadministrators before loading the shared roster",async()=>{
+it("allows safety staff to read the complete roster without membership controls",async()=>{
   mocks.access.mockResolvedValue({canManageAccounts:false});
-  expect(renderToStaticMarkup(await Page())).not.toContain('name="fullName"');
-  expect(mocks.read).not.toHaveBeenCalled();
+  mocks.read.mockResolvedValue({ok:true,items:[{participantId:"fixture",participantName:"Fictional Member",participantEmail:"safety-view@example.test",status:"listed"}]});
+  const html=renderToStaticMarkup(await Page());
+  expect(html).not.toContain('name="fullName"');
+  expect(html).toContain("safety-view@example.test");
+  expect(mocks.read).toHaveBeenCalled();
 });
 it("offers a standalone roster without any event ID input",async()=>{
   mocks.access.mockResolvedValue({canManageAccounts:true});

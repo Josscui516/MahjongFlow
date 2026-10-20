@@ -86,8 +86,8 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("independent public r
     session.client=authorised;expect(await saveDinnerRosterEntry("Fictional Denied","denied@example.test")).toMatchObject({ok:false,code:"PERMISSION_DENIED"});
     expect((await authorised.from("dinner_eligibility_roster").insert({full_name:"Fictional Denied",email:"denied@example.test"})).error).not.toBeNull();
   });
-  it("denies committee and anonymous roster reads and direct privileged RPC calls",async()=>{
-    session.client=committee;expect(await readDinnerVerification(eventId)).toMatchObject({ok:false,code:"PERMISSION_DENIED"});
+  it("allows committee distribution while denying full roster reads and direct elevated RPC calls",async()=>{
+    session.client=committee;expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:0,items:[]});
     expect((await committee.from("dinner_eligibility_roster").select("id")).data).toEqual([]);
     expect((await anonymous.from("dinner_roster").select("id")).error).not.toBeNull();
     const args={registration_token:token,participant_name:"Fictional Probe",participant_email:"probe@example.test",privacy_accepted:true};

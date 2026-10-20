@@ -45,7 +45,7 @@ export function getNavigationSections(
       id: "registrations",
       items: [
         { href: "/registrations", label: "Registrations" },
-        ...(canManageAccounts ? [{ href: "/dinner-roster", label: "Dinner eligibility roster" }] : []),
+        { href: "/dinner-roster", label: "Dinner eligibility roster" },
       ],
     });
   }

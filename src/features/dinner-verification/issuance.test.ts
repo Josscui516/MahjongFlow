@@ -2,7 +2,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 const mocks = vi.hoisted(() => ({ authorise: vi.fn(), client: vi.fn(), rpc: vi.fn() }));
 vi.mock("@/lib/auth/authorization", async original => ({
-  ...await original<typeof import("@/lib/auth/authorization")>(), requireAuthorised: mocks.authorise,
+  ...await original<typeof import("@/lib/auth/authorization")>(), requireBackendUser: mocks.authorise,
 }));
 vi.mock("@/lib/supabase/server", () => ({ createServerSupabaseClient: mocks.client }));
 import { AuthorizationError } from "@/lib/auth/authorization";

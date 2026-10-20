@@ -63,7 +63,10 @@ select is((select count(*)::int from public.dinner_eligibility_roster where emai
 
 select set_config('request.jwt.claim.sub','a2000000-0000-4000-8000-000000000002',true);
 select throws_ok($$select * from public.list_matched_dinner_attendees('a2100000-0000-4000-8000-000000000001')$$,'42501',null,'ordinary committee cannot read matched identities');
-select throws_ok($$select public.set_event_dinner_issued('a2100000-0000-4000-8000-000000000001','a2200000-0000-4000-8000-000000000002',true,false)$$,'42501',null,'ordinary committee cannot change serving state');
+select is((select count(*)::int from public.dinner_eligibility_roster),0,'committee cannot read standing roster identities');
+select is((select count(*)::int from public.list_event_dinner_service('a2100000-0000-4000-8000-000000000002')),1,'committee can read the scoped event serving projection');
+select lives_ok($$select public.set_event_dinner_issued('a2100000-0000-4000-8000-000000000002','a2200000-0000-4000-8000-000000000006',false,true)$$,'committee can correct an issued mark');
+select lives_ok($$select public.set_event_dinner_issued('a2100000-0000-4000-8000-000000000002','a2200000-0000-4000-8000-000000000006',true,false)$$,'committee can record issuance after current eligibility validation');
 reset role;
 update public.profiles set is_active=false where id='a2000000-0000-4000-8000-000000000001';
 set local role authenticated;

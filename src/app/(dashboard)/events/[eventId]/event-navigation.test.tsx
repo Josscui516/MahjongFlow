@@ -13,7 +13,7 @@ it.each(["authorised", "committee"])("limits the event registration shortcut for
   const html = renderToStaticMarkup(await Page({ params: Promise.resolve({ eventId: "fictional-event" }), searchParams: Promise.resolve({}) }));
   expect(html.includes('href="/registrations/fictional-event"')).toBe(role === "authorised");
   expect(html.includes('href="/attendance/fictional-event"')).toBe(role === "authorised");
-  expect(html.includes('href="/dinner-verification/fictional-event"')).toBe(role === "authorised");
+  expect(html).toContain('href="/dinner-verification/fictional-event"');
   expect(html).toContain("Starts (Sydney time)");
   expect(html).toContain("Safe event totals");
   expect(html.includes("Secure check-in settings")).toBe(role === "authorised");

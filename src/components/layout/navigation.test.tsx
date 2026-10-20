@@ -8,10 +8,10 @@ import {
 } from "./navigation";
 
 describe("role-aware navigation", () => {
-  it("shows the shared dinner roster only to authorised administrators", () => {
+  it("shows the complete dinner roster only to safety staff", () => {
     for (const role of ["committee", "authorised"] as const) for (const administrator of [false,true]) {
       expect(getNavigationSections(role,administrator).some(section=>section.items.some(item=>item.href==="/dinner-roster")))
-        .toBe(role==="authorised"&&administrator);
+        .toBe(role==="authorised");
     }
     expect(getNavigationSections("authorised",true).find(section=>section.id==="registrations")?.items.map(item=>item.href))
       .toEqual(["/registrations","/dinner-roster"]);
@@ -59,7 +59,7 @@ describe("role-aware navigation", () => {
           { href: "/events", label: "Events" },
         ],
       },
-      { id: "registrations", items: [{ href: "/registrations", label: "Registrations" }] },
+      { id: "registrations", items: [{ href: "/registrations", label: "Registrations" },{ href: "/dinner-roster", label: "Dinner eligibility roster" }] },
     ]);
   });
 
