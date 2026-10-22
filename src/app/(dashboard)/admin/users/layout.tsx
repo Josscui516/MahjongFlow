@@ -54,14 +54,7 @@ export default async function AccountManagementLayout({
 
   return (
     <BackofficeShell
-      accountSlot={
-        <span>
-          Signed in as{" "}
-          <strong className="font-semibold text-slate-900">
-            {context.displayName?.trim() || "Committee member"}
-          </strong>
-        </span>
-      }
+      displayName={context.displayName}
       canManageAccounts
       currentPath="/admin/users"
       role={context.role}

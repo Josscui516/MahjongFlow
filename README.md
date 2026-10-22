@@ -1,5 +1,7 @@
 # MahjongFlow
 
+> 2026-10-21 扫码流程：公开二维码只注册，authorised 工作人员再手动确认到场。已有签到保留，见[当前决定及部署](docs/project/QR_REGISTRATION_STAFF_ATTENDANCE.md)。
+
 > A lightweight meeting, task, event, and attendance coordination system for the Monash Mahjong Club.
 
 > 2026-10-18 晚餐功能：`/dinner-roster` 维护所有活动共用的持续资格，活动晚餐页显示本场可领取人员并保存已发放状态；见[当前需求与部署](docs/project/DINNER_CHECK_IN_EMAIL_MATCHING.md)。
@@ -92,7 +94,7 @@ Task 创建和编辑支持关联多场 Meeting；会议详情显示全部关联�
 
 ### 已配置的本地 Docker 环境
 
-前端现在作为 `mahjongflow-frontend` 与现有本地 Supabase 容器一起运行。完成配置后，启动 Docker Desktop 即可自动恢复完整本地服务。访问 http://localhost:3000，无需另外启动 `npm run dev`。现有数据库卷和账号保留。
+前端与本地 Supabase 统一放在 Docker Desktop 的 `mahjongflow` 分组中，共 8 个容器。访问 http://localhost:3000，无需另外启动 `npm run dev`。日常开发使用 `start-local.ps1 -Mode Development -Build` 首次构建，之后 `src` 中的代码和样式修改支持热更新；后续启动可省略 `-Build`。生产验收使用 `start-local.ps1 -Mode Production -Build`，默认仍为生产模式。详见[本地 Docker 开发与生产模式](docs/operations/LOCAL_DOCKER_STACK.md)。现有数据库卷和账号保留；手动停止后保持停止，需再次启动。
 
 需要主动启动服务或更换网络后重新检测局域网 IP 时，在仓库目录的 Windows PowerShell 运行：
 
@@ -106,7 +108,13 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\start-local.ps1
 powershell -NoProfile -ExecutionPolicy Bypass -File .\start-local.ps1 -Build
 ```
 
-脚本使用现有 `supabase_network_MahjongFlow` 和本地 Supabase CLI；数据库不存在时明确拒绝创建或重置。脚本私下生成被忽略的 `compose.local.env`，不要提交或分享该文件。浏览器通过当前 origin 的 `/supabase` 请求 API，服务端通过 Docker 内部网关访问。Docker 二维码使用启动脚本识别的宿主机局域网地址；正式托管部署继续使用配置的可信 HTTPS 应用 origin。
+统一停止并保留容器和数据：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File .\stop-local.ps1
+```
+
+也可在 Docker Desktop 中启动／停止整个 `mahjongflow` 分组。脚本继续使用现有 `supabase_network_MahjongFlow` 和 `supabase_db_MahjongFlow` 数据卷；必需容器缺失时拒绝新建或重置数据库。私有运行参数保存在被忽略的 `compose.local.env`，不要提交或分享；服务清单在 `supabase/.temp/compose.runtime.json` 中生成。服务取舍、恢复方法与验证见[本地 Docker 运维](docs/operations/LOCAL_DOCKER_STACK.md)。浏览器通过当前 origin 的 `/supabase` 请求 API，服务端通过 Docker 内部网关访问。Docker 二维码使用启动脚本识别的宿主机局域网地址；正式托管部署继续使用配置的可信 HTTPS 应用 origin。
 
 扫码报名及管理员独立维护的晚餐名册规则见[需求纠正](docs/project/REGISTRATION_AND_DINNER_CORRECTION.md)。本轮提交与验证范围见[补丁交付记录](docs/project/POST_SPRINT_PATCH_DELIVERY.md)。
 

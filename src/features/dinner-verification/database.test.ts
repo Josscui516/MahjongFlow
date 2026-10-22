@@ -30,7 +30,7 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("independent public r
     }
     committee=await user("committee");authorised=await user("authorised");manager=await user("authorised",true);
     sql(`insert into public.events(id,name,event_type,location,description,starts_at,check_in_opens_at,check_in_closes_at,created_by)values('${eventId}','Fictional separated-flow test','weekly_session','Test room','Fictional test',now(),now()-interval '1 hour',now()+interval '1 hour','${users[2]}');insert into public.event_check_in_tokens(event_id,token_digest,created_by)values('${eventId}','${createHash("sha256").update(token).digest("hex")}','${users[2]}');`);
-    sql(`insert into public.events(id,name,event_type,location,description,starts_at,check_in_opens_at,check_in_closes_at,requires_student_id,created_by)values('${studentEvent}','Fictional student registration test','weekly_session','Test room','Fictional test',now(),now()-interval '1 hour',now()+interval '1 hour',true,'${users[2]}');insert into public.event_check_in_tokens(event_id,token_digest,created_by)values('${studentEvent}','${createHash("sha256").update(studentToken).digest("hex")}','${users[2]}');`);
+    sql(`insert into public.events(id,name,event_type,location,description,starts_at,check_in_opens_at,check_in_closes_at,created_by)values('${studentEvent}','Fictional concurrent registration test','weekly_session','Test room','Fictional test',now(),now()-interval '1 hour',now()+interval '1 hour','${users[2]}');insert into public.event_check_in_tokens(event_id,token_digest,created_by)values('${studentEvent}','${createHash("sha256").update(studentToken).digest("hex")}','${users[2]}');`);
   },30000);
   afterAll(async()=>{
     session.client=null;if(!users.length||!privileged)return;
@@ -57,8 +57,11 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("independent public r
     expect((await privileged.rpc("submit_event_registration",{registration_token:token,participant_name:"Fictional Registered Attendee",participant_email:` ${rosterEmail.toUpperCase()} `,privacy_accepted:true})).data).toBe("success");
     expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:0,items:[]});
     const scanned=await Promise.all([1,2].map(()=>privileged.rpc("submit_event_self_check_in",{registration_token:token,participant_name:"Fictional Registered Attendee",participant_email:rosterEmail,privacy_accepted:true})));
-    expect(scanned.map(result=>result.data).sort()).toEqual(["already_processed","success"]);
-    expect(sql(`select count(*) from public.attendance_records a join public.participants p on p.id=a.participant_id where a.event_id='${eventId}' and p.email='${rosterEmail}' and a.check_in_method='qr' and a.recorded_by is null;`)).toBe("1");
+    expect(scanned.map(result=>result.data)).toEqual(["already_processed","already_processed"]);
+    expect(sql(`select count(*) from public.attendance_records a join public.participants p on p.id=a.participant_id where a.event_id='${eventId}' and p.email='${rosterEmail}';`)).toBe("0");
+    expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:0,items:[]});
+    const participantId=sql(`select id from public.participants where email='${rosterEmail}';`);
+    expect((await authorised.from("attendance_records").insert({event_id:eventId,participant_id:participantId} as Database["public"]["Tables"]["attendance_records"]["Insert"])).error).toBeNull();
     const r=await readDinnerVerification(eventId);expect(r).toMatchObject({ok:true,eligibleCount:1});if(!r.ok||!internal.ok)throw new Error("Roster read failed");
     expect(r.items[0]).toMatchObject({participantEmail:rosterEmail,eligibility:"Eligible"});
     expect(r.items[0].participantName).toBe("Fictional Registered Attendee");
@@ -86,8 +89,8 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("independent public r
     session.client=authorised;expect(await saveDinnerRosterEntry("Fictional Safety Writer",`safety-${eventId}@example.test`)).toEqual({ok:true});
     expect((await authorised.from("dinner_eligibility_roster").insert({full_name:"Fictional Denied",email:`direct-${eventId}@example.test`})).error).toBeNull();
   });
-  it("allows committee distribution while denying full roster reads and direct elevated RPC calls",async()=>{
-    session.client=committee;expect(await readDinnerVerification(eventId)).toMatchObject({ok:true,eligibleCount:0,items:[]});
+  it("denies committee dinner access, full roster reads and direct elevated RPC calls",async()=>{
+    session.client=committee;expect(await readDinnerVerification(eventId)).toMatchObject({ok:false,code:"PERMISSION_DENIED"});
     expect((await committee.from("dinner_eligibility_roster").select("id")).data).toEqual([]);
     expect((await anonymous.from("dinner_roster").select("id")).error).not.toBeNull();
     const args={registration_token:token,participant_name:"Fictional Probe",participant_email:"probe@example.test",privacy_accepted:true};
@@ -103,10 +106,9 @@ describe.skipIf(process.env.ISSUE35_LIVE_DATABASE !== "1")("independent public r
     expect((await privileged.rpc("submit_event_registration",{registration_token:token,participant_name:"Fictional New Registrant",participant_email:email,privacy_accepted:true})).data).toBe("unable_to_process");
     expect(sql(`select registration_status from public.registrations where event_id='${eventId}';`)).toBe("cancelled");
   });
-  it("requires the configured student ID and creates only one registration during concurrent submissions",async()=>{
+  it("creates only one registration and no attendance during concurrent submissions without student ID",async()=>{
     const args={registration_token:studentToken,participant_name:"Fictional Student",participant_email:studentEmail,privacy_accepted:true};
-    expect((await privileged.rpc("submit_event_registration",args)).data).toBe("unable_to_process");
-    const results=await Promise.all([1,2,3].map(()=>privileged.rpc("submit_event_registration",{...args,participant_student_id:"FAKE-61004"})));
+    const results=await Promise.all([1,2,3].map(()=>privileged.rpc("submit_event_registration",args)));
     expect(results.map(result=>result.data).sort()).toEqual(["already_processed","already_processed","success"]);
     expect(sql(`select count(*) from public.registrations where event_id='${studentEvent}';`)).toBe("1");
     expect(sql(`select count(*) from public.attendance_records where event_id='${studentEvent}';`)).toBe("0");

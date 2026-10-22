@@ -22,7 +22,7 @@ vi.mock("@/lib/auth/authorization", () => {
     }
   }
 
-  return { AuthorizationError, ...authMocks };
+  return { AuthorizationError, ...authMocks, requireActiveUser: authMocks.requireBackendUser };
 });
 
 vi.mock("@/app/(auth)/backoffice/logout-form", () => ({
@@ -36,12 +36,13 @@ import { AuthorizationError } from "@/lib/auth/authorization";
 
 beforeEach(() => {
   authMocks.requireBackendUser.mockReset();
-  authMocks.requireBackendUser.mockReset();
+  authMocks.requireAuthorised.mockReset();
 });
 
 describe("integrated role-aware pages", () => {
-  test("sends the old committee dashboard entry to the single Dashboard", () => {
-    expect(() => BackofficePage()).toThrow("NEXT_REDIRECT:/dashboard");
+  test.each([[false, "/dashboard"], [true, "/admin/users"]])("routes the authenticated backoffice entry by account capability", async (canManageAccounts, path) => {
+    authMocks.requireBackendUser.mockResolvedValue({ canManageAccounts });
+    await expect(BackofficePage()).rejects.toThrow(`NEXT_REDIRECT:${path}`);
   });
   test.each(["committee", "authorised"] as const)(
     "renders the trusted %s role in the back-office shell",
@@ -58,12 +59,12 @@ describe("integrated role-aware pages", () => {
       expect(html).toContain(`Role: ${role === "authorised" ? "Authorised" : "Committee"}`);
       expect(html).toContain("Dashboard");
       expect(html).toContain("Fictional committee member");
-      expect(html).toContain('href="/registrations"');
+      expect(html).not.toContain('href="/registrations"');
     },
   );
 
   test("denies inactive or missing-profile users before rendering registration content", async () => {
-    authMocks.requireBackendUser.mockRejectedValue(
+    authMocks.requireAuthorised.mockRejectedValue(
       new AuthorizationError("FORBIDDEN"),
     );
 
@@ -74,7 +75,7 @@ describe("integrated role-aware pages", () => {
   });
 
   test("shows only a fictional empty state to an authorised user", async () => {
-    authMocks.requireBackendUser.mockResolvedValue({
+    authMocks.requireAuthorised.mockResolvedValue({
       role: "authorised",
       userId: "fictional-authorised-id",
     });

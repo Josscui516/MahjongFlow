@@ -24,17 +24,17 @@ describe("MeetingAgendaSection", () => {
       />,
     );
 
-    expect(markup).toContain("Discussion points 1");
-    expect(markup).toContain("Key decisions 1");
-    expect(markup).toContain("Remove item");
-    expect(markup).toContain("Move down");
-    expect(markup).toContain("Saved");
-    expect(markup).toContain("Save agenda");
-    expect(markup).toContain('disabled=""');
-    expect(markup).toContain('href="/tasks/convert/discussion/discussion-1"');
-    expect(markup).toContain("Create task from discussion point");
-    expect(markup).toContain('href="/tasks/convert/decision/decision-1"');
-    expect(markup).toContain("Create task from decision");
+    expect(markup).toContain("Agenda item 1");
+    expect(markup).toContain("Agenda item 2");
+    expect(markup).toContain("Remove agenda item");
+    expect(markup).not.toContain("Move down");
+    expect(markup).toContain("No changes to save");
+    expect(markup).toContain("Done");
+    expect(markup).not.toContain('disabled=""');
+    expect(markup).not.toContain("Done editing");
+    expect(markup).not.toContain("Discard changes");
+    expect(markup).not.toContain("/tasks/convert/");
+    expect(markup).not.toContain("Create task");
     expect(markup).not.toContain("Delete meeting");
   });
 
@@ -46,10 +46,10 @@ describe("MeetingAgendaSection", () => {
       />,
     );
 
-    expect(markup).toContain("Capture topics, questions, or updates");
-    expect(markup).toContain("Add first discussion point");
-    expect(markup).toContain("Record agreed outcomes");
-    expect(markup).toContain("Add first key decision");
+    expect(markup).toContain("No agenda items yet");
+    expect(markup).toContain("Add agenda");
+
+
   });
 
   it("reorders one section without mutating the other", () => {
@@ -87,5 +87,26 @@ it("opens existing meetings in read mode with explicit editing", () => {
  expect(html).toContain("Edit agenda");
  expect(html).toContain("Fictional booking");
  expect(html).not.toContain("textarea");
- expect(html).not.toContain("Save agenda");
+ expect(html).not.toContain("Done");
+});
+
+it("offers direct additions for empty sections in read mode", () => {
+  const markup = renderToStaticMarkup(<MeetingAgendaSection startInReadMode agenda={{meetingId:"meeting", discussionPoints:[], decisions:[]}} onSave={vi.fn()} />);
+  expect(markup).toContain("Add agenda");
+  expect(markup).toContain("Add agenda");
+  expect(markup).not.toContain("textarea");
+});
+
+it("keeps reorder controls for sections with multiple entries", () => {
+  const markup = renderToStaticMarkup(<MeetingAgendaSection agenda={{meetingId:"meeting", discussionPoints:[{id:"one",content:"Room",position:0},{id:"two",content:"Equipment",position:1}], decisions:[]}} onSave={vi.fn()} />);
+  expect(markup).toContain('aria-label="Move agenda item 2 up"');
+  expect(markup).toContain('aria-label="Move agenda item 1 down"');
+});
+
+it("numbers read-mode items and preserves each distinct source link", () => {
+  const html = renderToStaticMarkup(<MeetingAgendaSection startInReadMode agenda={{meetingId:"meeting",discussionPoints:[{id:"discussion",content:"Room discussion",position:0}],decisions:[{id:"decision",content:"Book the room",position:0}]}} onSave={vi.fn()} />);
+  expect(html).toContain('aria-label="Create task from agenda item 1"');
+  expect(html).toContain('aria-label="Create task from agenda item 2"');
+  expect(html).toContain('href="/tasks/convert/discussion/discussion"');
+  expect(html).toContain('href="/tasks/convert/decision/decision"');
 });

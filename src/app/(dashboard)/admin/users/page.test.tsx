@@ -1,5 +1,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { AuthorizationError } from "@/lib/auth/authorization";
+
+vi.mock("server-only", () => ({}));
 
 const mocks = vi.hoisted(() => ({
   listAccounts: vi.fn(),
@@ -47,5 +50,12 @@ describe("account-management page", () => {
     await expect(AccountManagementPage()).rejects.toThrow(
       "private provider response",
     );
+  });
+
+  it("renders a safe denial when the concurrent page read is forbidden", async () => {
+    mocks.listAccounts.mockRejectedValue(new AuthorizationError("FORBIDDEN"));
+    const html = renderToStaticMarkup(await AccountManagementPage());
+    expect(html).toContain("You cannot access this page");
+    expect(html).not.toContain("Directory count");
   });
 });

@@ -10,6 +10,10 @@ const render = (risk: DueRiskResult, href: `/tasks/${string}` | undefined = task
   renderToStaticMarkup(<DueRiskReminder risk={risk} taskTitle={taskTitle} taskHref={href} />);
 
 describe("DueRiskReminder", () => {
+  it("uses tomorrow across the Sydney day boundary", () => {
+    const html = renderToStaticMarkup(<DueRiskReminder compact now={new Date("2026-10-20T13:30:00Z")} dueDate="2026-10-22" risk={{ ok: true, value: "dueSoon" }} taskTitle="Fictional task" />);
+    expect(html).toContain("Due tomorrow");
+  });
   it.each([
     ["overdue", "Overdue", "Past its due date"],
     ["dueSoon", "Due soon", "Due today or within 7 days"],

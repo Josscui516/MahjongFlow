@@ -1,4 +1,5 @@
 import "server-only";
+import { attendanceAuditService } from "@/features/attendance/records/server";
 
 import { type DinnerRosterResult, type DinnerRosterReadPort } from "./roster";
 import { matchedDinnerAttendance } from "./matched-attendance";
@@ -107,4 +108,36 @@ export function createDinnerVerificationReader(
   };
 }
 
-export const readDinnerVerification = createDinnerVerificationReader(matchedDinnerAttendance);
+export function createConfirmedDinnerReader(
+  readDinner: (eventId: string) => Promise<DinnerVerificationResult>,
+  attendance: import("@/features/attendance/records/server").AttendanceReadPort,
+) {
+  return async (eventId: string): Promise<DinnerVerificationResult> => {
+    try {
+      const dinner = await readDinner(eventId);
+      if (!dinner.ok) return dinner;
+      const audit = await attendance.listForEvent(eventId);
+      if (!audit.ok) return audit;
+      if (audit.event.id.toLowerCase() !== dinner.event.id) return { ok: false, code: "SYSTEM_ERROR" };
+      const confirmed = audit.items.filter(row => row.status === "confirmed");
+      const ids = new Set(confirmed.map(row => row.participantId.toLowerCase()));
+      const matches = new Map(dinner.items.map(row => [row.participantId, row]));
+      const items = confirmed.map(row => ({
+        participantId: row.participantId.toLowerCase(),
+        participantName: row.participantName,
+        participantEmail: row.participantEmail,
+        eligibility: matches.get(row.participantId.toLowerCase())?.eligibility ?? "Not Eligible Yet" as const,
+        issuedAt: matches.get(row.participantId.toLowerCase())?.issuedAt,
+      }));
+      return { ...dinner, items, eligibleCount: items.filter(row => row.eligibility === "Eligible").length,
+        previousIssuedItems: dinner.items.filter(row => row.issuedAt && !ids.has(row.participantId)),
+      };
+    } catch { return { ok: false, code: "SYSTEM_ERROR" }; }
+  };
+}
+
+export const readDinnerVerification = createConfirmedDinnerReader(
+  createDinnerVerificationReader(matchedDinnerAttendance), attendanceAuditService,
+);
+
+export { readDinnerEligibilityCount } from "./safe-count";

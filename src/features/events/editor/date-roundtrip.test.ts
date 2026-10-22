@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { localDateTime } from "./EventEditor";
+import { localDateTime } from "./create-defaults";
 import { validateEventInput } from "../core/validation";
 
 describe("persisted event time round trip", () => {

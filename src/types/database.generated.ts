@@ -810,6 +810,10 @@ export type Database = {
         }
         Returns: string
       }
+      delete_event_record: {
+        Args: { target_event_id: string }
+        Returns: string
+      }
       delete_meeting_record: {
         Args: { target_meeting_id: string }
         Returns: string
@@ -836,6 +840,10 @@ export type Database = {
           created_at: string
           revoked_at: string
         }[]
+      }
+      get_event_dinner_eligibility_total: {
+        Args: { target_event_id: string }
+        Returns: number
       }
       get_event_participation_totals: {
         Args: { event_ids: string[] }

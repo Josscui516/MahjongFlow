@@ -12,10 +12,22 @@ import { TaskConversionForm } from "./TaskConversionForm";
 const ACTION: TaskConversionAction = async (state) => state;
 
 describe("task conversion form", () => {
-  it("offers a direct task link after successful conversion", () => {
+  it("orders error links by the visible fields and keeps a cancel route to the source", () => {
+    const html = renderToStaticMarkup(<TaskConversionForm assigneeOptions={FIXTURE_ASSIGNEES} conversionAction={ACTION} initialValues={FIXTURE_TASK_VALUES} sourceContext={FIXTURE_SOURCE_CONTEXT} sourceLabel="Fictional agenda" initialState={{status: "validation", sourceContext: FIXTURE_SOURCE_CONTEXT, values: FIXTURE_TASK_VALUES, errors: [
+      {field: "description", code: "DESCRIPTION_REQUIRED", label: "Description", message: "Enter a description."},
+      {field: "dueDate", code: "DUE_DATE_REQUIRED", label: "Due date", message: "Choose a due date."},
+      {field: "assigneeId", code: "ASSIGNEE_REQUIRED", label: "Primary assignee", message: "Choose a member."},
+      {field: "title", code: "TITLE_REQUIRED", label: "Task title", message: "Enter a title."},
+    ]}} />);
+    const links = [...html.matchAll(/href="#task-conversion-([^"]+)"/g)].map(match => match[1]);
+    expect(links).toEqual(["title", "assigneeId", "dueDate", "description"]);
+    expect(html).toContain(`href="/meetings/${FIXTURE_SOURCE_CONTEXT.meetingId}"`);
+    expect(html).toContain("Cancel");
+  });
+  it("does not show success feedback on the conversion form", () => {
     const html = renderToStaticMarkup(<TaskConversionForm assigneeOptions={FIXTURE_ASSIGNEES} conversionAction={ACTION} initialValues={FIXTURE_TASK_VALUES} sourceContext={FIXTURE_SOURCE_CONTEXT} sourceLabel="Fictional source" initialState={{ errors: [], sourceContext: FIXTURE_SOURCE_CONTEXT, status: "success", taskId: "fictional-task", values: FIXTURE_TASK_VALUES }} />);
-    expect(html).toContain('href="/tasks/fictional-task"');
-    expect(html).toContain("Open created task");
+    expect(html).not.toContain("Open created task");
+    expect(html).not.toContain("Task created");
   });
   it("renders all C-02 fields with a single-select assignee control", () => {
     const html = renderToStaticMarkup(

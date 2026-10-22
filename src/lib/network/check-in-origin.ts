@@ -30,12 +30,31 @@ export function isPrivateIPv4(host: string): boolean {
       || (octets[0] === 192 && octets[1] === 168));
 }
 
+/** A physical LAN can use public IPv4 addresses, for example on campus Wi-Fi. */
+export function isNetworkIPv4(host: string): boolean {
+  const octets = host.split(".").map(Number);
+  return /^\d{1,3}(\.\d{1,3}){3}$/.test(host)
+    && octets.every(octet => octet >= 0 && octet <= 255)
+    && octets[0] > 0 && octets[0] < 224 && octets[0] !== 127
+    && !(octets[0] === 169 && octets[1] === 254);
+}
+
+export function localQrHosts(dockerHost: string | undefined, interfaces: Interfaces, containerized: boolean): string[] {
+  if (dockerHost) {
+    if (!isNetworkIPv4(dockerHost)) throw new Error("Invalid configured local host IPv4 address.");
+    return [dockerHost];
+  }
+  // Container interface names can look physical. Never advertise their addresses.
+  if (containerized) throw new Error("Local Docker requires a host LAN address. Run start-local.ps1.");
+  return localNetworkHosts(interfaces);
+}
+
 export function localNetworkHosts(interfaces: Interfaces): string[] {
   return [...new Set(Object.entries(interfaces)
     .filter(([name]) => !/virtual|vethernet|wsl|docker|vmware|vbox|loopback|tailscale/i.test(name))
     .flatMap(([, addresses]) => (addresses ?? [])
       .filter(({ address, family, internal }) => !internal
-        && (family === "IPv4" || family === 4) && isPrivateIPv4(address))
+        && (family === "IPv4" || family === 4) && isNetworkIPv4(address))
       .map(({ address }) => address)))];
 }
 

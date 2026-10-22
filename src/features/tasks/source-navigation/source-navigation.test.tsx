@@ -16,11 +16,29 @@ import {
 } from "./SourceTraceabilityPanel";
 
 describe("RelatedTasksPanel", () => {
+  it.each([false, true])("uses the current agenda order for source numbers (reversed: %s)", (reversed) => {
+    const agendaItems = [
+      { id: "discussion-source", kind: "discussion" as const },
+      { id: FIXTURE_SOURCE_ID, kind: "decision" as const },
+    ];
+    if (reversed) agendaItems.reverse();
+    const html = renderToStaticMarkup(<RelatedTasksPanel agendaItems={agendaItems} result={{ok: true, items: [{id: FIXTURE_TASK_ID, title: "Fictional full task title", sourceKind: "decision", sourceId: FIXTURE_SOURCE_ID, status: "not_started"}]}} />);
+    expect(html).toContain(`Agenda item ${reversed ? 1 : 2}`);
+    expect(html).toContain("Fictional full task title");
+    expect(html).toContain("Not started");
+    expect(html).toContain(`href="/tasks/${FIXTURE_TASK_ID}"`);
+  });
+
+  it("does not invent an agenda number for an unmatched source", () => {
+    const html = renderToStaticMarkup(<RelatedTasksPanel agendaItems={[{id: FIXTURE_SOURCE_ID, kind: "discussion"}]} result={{ok: true, items: [{id: FIXTURE_TASK_ID, title: "Fictional task", sourceKind: "decision", sourceId: FIXTURE_SOURCE_ID}]}} />);
+    expect(html).toContain("Meeting agenda source");
+    expect(html).not.toContain("Agenda item 1");
+  });
   it("displays manually associated tasks without claiming a decision or discussion source", () => {
     const html = renderToStaticMarkup(<RelatedTasksPanel result={{ ok: true, items: [{ id: FIXTURE_TASK_ID, title: "Fictional linked follow-up", sourceKind: null }] }} />);
     expect(html).toContain("Linked meeting");
     expect(html).toContain("linked to this meeting");
-    expect(html).not.toContain("Discussion point source");
+    expect(html).not.toContain("Meeting agenda source");
   });
   it("renders decision and discussion tasks with descriptive links", () => {
     const html = renderToStaticMarkup(
@@ -28,10 +46,10 @@ describe("RelatedTasksPanel", () => {
     );
 
     expect(html).toContain('data-source-navigation-state="success"');
-    expect(html).toContain("Decision source");
-    expect(html).toContain("Discussion point source");
+    expect(html).toContain("Meeting agenda source");
+    expect(html).toContain("Meeting agenda source");
     expect(html).toContain('href="/tasks/00000000-0000-4000-8000-000000000101"');
-    expect(html).toContain("Open task Confirm the fictional venue booking from this decision");
+    expect(html).toContain("Open task Confirm the fictional venue booking from this meeting agenda");
   });
 
   it("renders an explicit empty state", () => {
@@ -74,7 +92,7 @@ describe("SourceTraceabilityPanel", () => {
       <SourceTraceabilityPanel result={createSourceTraceabilityFixture()} />,
     );
 
-    expect(html).toContain("Decision source");
+    expect(html).toContain("Meeting agenda source");
     expect(html).toContain("Fictional event planning meeting");
     expect(html).toContain("Approve the fictional venue booking.");
     expect(html).toContain('href="/meetings/00000000-0000-4000-8000-000000000001"');

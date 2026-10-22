@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { PRIMARY_ROUTE_ACTION_CLASS } from "./RouteState";
 import { useId, type ReactNode } from "react";
 
 type FeedbackState = "empty" | "error" | "loading" | "permission" | "success";
@@ -198,14 +200,32 @@ export type PermissionDeniedFeedbackProps = Readonly<{
 export function PermissionDeniedFeedback({
   backAction,
 }: PermissionDeniedFeedbackProps) {
+  const titleId = useId();
+  const descriptionId = useId();
+
   return (
-    <FeedbackPanel
-      action={backAction}
-      description="This page is not available to your account. Return to a page you can access or contact the committee if you need help."
-      live="assertive"
+    <section
+      aria-labelledby={titleId}
+      aria-describedby={descriptionId}
+      className="mx-auto w-full max-w-2xl rounded-2xl border border-slate-200 bg-white p-6 text-slate-950 sm:p-10"
+      data-feedback-state="permission"
       role="alert"
-      state="permission"
-      title="You cannot access this page"
-    />
+    >
+      <span aria-hidden="true" className="grid size-12 place-items-center rounded-xl bg-slate-100 text-slate-600">
+        <svg className="size-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+          <rect x="5" y="10" width="14" height="11" rx="2" />
+          <path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3" />
+        </svg>
+      </span>
+      <h2 className="mt-6 text-2xl font-bold tracking-tight sm:text-3xl" id={titleId}>
+        You cannot access this page
+      </h2>
+      <p className="mt-3 max-w-lg text-sm leading-6 text-slate-600 sm:text-base" id={descriptionId}>
+        This page is not available to your account. Return to a page you can access or contact the committee if you need help.
+      </p>
+      <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:items-center">
+        {backAction ?? <Link className={PRIMARY_ROUTE_ACTION_CLASS} href="/backoffice">Return to workspace</Link>}
+      </div>
+    </section>
   );
 }

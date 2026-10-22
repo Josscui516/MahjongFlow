@@ -3,12 +3,21 @@ import {
   getAccountManagementService,
   InviteAccountForm,
 } from "@/features/account-management";
+import { PermissionDeniedFeedback } from "@/components/feedback";
+import { AuthorizationError } from "@/lib/auth/authorization";
 
 export const dynamic = "force-dynamic";
 
 export default async function AccountManagementPage() {
   const service = await getAccountManagementService();
-  const accounts = await service.listAccounts();
+  let accounts;
+  try {
+    accounts = await service.listAccounts();
+  } catch (error) {
+    // Pages and layouts render concurrently: the layout cannot catch this read.
+    if (error instanceof AuthorizationError) return <PermissionDeniedFeedback />;
+    throw error;
+  }
 
   return (
     <div className="space-y-8">
@@ -23,16 +32,18 @@ export default async function AccountManagementPage() {
           </p>
         </header>
 
-        <section className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-          <h2 className="text-xl font-bold text-slate-950">Invite a member</h2>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            The member receives an email link and chooses their own password. Passwords
-            are never visible to committee administrators.
-          </p>
-          <div className="mt-6">
+        <details className="group rounded-2xl border border-slate-200 bg-white shadow-sm">
+          <summary className="flex min-h-14 cursor-pointer items-center justify-between gap-4 rounded-2xl p-5 text-base font-bold text-emerald-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 sm:px-6">
+            Invite member
+            <span className="text-sm font-medium text-slate-500 group-open:hidden">Expand form</span>
+            <span className="hidden text-sm font-medium text-slate-500 group-open:inline">Collapse form</span>
+          </summary>
+          <div className="border-t border-slate-200 p-5 sm:p-6">
+          <div>
             <InviteAccountForm />
           </div>
-        </section>
+          </div>
+        </details>
 
         <section className="space-y-4" aria-labelledby="account-directory-title">
           <div>

@@ -34,3 +34,12 @@ it("returns validation and system failures without fake zero results", async () 
   expect(getClient).not.toHaveBeenCalled();
   expect(await search({})).toEqual({ ok: false, code: "SYSTEM_ERROR" });
 });
+
+it.each([["latest", "starts_at.desc,id.asc"], ["name", "name.asc,id.asc"]])("orders %s before pagination", async (sort, order) => {
+ let requested: URL | undefined;
+ const client = createClient<Database>("https://events.example.test", "fictional", {auth:{persistSession:false},global:{fetch:async input => {requested=new URL(String(input));return new Response("[]",{headers:{"Content-Type":"application/json","Content-Range":"*/42"}});}}});
+ const browse=createEventBrowser({authorise:async()=>({}),getClient:async()=>client});
+ expect(await browse({sort,page:"2"})).toMatchObject({ok:true});
+ expect(requested?.searchParams.get("order")).toBe(order);
+ expect(requested?.searchParams.get("offset")).toBe("20");
+});

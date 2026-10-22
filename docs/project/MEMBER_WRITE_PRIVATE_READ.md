@@ -1,4 +1,8 @@
+> 2026-10-22 最新决定：General 不得新增／移除长期晚餐资格，仅 Secretary 可操作，取代下文旧例外。见[权限决定](SECRETARY_ONLY_DINNER_ROSTER.md)。
+
 # 普通委员可提交增删，完整名单仅安全员可读
+
+> 2026-10-21 最新决定：General（committee）不再允许报名管理及活动晚餐核验／发放。本文较早的相关普通成员例外已被替代；独立晚餐名册提交能力保持原权限。见[当前权限与部署](GENERAL_EVENT_OPERATION_RESTRICTION.md)。
 
 ## 2026-10-20 用户确认
 

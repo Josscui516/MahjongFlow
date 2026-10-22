@@ -1,13 +1,11 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 
 import { SubmitButton } from "@/components/forms";
 
 import {
   inviteAccountAction,
-  sendRecoveryAction,
-  setAccountActiveAction,
   updateAccountAction,
 } from "./actions";
 import {
@@ -15,6 +13,8 @@ import {
   type AccountActionState,
   type ManagedAccount,
 } from "./contracts";
+import { AccountStatusForm } from "./AccountStatusForm";
+import { RecoveryEmailForm } from "./RecoveryEmailForm";
 
 function ActionFeedback({ state }: Readonly<{ state: AccountActionState }>) {
   if (state.status === "idle") {
@@ -50,7 +50,7 @@ export function InviteAccountForm() {
     <form action={action} className="space-y-5">
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="text-sm font-semibold text-slate-800">
-          Display name
+          Name
           <input
             aria-describedby={state.fieldErrors?.displayName ? "invite-display-name-error" : undefined}
             aria-invalid={Boolean(state.fieldErrors?.displayName) || undefined}
@@ -63,7 +63,7 @@ export function InviteAccountForm() {
         </label>
 
         <label className="text-sm font-semibold text-slate-800">
-          Login email
+          Email
           <input
             aria-describedby={state.fieldErrors?.email ? "invite-email-error" : undefined}
             aria-invalid={Boolean(state.fieldErrors?.email) || undefined}
@@ -77,21 +77,9 @@ export function InviteAccountForm() {
           <FieldError id="invite-email-error" message={state.fieldErrors?.email} />
         </label>
 
-        <label className="text-sm font-semibold text-slate-800">
-          Committee position
-          <input
-            aria-describedby={state.fieldErrors?.committeePosition ? "invite-position-error" : undefined}
-            aria-invalid={Boolean(state.fieldErrors?.committeePosition) || undefined}
-            className="mt-2 block min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-normal shadow-sm outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
-            maxLength={80}
-            name="committeePosition"
-            placeholder="Optional, e.g. Secretary"
-          />
-          <FieldError id="invite-position-error" message={state.fieldErrors?.committeePosition} />
-        </label>
 
         <label className="text-sm font-semibold text-slate-800">
-          Data access role
+          Role
           <select
             aria-describedby={state.fieldErrors?.role ? "invite-role-error" : undefined}
             aria-invalid={Boolean(state.fieldErrors?.role) || undefined}
@@ -106,14 +94,6 @@ export function InviteAccountForm() {
         </label>
       </div>
 
-      <label className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
-        <input className="mt-1 size-4" name="canManageAccounts" type="checkbox" />
-        <span>
-          <strong className="block text-slate-900">Account administrator</strong>
-          Can invite, update, disable and reactivate committee accounts. This does
-          not grant participant-data access.
-        </span>
-      </label>
 
       <ActionFeedback state={state} />
       <SubmitButton pending={pending} pendingLabel="Sending invitation…">
@@ -134,14 +114,6 @@ function AccountCard({ account }: Readonly<{ account: ManagedAccount }>) {
     updateAccountAction,
     INITIAL_ACCOUNT_ACTION_STATE,
   );
-  const [statusState, statusAction, statusPending] = useActionState(
-    setAccountActiveAction,
-    INITIAL_ACCOUNT_ACTION_STATE,
-  );
-  const [recoveryState, recoveryAction, recoveryPending] = useActionState(
-    sendRecoveryAction,
-    INITIAL_ACCOUNT_ACTION_STATE,
-  );
   const fieldPrefix = `account-${account.id}`;
 
   return (
@@ -154,7 +126,10 @@ function AccountCard({ account }: Readonly<{ account: ManagedAccount }>) {
               <span className="ml-2 text-sm font-medium text-slate-500">You</span>
             ) : null}
           </h3>
-          <p className="mt-1 text-sm text-slate-600">{account.email}</p>
+          <p className="mt-1 break-all text-sm text-slate-600">{account.email}</p>
+          <p className="mt-2 text-sm font-semibold text-emerald-900">
+            {account.canManageAccounts ? "Superuser" : account.role === "authorised" ? "Authorised" : "Committee"}
+          </p>
         </div>
         <span
           className={`rounded-full px-3 py-1 text-xs font-bold capitalize ring-1 ring-inset ${STATUS_STYLES[account.status]}`}
@@ -171,7 +146,7 @@ function AccountCard({ account }: Readonly<{ account: ManagedAccount }>) {
           <input name="id" type="hidden" value={account.id} />
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="text-sm font-semibold text-slate-800" htmlFor={`${fieldPrefix}-name`}>
-              Display name
+              Name
               <input
                 aria-describedby={updateState.fieldErrors?.displayName ? `${fieldPrefix}-name-error` : undefined}
                 aria-invalid={Boolean(updateState.fieldErrors?.displayName) || undefined}
@@ -185,22 +160,9 @@ function AccountCard({ account }: Readonly<{ account: ManagedAccount }>) {
               <FieldError id={`${fieldPrefix}-name-error`} message={updateState.fieldErrors?.displayName} />
             </label>
 
-            <label className="text-sm font-semibold text-slate-800" htmlFor={`${fieldPrefix}-position`}>
-              Committee position
-              <input
-                aria-describedby={updateState.fieldErrors?.committeePosition ? `${fieldPrefix}-position-error` : undefined}
-                aria-invalid={Boolean(updateState.fieldErrors?.committeePosition) || undefined}
-                className="mt-2 block min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2 font-normal shadow-sm outline-none focus:border-emerald-700 focus:ring-2 focus:ring-emerald-100"
-                defaultValue={account.committeePosition ?? ""}
-                id={`${fieldPrefix}-position`}
-                maxLength={80}
-                name="committeePosition"
-              />
-              <FieldError id={`${fieldPrefix}-position-error`} message={updateState.fieldErrors?.committeePosition} />
-            </label>
 
             <label className="text-sm font-semibold text-slate-800" htmlFor={`${fieldPrefix}-role`}>
-              Data access role
+              Role
               <select
                 aria-describedby={updateState.fieldErrors?.role ? `${fieldPrefix}-role-error` : undefined}
                 aria-invalid={Boolean(updateState.fieldErrors?.role) || undefined}
@@ -216,24 +178,8 @@ function AccountCard({ account }: Readonly<{ account: ManagedAccount }>) {
             </label>
           </div>
 
-          <label className="flex items-start gap-3 text-sm text-slate-700">
-            <input
-              className="mt-1 size-4"
-              defaultChecked={account.canManageAccounts}
-              disabled={account.isCurrentUser && account.canManageAccounts}
-              name="canManageAccounts"
-              type="checkbox"
-            />
-            <span>
-              Account administrator
-              {account.isCurrentUser && account.canManageAccounts
-                ? " — you cannot revoke your own access."
-                : ""}
-            </span>
-          </label>
-          {account.isCurrentUser && account.canManageAccounts ? (
-            <input name="canManageAccounts" type="hidden" value="on" />
-          ) : null}
+          <input name="committeePosition" type="hidden" value={account.committeePosition ?? ""} />
+          {account.canManageAccounts ? <input name="canManageAccounts" type="hidden" value="on" /> : null}
 
           <ActionFeedback state={updateState} />
           <SubmitButton pending={updatePending} pendingLabel="Saving…">
@@ -243,40 +189,9 @@ function AccountCard({ account }: Readonly<{ account: ManagedAccount }>) {
       </details>
 
       <div className="mt-4 flex flex-wrap gap-3 border-t border-slate-200 pt-4">
-        <form action={recoveryAction} className="space-y-2">
-          <input name="id" type="hidden" value={account.id} />
-          <SubmitButton
-            className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-800 hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
-            disabled={account.status === "disabled"}
-            pending={recoveryPending}
-            pendingLabel="Sending…"
-          >
-            Send password recovery
-          </SubmitButton>
-          <ActionFeedback state={recoveryState} />
-        </form>
+        <RecoveryEmailForm accountId={account.id} disabled={account.status === "disabled"} />
 
-        <form action={statusAction} className="space-y-2">
-          <input name="id" type="hidden" value={account.id} />
-          <input
-            name="isActive"
-            type="hidden"
-            value={account.status === "disabled" ? "true" : "false"}
-          />
-          <SubmitButton
-            className={
-              account.status === "disabled"
-                ? "inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-950 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-900 disabled:cursor-not-allowed disabled:opacity-60"
-                : "inline-flex min-h-11 items-center justify-center rounded-xl border border-rose-300 bg-white px-3 py-2 text-sm font-semibold text-rose-800 hover:bg-rose-50 disabled:cursor-not-allowed disabled:opacity-60"
-            }
-            disabled={account.isCurrentUser}
-            pending={statusPending}
-            pendingLabel={account.status === "disabled" ? "Reactivating…" : "Disabling…"}
-          >
-            {account.status === "disabled" ? "Reactivate account" : "Disable account"}
-          </SubmitButton>
-          <ActionFeedback state={statusState} />
-        </form>
+        <AccountStatusForm accountId={account.id} isDisabled={account.status === "disabled"} isCurrentUser={account.isCurrentUser} />
       </div>
     </article>
   );
@@ -285,22 +200,62 @@ function AccountCard({ account }: Readonly<{ account: ManagedAccount }>) {
 export function AccountDirectory({
   accounts,
 }: Readonly<{ accounts: readonly ManagedAccount[] }>) {
-  if (accounts.length === 0) {
+  const [query, setQuery] = useState("");
+  const [status, setStatus] = useState("all");
+  const [page, setPage] = useState(1);
+  const members = accounts.filter(account => !account.isCurrentUser);
+  const search = query.trim().toLowerCase();
+  const matches = members.filter(account =>
+    (status === "all" || account.status === status) &&
+    (!search || `${account.displayName} ${account.email}`.toLowerCase().includes(search)),
+  );
+  const pageCount = Math.max(1, Math.ceil(matches.length / 10));
+  const currentPage = Math.min(page, pageCount);
+  const visible = matches.slice((currentPage - 1) * 10, currentPage * 10);
+  const controlClass = "min-h-11 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-800 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700";
+
+  if (members.length === 0) {
     return (
       <div className="rounded-2xl border border-dashed border-slate-300 bg-white p-8 text-center">
         <h2 className="font-bold text-slate-950">No committee accounts</h2>
         <p className="mt-2 text-sm text-slate-600">
-          Invite the first additional committee member using the form above.
+          Invite a committee member using the form above.
         </p>
       </div>
     );
   }
 
   return (
-    <div className="grid gap-4 xl:grid-cols-2">
-      {accounts.map((account) => (
+    <div className="space-y-4">
+      <div className="flex flex-wrap items-end gap-3">
+        <label className="flex min-w-0 flex-1 flex-col gap-2 text-sm font-semibold text-slate-800">
+          Search accounts
+          <input type="search" placeholder="Name or email" className={controlClass} value={query} onChange={event => { setQuery(event.target.value); setPage(1); }} />
+        </label>
+        <label className="flex flex-col gap-2 text-sm font-semibold text-slate-800">
+          Status
+          <select className={controlClass} value={status} onChange={event => { setStatus(event.target.value); setPage(1); }}>
+            <option value="all">All statuses</option>
+            <option value="active">Active</option>
+            <option value="invited">Invited</option>
+            <option value="disabled">Disabled</option>
+          </select>
+        </label>
+      </div>
+      <p className="text-sm text-slate-600" role="status">
+        {matches.length === 0 ? "No matching accounts" : `Showing ${(currentPage - 1) * 10 + 1}–${Math.min(currentPage * 10, matches.length)} of ${matches.length} accounts`}
+      </p>
+      {visible.map((account) => (
         <AccountCard account={account} key={account.id} />
       ))}
+      {matches.length === 0 ? <p className="rounded-xl border border-dashed border-slate-300 p-6 text-sm text-slate-600">Try another name, email or status.</p> : null}
+      {pageCount > 1 ? (
+        <nav aria-label="Account pages" className="flex flex-wrap items-center justify-between gap-3">
+          <button className={`${controlClass} disabled:opacity-50`} disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)} type="button">Previous</button>
+          <span className="text-sm text-slate-600">Page {currentPage} of {pageCount}</span>
+          <button className={`${controlClass} disabled:opacity-50`} disabled={currentPage === pageCount} onClick={() => setPage(currentPage + 1)} type="button">Next</button>
+        </nav>
+      ) : null}
     </div>
   );
 }

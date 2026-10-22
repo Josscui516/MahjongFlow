@@ -1,126 +1,104 @@
 "use client";
 
-import { useCallback, useEffect, useReducer, useRef, useState, useTransition } from "react";
-import type { DinnerVerificationResult } from "./contracts";
+import { useRef, useState } from "react";
+import type { DinnerVerificationItem, DinnerVerificationResult } from "./contracts";
+import { countDinnerEligibility } from "./eligibility-count";
 import { DinnerFeedback } from "./DinnerFeedback";
-import { initialVerificationState, verificationReducer } from "./refresh-state";
 
 type Props = Readonly<{
   eventId: string;
   initialResult: DinnerVerificationResult;
-  refreshAction: (eventId: string) => Promise<DinnerVerificationResult>;
   issueAction?: (eventId: string, participantId: string, issued: boolean, expectedIssued: boolean) => Promise<Readonly<{ ok: true }> | Readonly<{ ok: false; code: string }>>;
 }>;
 
-export function DinnerVerification({ eventId, initialResult, refreshAction, issueAction }: Props) {
-  const [state, dispatch] = useReducer(verificationReducer, initialResult, initialVerificationState);
+export function DinnerVerification({ eventId, initialResult, issueAction }: Props) {
+  const [result, setResult] = useState(initialResult);
   const [search, setSearch] = useState("");
-  const [, startTransition] = useTransition();
-  const sequence = useRef(0);
+  const [filter, setFilter] = useState("all");
+  const [page, setPage] = useState(1);
   const issueLock = useRef(false);
   const [issuing, setIssuing] = useState<string | null>(null);
   const [issueMessage, setIssueMessage] = useState("");
-  const refresh = useCallback(() => {
-    const request = ++sequence.current;
-    dispatch({ type: "start", request });
-    startTransition(async () => {
-      let result: DinnerVerificationResult;
-      try { result = await refreshAction(eventId); }
-      catch { result = { ok: false, code: "SYSTEM_ERROR" }; }
-      dispatch({ type: "finish", request, result });
-    });
-  }, [eventId, refreshAction]);
-
   async function toggleIssued(participantId: string, currentlyIssued: boolean) {
-    if (!issueAction || issueLock.current || state.pending || state.stale) return;
-    if (currentlyIssued && !window.confirm("Clear this event's issued mark? Only do this to correct a recording mistake.")) return;
+    if (!issueAction || issueLock.current) return;
     issueLock.current = true; setIssuing(participantId); setIssueMessage("");
     try {
       const saved = await issueAction(eventId, participantId, !currentlyIssued, currentlyIssued);
-      if (saved.ok) setIssueMessage(currentlyIssued ? "Issued mark cleared for this event." : "Dinner issuance saved for this event.");
-      else setIssueMessage(saved.code === "REFRESH_REQUIRED" ? "Eligibility or serving status changed. Refresh and check before serving."
+      if (saved.ok) {
+        setResult(current => current.ok ? { ...current, items: current.items.map(item => item.participantId === participantId ? { ...item, issuedAt: currentlyIssued ? null : new Date().toISOString() } : item) } : current);
+      }
+      else setIssueMessage(saved.code === "REFRESH_REQUIRED" ? "Attendance or the saved mark changed. Reload the page before trying again."
         : saved.code === "PERMISSION_DENIED" || saved.code === "UNAUTHENTICATED" ? "Your access changed. Sign in again before serving."
-        : "The issued mark could not be confirmed. Refresh before retrying.");
-      refresh();
-    } catch { setIssueMessage("The issued mark could not be confirmed. Refresh before retrying."); refresh(); }
+        : "The mark could not be confirmed. Reload the page before retrying.");
+    } catch { setIssueMessage("The mark could not be confirmed. Reload the page before retrying."); }
     finally { issueLock.current = false; setIssuing(null); }
   }
 
-  useEffect(() => {
-    const stale = () => dispatch({ type: "stale" });
-    const visible = () => document.visibilityState === "visible" ? refresh() : stale();
-    window.addEventListener("focus", refresh);
-    window.addEventListener("blur", stale);
-    document.addEventListener("visibilitychange", visible);
-    return () => {
-      window.removeEventListener("focus", refresh);
-      window.removeEventListener("blur", stale);
-      document.removeEventListener("visibilitychange", visible);
-    };
-  }, [refresh]);
-
-  useEffect(() => {
-    const timeout = window.setTimeout(() => dispatch({ type: "stale" }), 60_000);
-    return () => window.clearTimeout(timeout);
-  }, [state.result]);
-
-  const result = state.result;
   const query = search.trim().toLowerCase();
-  const filtered = result.ok ? result.items.filter((item) =>
-    `${item.participantName} ${item.participantEmail}`.toLowerCase().includes(query),
+  const filtered = result.ok ? result.items.filter(item =>
+    `${item.participantName} ${item.participantEmail}`.toLowerCase().includes(query) &&
+    (filter === "all" || (filter === "issued" ? Boolean(item.issuedAt) : !item.issuedAt)),
   ) : [];
+  const pages = Math.max(1, Math.ceil(filtered.length / 10));
+  const currentPage = Math.min(page, pages);
+  const visible = filtered.slice((currentPage - 1) * 10, currentPage * 10);
+  const control = "min-h-11 rounded-lg border border-slate-300 bg-white px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700";
+  const row = (item: DinnerVerificationItem) => <li key={item.participantId} className={item.issuedAt ? "bg-emerald-50/40" : ""}>
+    <label className="flex min-h-16 items-center justify-between gap-4 px-5 py-2 hover:bg-slate-50">
+      <span className="min-w-0">
+        <span className="block break-words font-semibold text-slate-950">{item.participantName}</span>
+        <span className="block break-all text-sm text-slate-600">{item.participantEmail}</span>
 
-  return (
-    <section className="space-y-6" aria-label="Dinner verification" aria-busy={state.pending}>
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-semibold uppercase tracking-wider text-emerald-700">Dinner verification</p>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight text-slate-900">{result.ok ? result.event.name : "Verify dinner eligibility"}</h1>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">Registered, checked-in participants matching the shared eligibility roster can collect dinner. Tick Issued after serving. Each event has its own serving record; standing eligibility is not consumed.</p>
-        </div>
-        <button type="button" onClick={refresh} disabled={state.pending} className="rounded-xl bg-emerald-700 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-800 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-700 disabled:opacity-60">
-          {state.pending ? "Refreshing…" : "Refresh eligibility"}
-        </button>
-      </div>
+      </span>
+      <span className="flex min-h-11 shrink-0 items-center gap-3">
+        <span className="text-sm text-slate-600">{issuing === item.participantId ? "Saving…" : ""}</span>
+        <input type="checkbox" className="size-5 shrink-0 accent-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-emerald-700 disabled:opacity-50"
+          checked={Boolean(item.issuedAt)} aria-label={`Issued dinner to ${item.participantEmail}`}
+          disabled={!issueAction || Boolean(issuing)}
+          onChange={() => void toggleIssued(item.participantId, Boolean(item.issuedAt))} />
+      </span>
+    </label>
+  </li>;
 
-      <div aria-live="polite" aria-atomic="true">
-        {issueMessage ? <p role="status" className="mb-3 rounded-xl border border-slate-200 p-4 text-sm">{issueMessage}</p> : null}
-        {state.pending ? <p role="status" className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">Matching confirmed check-ins against the shared dinner eligibility roster… Please wait before serving.</p> : state.stale && result.ok ? (
-          <p role={state.refreshFailed ? "alert" : "status"} className="rounded-xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
-            {state.refreshFailed ? "Refresh failed. The previous result is shown below." : "Attendance, registration or the shared roster may have changed since this check."} Refresh successfully before serving dinner.
-          </p>
-        ) : result.ok ? <p className="text-sm text-slate-600">Last checked {new Intl.DateTimeFormat("en-AU", { timeZone: "Australia/Sydney", hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(result.readAt))} (Sydney). Refresh after any check-in, registration or shared roster change.</p> : null}
-      </div>
+  return <div className="space-y-5">
+    <header className="space-y-2">
+      <h1 className="text-3xl font-bold tracking-tight text-slate-950">Dinner verification</h1>
+      {result.ok ? <p className="break-words text-lg text-slate-700">{result.event.name}</p> : null}
+    </header>
+    {!result.ok ? <DinnerFeedback code={result.code} /> : <>
+      <section aria-labelledby="dinner-list-heading" aria-busy={Boolean(issuing)} className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
+        <header className="space-y-1 border-b border-slate-200 p-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <h2 id="dinner-list-heading" className="text-xl font-semibold text-slate-950">Eligibility</h2>
+              <span className="inline-flex min-w-8 items-center justify-center rounded-full bg-emerald-50 px-2.5 py-1 text-sm font-semibold tabular-nums text-emerald-900" aria-label={`Eligibility: ${countDinnerEligibility(result.items)}`} aria-live="polite" aria-atomic="true">{countDinnerEligibility(result.items)}</span>
+            </div>
+          </div>
+          <div className="flex flex-col gap-3 pt-3 sm:flex-row">
+            <div className="min-w-0 flex-1">
+              <label htmlFor="dinner-search" className="sr-only">Search by name or email</label>
+              <input id="dinner-search" type="search" autoComplete="off" value={search} onChange={event => { setSearch(event.target.value); setPage(1); }} placeholder="Search by name or email" className={`${control} w-full`} />
+            </div>
+            <div>
+              <label htmlFor="dinner-filter" className="sr-only">Dinner status</label>
+              <select id="dinner-filter" value={filter} onChange={event => { setFilter(event.target.value); setPage(1); }} className={`${control} w-full sm:w-44`}>
+                <option value="all">All participants</option><option value="unmarked">Not eligible</option><option value="issued">Eligible</option>
+              </select>
+            </div>
+          </div>
+        </header>
+        <div aria-live="polite" aria-atomic="true">
+          {issueMessage ? <p role="status" className="px-5 pt-3 text-sm">{issueMessage}</p> : null}
 
-      {!result.ok ? <DinnerFeedback code={result.code} /> : <>
-        <div className="rounded-2xl border border-emerald-200 bg-emerald-50 p-5">
-          <p className="text-sm font-medium text-emerald-900">{state.stale ? "Previously eligible" : "Eligible for dinner"}</p>
-          <p className="mt-1 text-3xl font-semibold text-emerald-950">{result.eligibleCount} <span className="text-sm font-normal">matched attendees</span></p>
-          <p className="mt-2 text-sm text-emerald-900">{result.items.filter(item => item.issuedAt).length} issued · {result.items.filter(item => item.eligibility === "Eligible" && !item.issuedAt).length} ready to collect</p>
         </div>
-        <div>
-          <label htmlFor="dinner-search" className="block text-sm font-semibold text-slate-800">Find a verified dinner attendee</label>
-          <input id="dinner-search" type="search" autoComplete="off" value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Search by name or email" className="mt-2 w-full max-w-xl rounded-xl border border-slate-300 bg-white px-4 py-3 text-base focus-visible:outline-2 focus-visible:outline-emerald-700" />
-        </div>
-        {result.items.length === 0 ? <p className="rounded-xl border border-slate-200 p-6 text-slate-600">No confirmed check-ins match the shared dinner eligibility roster for this event. Check registration, check-in and the matching email before serving.</p> : filtered.length === 0 ? <p role="status" className="rounded-xl border border-slate-200 p-6 text-slate-600">No matching verified attendees. Check the name or email, then confirm registration, check-in and shared roster membership.</p> : (
-          <ul className="divide-y divide-slate-200 overflow-hidden rounded-2xl border border-slate-200 bg-white" aria-label="Verified dinner attendees">
-            {filtered.map((item) => <li key={item.participantId} className="flex flex-col gap-3 p-5 sm:flex-row sm:items-center sm:justify-between">
-              <div className="min-w-0"><p className="break-words font-semibold text-slate-900">{item.participantName}</p><p className="mt-1 break-all text-sm text-slate-600">{item.participantEmail}</p></div>
-              <div className="space-y-2 text-sm">
-                <label className="flex min-h-11 cursor-pointer items-center gap-3 font-semibold">
-                  <input type="checkbox" checked={Boolean(item.issuedAt)} aria-label={`Issued dinner to ${item.participantEmail}`}
-                    disabled={!issueAction || Boolean(issuing) || state.pending || state.stale || (!item.issuedAt && item.eligibility !== "Eligible")}
-                    onChange={() => void toggleIssued(item.participantId, Boolean(item.issuedAt))} className="size-5 accent-emerald-700" />
-                  {issuing === item.participantId ? "Saving…" : item.issuedAt ? "Issued" : "Ready to collect"}
-                </label>
-                {item.issuedAt ? <p className="text-slate-600">Issued {new Intl.DateTimeFormat("en-AU", { timeZone: "Australia/Sydney", dateStyle: "short", timeStyle: "short" }).format(new Date(item.issuedAt))} (Sydney)</p> : null}
-                {item.issuedAt && item.eligibility !== "Eligible" ? <p className="text-amber-900">Eligibility changed after serving. The issued record is retained.</p> : null}
-              </div>
-            </li>)}
-          </ul>
-        )}
-        <p className="text-sm leading-6 text-slate-500">The shared roster grants ongoing eligibility across all events. This event also requires valid registration and confirmed attendance. Previously issued records remain visible if eligibility changes, so a correction cannot hide a meal already served.</p>
-      </>}
-    </section>
-  );
+        {result.items.length === 0 ? <div className="p-5 text-sm text-slate-600">
+          <p>No confirmed attendance for this event yet.</p>
+        </div> : visible.length === 0 ? <p role="status" className="p-5 text-slate-600">No attendees match your search or filter.</p> : <ul aria-label="Confirmed attendees for dinner" className="divide-y divide-slate-100">{visible.map(row)}</ul>}
+        {filtered.length > 0 ? <nav aria-label="Dinner pages" className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-5 py-3">
+          <p role="status" className="text-sm text-slate-600">{(currentPage - 1) * 10 + 1}–{Math.min(currentPage * 10, filtered.length)} of {filtered.length}</p>
+          {pages > 1 ? <div className="flex items-center gap-3"><button type="button" className={`${control} disabled:opacity-40`} disabled={currentPage === 1} onClick={() => setPage(currentPage - 1)}>Previous</button><span className="text-sm text-slate-600">{currentPage} / {pages}</span><button type="button" className={`${control} disabled:opacity-40`} disabled={currentPage === pages} onClick={() => setPage(currentPage + 1)}>Next</button></div> : null}
+        </nav> : null}
+      </section>
+    </>}
+  </div>;
 }

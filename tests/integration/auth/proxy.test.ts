@@ -9,6 +9,7 @@ import { AUTH_ERROR_CODES } from "@/lib/auth/contracts";
 const mocks = vi.hoisted(() => ({
   createServerClient: vi.fn(),
   getUser: vi.fn(),
+  profile: vi.fn(),
 }));
 
 vi.mock("@supabase/ssr", () => ({
@@ -41,12 +42,28 @@ type ServerClientOptions = Readonly<{
 describe("authentication proxy", () => {
   beforeEach(() => {
     mocks.getUser.mockReset();
+    mocks.profile.mockResolvedValue({ data: { is_active: true, can_manage_accounts: false }, error: null });
     mocks.createServerClient.mockImplementation(
       (_url: string, _key: string, options: ServerClientOptions) => ({
         auth: { getUser: mocks.getUser },
+        from: () => ({ select: () => ({ eq: () => ({ maybeSingle: mocks.profile }) }) }),
         testCookieAdapter: options.cookies,
       }),
     );
+  });
+
+  test.each(["/dashboard", "/meetings", "/tasks", "/events", "/attendance/example", "/registrations", "/dinner-verification/example"])("restricts Superuser navigation from %s", async path => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: "fictional-admin" } }, error: null });
+    mocks.profile.mockResolvedValue({ data: { is_active: true, can_manage_accounts: true }, error: null });
+    const response = await proxy(new NextRequest(`https://mahjongflow.test${path}`));
+    expect(response.headers.get("location")).toBe("https://mahjongflow.test/admin/users");
+  });
+
+  test("rejects Superuser coordination writes and permits the accounts page", async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: { id: "fictional-admin" } }, error: null });
+    mocks.profile.mockResolvedValue({ data: { is_active: true, can_manage_accounts: true }, error: null });
+    expect((await proxy(new NextRequest("https://mahjongflow.test/events", { method: "POST" }))).status).toBe(403);
+    expect((await proxy(new NextRequest("https://mahjongflow.test/admin/users"))).status).toBe(200);
   });
 
   test.each([

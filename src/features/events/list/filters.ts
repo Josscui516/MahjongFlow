@@ -1,14 +1,17 @@
+import { calendarDateAt, SYDNEY_TIME_ZONE } from "@/lib/dates";
 import { EVENT_STATUSES, type EventStatus } from "../core/contracts";
 import { sydneyInstant } from "../core/validation";
 
+export const EVENT_SORTS = { soonest: "Event date: earliest first", latest: "Event date: latest first", name: "Event name: A-Z" } as const;
 export const EVENT_PAGE_SIZE = 20;
-export type EventFilters = Readonly<{ q: string; status: EventStatus | ""; from: string; to: string; page: number }>;
+export type EventFilters = Readonly<{ q: string; status: EventStatus | ""; from: string; to: string; page: number; sort: keyof typeof EVENT_SORTS; view?: "all" }>;
 export type EventSearchParams = Readonly<Record<string, string | string[] | undefined>>;
 const day = (value: string) => value >= "0100-01-01" && value <= "9999-12-30" && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(`${value}T00:00:00Z`)) && new Date(`${value}T00:00:00Z`).toISOString().slice(0, 10) === value && sydneyInstant(`${value}T00:00`) !== null;
 export function readEventFilters(params: EventSearchParams): { filters: EventFilters; error?: string } {
   const text = (key: string) => typeof params[key] === "string" ? params[key].trim() : "";
-  const filters: EventFilters = { q: text("q"), status: text("status") as EventFilters["status"], from: text("from"), to: text("to"), page: text("page") ? Number(text("page")) : 1 };
-  if (["q", "status", "from", "to", "page"].some(key => Array.isArray(params[key]))) return { filters, error: "Use one value per filter." };
+  const filters: EventFilters = { sort: (text("sort") || "soonest") as EventFilters["sort"], q: text("q"), status: text("status") as EventFilters["status"], from: text("from"), to: text("to"), page: text("page") ? Number(text("page")) : 1, ...(params.view === "all" ? { view: "all" as const } : {}) };
+  if (["q", "status", "from", "to", "page", "sort"].some(key => Array.isArray(params[key]))) return { filters, error: "Use one value per filter." };
+  if (!Object.hasOwn(EVENT_SORTS, filters.sort)) return { filters, error: "Choose a valid event sort order." };
   if (filters.q.length > 100 || /[\u0000-\u001f]/.test(filters.q)) return { filters, error: "Use a search of 100 characters or fewer without control characters." };
   if (filters.status && !EVENT_STATUSES.includes(filters.status)) return { filters, error: "Choose a valid event status." };
   if ((filters.from && !day(filters.from)) || (filters.to && !day(filters.to))) return { filters, error: "Enter valid start and end dates." };
@@ -22,7 +25,25 @@ export function eventDateBounds(filters: EventFilters) {
 }
 export function eventListHref(filters: EventFilters, page = filters.page) {
   const query = new URLSearchParams();
+  if (filters.sort !== "soonest") query.set("sort", filters.sort);
+  if (filters.view) query.set("view", filters.view);
   for (const key of ["q", "status", "from", "to"] as const) if (filters[key]) query.set(key, filters[key]);
   if (page > 1) query.set("page", String(page));
   return `/events${query.size ? `?${query}` : ""}`;
+}
+
+/** Default to scheduled events from today; explicit searches retain historical access. */
+export function defaultEventListParams(params: EventSearchParams, now: Date): EventSearchParams {
+  if (params.view === "all" || ["q", "status", "from", "to"].some(key => params[key] !== undefined)) return params;
+  const today = calendarDateAt(now, SYDNEY_TIME_ZONE);
+  if (!today.ok) throw new Error("Invalid event list clock");
+  return { ...params, status: "scheduled", from: today.value.isoDate };
+}
+
+/** Neither the default upcoming view nor the unfiltered all-events view needs clearing. */
+export function hasEventListFilters(filters: EventFilters, defaultFrom: string) {
+  if (filters.q || filters.to) return true;
+  const allEvents = !filters.status && !filters.from;
+  const defaultUpcoming = filters.status === "scheduled" && filters.from === defaultFrom;
+  return !allEvents && !defaultUpcoming;
 }

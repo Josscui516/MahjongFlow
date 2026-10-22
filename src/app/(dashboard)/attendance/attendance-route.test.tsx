@@ -5,13 +5,16 @@ vi.mock("server-only", () => ({}));
 
 const mocks = vi.hoisted(() => ({
   audit: vi.fn(),
+  registrations: vi.fn(),
   redirect: vi.fn((url: string) => {
     throw new Error(`redirect:${url}`);
   }),
   summary: vi.fn(),
 }));
 
-vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
+vi.mock("next/navigation", () => ({ redirect: mocks.redirect, useRouter: () => ({ refresh: vi.fn() }) }));
+vi.mock("@/features/registrations/records/service", () => ({ registrationService: { list: mocks.registrations } }));
+vi.mock("@/features/attendance/manual/actions", () => ({ submitManualAttendance: vi.fn() }));
 vi.mock("@/features/attendance/records/server", () => ({
   attendanceAuditService: { listForEvent: mocks.audit },
 }));
@@ -33,7 +36,10 @@ const eventId = "34000000-0000-4000-8000-000000000034";
 const params = Promise.resolve({ eventId });
 
 describe("attendance route access boundary", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mocks.registrations.mockResolvedValue({ ok: true, eventId, items: [{ id: "reg-1", participantName: "Fictional Attendee", participantEmail: "fictional.attendee@example.test", status: "registered" }], page: 1, total: 1 });
+  });
 
   it("redirects anonymous sessions without reading aggregate or personal data", async () => {
     mocks.audit.mockResolvedValue({ code: "UNAUTHENTICATED", ok: false });
@@ -41,6 +47,7 @@ describe("attendance route access boundary", () => {
     await expect(Page({ params })).rejects.toThrow(
       `redirect:/login?next=%2Fattendance%2F${eventId}`,
     );
+    expect(mocks.registrations).not.toHaveBeenCalled();
     expect(mocks.summary).not.toHaveBeenCalled();
   });
 
@@ -51,6 +58,7 @@ describe("attendance route access boundary", () => {
 
     expect(html).toContain("do not have permission");
     expect(html).not.toContain("@example.test");
+    expect(mocks.registrations).not.toHaveBeenCalled();
     expect(mocks.summary).not.toHaveBeenCalled();
   });
 
@@ -84,11 +92,13 @@ describe("attendance route access boundary", () => {
     expect(html).toContain("Fictional Attendance Event");
     expect(html).toContain("Fictional Attendee");
     expect(html).toContain("fictional.attendee@example.test");
-    expect(html).toContain('data-testid="registered-count">2');
-    expect(html).toContain('data-testid="attendance-count">1');
-    expect(html).toContain(`href="/registrations/${eventId}"`);
-    expect(html).toContain(`href="/dinner-verification/${eventId}"`);
-    expect(html).toContain('aria-label="Manual attendance"');
+    expect(html).not.toContain("Currently registered");
+    expect(html).toContain('data-testid="attendance-count" aria-live="polite" aria-atomic="true">1');
+    expect(html).not.toContain("Manage registrations");
+    expect(html).not.toContain("Verify dinner eligibility");
+    expect(html).not.toContain("Participant-level attendance");
+    expect(html).toContain('type="checkbox"');
+    expect(html).toContain('checked=""');
     expect(mocks.summary).toHaveBeenCalledWith(eventId);
   });
 
@@ -101,7 +111,8 @@ describe("attendance route access boundary", () => {
 
       expect(html).toContain('role="alert"');
       expect(html).not.toContain("@example.test");
-      expect(mocks.summary).not.toHaveBeenCalled();
+      expect(mocks.registrations).not.toHaveBeenCalled();
+    expect(mocks.summary).not.toHaveBeenCalled();
     },
   );
 
@@ -109,9 +120,7 @@ describe("attendance route access boundary", () => {
     const loading = renderToStaticMarkup(<Loading />);
     const error = renderToStaticMarkup(<ErrorBoundary reset={vi.fn()} />);
 
-    expect(loading).toContain("Loading participation totals");
-    expect(loading).toContain("Loading attendance audit records");
-    expect(loading).toContain("Loading manual attendance");
+    expect(loading).toContain("Loading attendance checklist");
     expect(error).toContain('role="alert"');
     expect(error).toContain("Attendance records could not be loaded");
     expect(error).toContain("Try again");

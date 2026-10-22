@@ -40,8 +40,8 @@ describe("DashboardPage", () => {
     expect(html).toContain("There are no unfinished committee tasks.");
     expect(html).not.toContain("Task summaries are waiting for the shared task query provider.");
     expect(html).not.toContain("fictional-committee-user");
-    expect(mocks.listTasks).toHaveBeenCalledTimes(8);
-    expect(mocks.listTasks.mock.calls.filter(([criteria]) => criteria.assigneeId === "fictional-committee-user")).toHaveLength(2);
+    expect(mocks.listTasks).toHaveBeenCalledTimes(2);
+    expect(mocks.listTasks.mock.calls.every(([criteria]) => criteria.assigneeId === undefined)).toBe(true);
   });
 
   it("does not render Dashboard data when server authorisation fails", async () => {

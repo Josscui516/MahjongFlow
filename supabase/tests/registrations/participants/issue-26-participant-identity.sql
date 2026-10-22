@@ -1,4 +1,7 @@
 begin;
+-- 历史回滚兼容性：仅在本事务撤销停用约束，验证仍保留的旧触发器与 RLS。
+-- 当前停用合同由 events/student_id_retirement.sql 覆盖；rollback 恢复约束。
+alter table public.events drop constraint events_student_id_requirement_retired;
 
 select plan(35);
 

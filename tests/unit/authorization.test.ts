@@ -161,3 +161,9 @@ describe("requireAccountAdmin", () => {
     });
   });
 });
+
+ test.each(["committee", "authorised"])("denies coordination access to %s Superusers", async role => {
+ configureSupabase(role, "fictional-user-id", {canManageAccounts:true});
+ await expect(requireBackendUser()).rejects.toMatchObject({code:"FORBIDDEN"});
+ await expect(requireAuthorised()).rejects.toMatchObject({code:"FORBIDDEN"});
+ });

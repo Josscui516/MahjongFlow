@@ -42,20 +42,56 @@ describe("DashboardView", () => {
   });
 });
 
-it("retains every task behind a bounded preview and preserves the accurate total", () => {
+it.each(["mine", "unfinished"] as const)("retains every %s task behind a bounded preview and preserves the accurate total", (key) => {
  const items = Array.from({length:5}, (_,i) => ({id:`fixture-${i}`,title:`Fictional task ${i}`,dueDate:"2026-09-09",status:"not_started" as const,assigneeId:"fixture-owner",description:"Fixture",eventId:null,createdBy:"fixture-owner",createdAt:"2026-09-09T00:00:00Z",updatedAt:"2026-09-09T00:00:00Z",sourceMeetingId:null,sourceDecisionId:null,sourceDiscussionPointId:null}));
- const html = renderToStaticMarkup(<DashboardView snapshot={{...snapshot,sections:[{ok:true,section:{items,key:"mine",total:5}}]}} upcomingEvents={{state:"not_connected"}} />);
- expect(html).toContain("View all 5 tasks");
+ const html = renderToStaticMarkup(<DashboardView snapshot={{...snapshot,sections:[{ok:true,section:{items,key,total:5}}]}} upcomingEvents={{state:"not_connected"}} />);
+ expect(html).toContain("Show 2 more tasks");
  const disclosure = html.indexOf("<details");
  expect(html.indexOf("Fictional task 2")).toBeLessThan(disclosure);
- expect(html.indexOf("Fictional task 3")).toBeGreaterThan(disclosure);
- expect(html).toContain("Fictional task 4");
- expect(html).toContain('href="#dashboard-mine"');
+ expect(html).not.toContain("Fictional task 3");
+ expect(html).not.toContain("Fictional task 4");
+ expect(html).toContain(`href="#dashboard-${key}"`);
 });
 
-it("places upcoming events ahead of task groups while preserving independent error states", () => {
+it("places task groups ahead of the supporting events panel while preserving independent error states", () => {
   const html = renderToStaticMarkup(<DashboardView snapshot={snapshot} upcomingEvents={{state:"ready",events:[]}} />);
-  expect(html.indexOf('id="upcoming-events-heading"')).toBeLessThan(html.indexOf('id="dashboard-mine"'));
+  expect(html.indexOf('id="dashboard-mine"')).toBeLessThan(html.indexOf('id="upcoming-events-heading"'));
   expect(html).toContain("This task summary could not be loaded.");
   expect(html).toContain("There are no unfinished committee tasks.");
+});
+
+const emptySnapshot: DashboardSnapshot = {
+  ...snapshot,
+  sections: (["mine", "overdue", "dueSoon", "unfinished"] as const).map(key => ({ok: true, section: {key, items: [], total: 0}})),
+};
+
+it("retains four accessible tabs and honest empty states with every summary anchor", () => {
+  const html = renderToStaticMarkup(<DashboardView snapshot={emptySnapshot} upcomingEvents={{state:"ready",events:[]}} />);
+  expect(html).toContain("Task overview");
+  expect(html).toContain("You have no unfinished tasks.");
+  expect(html.match(/role="tab"/g)).toHaveLength(4);
+  expect(html.match(/role="tabpanel"/g)).toHaveLength(4);
+  expect(html.match(/hidden=""/g)).toHaveLength(3);
+  expect(html).toContain('id="tab-mine" aria-selected="true"');
+  for (const key of ["mine", "overdue", "dueSoon", "unfinished"]) {
+    expect(html).toContain(`href="#dashboard-${key}"`);
+    expect(html).toContain(`id="dashboard-${key}"`);
+  }
+  expect(html).not.toContain("bg-rose-50");
+  expect(html).not.toContain("View task overview");
+});
+
+it("keeps permission failures visible rather than presenting an all-clear state", () => {
+  const html = renderToStaticMarkup(<DashboardView snapshot={{...emptySnapshot, sections: [...emptySnapshot.sections.filter(result => result.ok && result.section.key !== "overdue"), {ok:false,key:"overdue",code:"PERMISSION_DENIED"}]}} upcomingEvents={{state:"error"}} />);
+  expect(html).not.toContain("No unfinished tasks");
+  expect(html).toContain("You do not have permission to view this task summary.");
+  expect(html).toContain("Unavailable");
+  expect(html).not.toContain("bg-rose-50");
+});
+
+it("uses warning color only for confirmed overdue tasks", () => {
+  const html = renderToStaticMarkup(<DashboardView snapshot={{...snapshot, sections:[{ok:true,section:{key:"overdue",items:[],total:1}}]}} upcomingEvents={{state:"not_connected"}} />);
+  expect(html).toContain("bg-rose-50");
+  expect(html).not.toContain("View tasks");
+  expect(html).toContain('aria-controls="dashboard-overdue"');
 });

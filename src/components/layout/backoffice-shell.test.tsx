@@ -21,13 +21,13 @@ function renderFromTrustedTestContext(
   context: TestAccessContext,
   children: ReactNode,
   options?: Readonly<{
-    accountSlot?: ReactNode;
+    displayName?: string;
     currentPath?: string;
   }>,
 ) {
   return renderToStaticMarkup(
     <BackofficeShell
-      accountSlot={options?.accountSlot}
+      displayName={options?.displayName}
       currentPath={options?.currentPath}
       role={context.role}
       signOutSlot={<button type="button">Sign out</button>}
@@ -38,12 +38,27 @@ function renderFromTrustedTestContext(
 }
 
 describe("BackofficeShell", () => {
+  it.each(["/dashboard", "/meetings/new", "/meetings/fictional-meeting", "/tasks/fictional-task/edit", "/events/fictional-event", "/registrations/fictional-event", "/attendance/fictional-event", "/dinner-verification/fictional-event", "/admin/users"])("uses the same account identity on %s", (currentPath) => {
+    const html = renderFromTrustedTestContext(COMMITTEE_CONTEXT, <p>Content</p>, {
+      currentPath,
+      displayName: "  Alex Example  ",
+    });
+    expect(html).toContain('Signed in as <strong class="font-semibold text-slate-900">Alex Example</strong>');
+    expect(html).toContain("Role: Committee");
+    expect(html).toContain("Sign out");
+  });
+
+  it("uses the Dashboard fallback when a display name is blank", () => {
+    const html = renderFromTrustedTestContext(AUTHORISED_CONTEXT, <p>Content</p>, { displayName: "  " });
+    expect(html).toContain('Signed in as <strong class="font-semibold text-slate-900">Committee member</strong>');
+  });
+
   it("renders landmarks and committee UI through a role-only adapter", () => {
     const html = renderFromTrustedTestContext(
       COMMITTEE_CONTEXT,
       <h1>Dashboard</h1>,
       {
-        accountSlot: <span>Fictional committee member</span>,
+        displayName: "Fictional committee member",
         currentPath: "/dashboard",
       },
     );
@@ -59,10 +74,11 @@ describe("BackofficeShell", () => {
     expect(html).toContain("Sign out");
     expect(html).toContain("<h1>Dashboard</h1>");
     expect(html).not.toContain(COMMITTEE_CONTEXT.userId);
-    expect(html).toContain("Registrations");
+    expect(html).not.toContain("Registrations");
+    expect(html).not.toContain("Dinner eligibility roster");
   });
 
-  it("exposes registration navigation for the trusted authorised role", () => {
+  it("preserves authorised content while hiding secondary navigation", () => {
     const html = renderFromTrustedTestContext(
       AUTHORISED_CONTEXT,
       <p>Protected fictional content</p>,
@@ -70,7 +86,8 @@ describe("BackofficeShell", () => {
 
     expect(html).toContain("Role: Authorised");
     expect(html).not.toContain("Sensitive operations");
-    expect(html).toContain("Registrations");
+    expect(html).not.toContain("Registrations");
+    expect(html).not.toContain("Dinner eligibility roster");
     expect(html).toContain("Protected fictional content");
     expect(html).not.toContain(AUTHORISED_CONTEXT.userId);
   });

@@ -21,7 +21,7 @@ export function createEventBrowser({ authorise = requireBackendUser, getClient =
       if (bounds.from) query = query.gte("starts_at", bounds.from);
       if (bounds.before) query = query.lt("starts_at", bounds.before);
       const offset = (filters.page - 1) * EVENT_PAGE_SIZE;
-      const result = await query.order("starts_at").order("id").range(offset, offset + EVENT_PAGE_SIZE - 1);
+      const result = await query.order(filters.sort === "name" ? "name" : "starts_at", { ascending: filters.sort !== "latest" }).order("id").range(offset, offset + EVENT_PAGE_SIZE - 1);
       if (result.error || result.count === null) return { ok: false, code: result.error?.code === "42501" ? "PERMISSION_DENIED" : "SYSTEM_ERROR" };
       return { ok: true, total: result.count, items: (result.data ?? []).map(row => ({ id: row.id, name: row.name, startsAt: row.starts_at, eventType: row.event_type, location: row.location, status: row.status })) };
     } catch (error) { return { ok: false, code: error instanceof AuthorizationError ? "PERMISSION_DENIED" : "SYSTEM_ERROR" }; }

@@ -3,7 +3,7 @@ import { TASK_STATUSES, type TaskStatus } from "../core/contracts";
 export const TASK_SORTS = ["due_soonest", "due_latest", "updated_recent"] as const;
 export type TaskSort = (typeof TASK_SORTS)[number];
 export type TaskStatusFilter = "all" | TaskStatus;
-export const TASK_PAGE_SIZE = 20;
+export const TASK_PAGE_SIZE = 10;
 export type TaskFilterCriteria = Readonly<{ assigneeId?: string; dueFrom?: string; dueTo?: string; eventId?: string; page: number; pageSize: number; search: string; sort: TaskSort; status: TaskStatusFilter }>;
 export type TaskFilterParseResult = Readonly<{ criteria: TaskFilterCriteria; ok: true }> | Readonly<{ errors: readonly string[]; ok: false }>;
 export type RawTaskSearchParams = Readonly<{ assigneeId?: string | string[]; dueFrom?: string | string[]; dueTo?: string | string[]; eventId?: string | string[]; page?: string | string[]; q?: string | string[]; sort?: string | string[]; status?: string | string[] }>;

@@ -1,4 +1,12 @@
+> 2026-10-22 晚餐安全汇总：应用 `20261021134221_dinner_eligibility_safe_total.sql` 后重新生成类型。General 与 authorised 只获得汇总 RPC 的数字，不扩大人员表、晚餐明细或写权限。部署与回退见 [晚餐流程最新决定](../project/DINNER_CHECK_IN_EMAIL_MATCHING.md)。本次仅本地应用。
+
+> 2026-10-22 活动晚餐勾选清单：新增 `20261021133257_confirmed_attendance_dinner_checklist.sql`，取消共享名单匹配前置条件，保留有效报名、确认到场、authorised、并发检查和审计。无新表、索引或 RLS policy；执行授权不放宽，既有数据不转换。先应用 migration、重新生成类型，再发布 UI；回退步骤见 [晚餐流程最新决定](../project/DINNER_CHECK_IN_EMAIL_MATCHING.md)。本次只应用至本地数据库。
+
 # Database migration operations
+
+> 2026-10-21 最新扫码规则：先应用 `20261021123653_separate_public_registration_from_staff_attendance.sql`，公开入口及旧兼容 RPC 均只注册，工作人员手动确认到场。历史签到保留；见[部署与回退](../project/QR_REGISTRATION_STAFF_ATTENDANCE.md)。
+
+> 2026-10-21 最新权限：普通 committee 禁止报名管理与活动晚餐核验／发放。先应用 `20261021074810_restrict_general_event_operations.sql` 再发布应用；已有记录和原表 RLS 保留。见[当前决定及回退](../project/GENERAL_EVENT_OPERATION_RESTRICTION.md)。
 
 > 2026-10-20 新增普通委员私密名单写入迁移 `20261020014659_allow_committee_blind_registration_and_dinner_writes.sql`；发布前按时间顺序应用，回退与不返回记录的接口见[写入／读取权限](../project/MEMBER_WRITE_PRIVATE_READ.md)。
 
@@ -156,3 +164,9 @@ token 审计历史，不恢复已撤销的明文链接。2026-09-30 在隔离本
 ## 管理员二维码权限修复（2026-10-16）
 
 新增 migration 20261015231742_fix_admin_qr_management_permissions.sql，发布顺序、权限边界及回退见[管理员二维码修复](../project/ADMIN_QR_MANAGEMENT_FIX.md)。已有数据库须应用迁移，不能用 reset 代替升级。
+
+## 活动删除边界（2026-10-21）
+
+`20261021063343_add_event_delete_boundary.sql` 新增 `delete_event_record(uuid)`，只允许有效后台用户删除没有关联业务记录的活动。不给活动表新增直接 DELETE 权限；匿名用户不可执行 RPC，函数内部再次验证角色。现有 RESTRICT 外键保留任务、报名、签到和晚餐记录，错误仅返回 `linked_records`，不暴露敏感明细。行锁与外键保证并发插入不会留下孤立记录；已有活动索引和约束不变。活动签到 token 依既有外键级联删除，相关 QR 立即失效。
+
+先应用 migration，再通过本地 CLI 重新生成数据库类型，最后发布应用。migration 不修改现有数据或 seed。回退时先撤下删除入口，再使用前向 migration 撤销执行权限并删除函数。已经删除的活动和 token 只能从删除前备份恢复，schema 回退不能恢复记录。数据库回归测试使用虚构数据并在事务末尾回滚。

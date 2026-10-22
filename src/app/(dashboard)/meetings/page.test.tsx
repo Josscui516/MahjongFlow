@@ -38,7 +38,7 @@ function pageResult(items = [FICTIONAL_ITEM], totalCount = items.length) {
     items,
     page: 1,
     pageCount: Math.max(1, Math.ceil(totalCount / 8)),
-    pageSize: 8,
+    pageSize: 10,
     totalCount,
   };
 }
@@ -105,7 +105,7 @@ describe("meetings history page", () => {
       expect(html).not.toContain("00000000-0000-4000-8000-000000000021");
       expect(mocks.queryMeetingHistory).toHaveBeenCalledWith({
         page: 1,
-        pageSize: 8,
+        pageSize: 10,
         search: "",
         sort: "newest",
         time: "all",
@@ -140,13 +140,13 @@ describe("meetings history page", () => {
 
     expect(mocks.queryMeetingHistory).toHaveBeenCalledWith({
       page: 1,
-      pageSize: 8,
+      pageSize: 10,
       search: "planning",
       sort: "oldest",
       time: "past",
     });
     expect(html).toContain('value="planning"');
-    expect(html).toContain("Sorted by date · oldest first");
+    expect(html).toContain("Meeting date: earliest first");
   });
 
   it("renders deletion confirmation from the safe URL state", async () => {

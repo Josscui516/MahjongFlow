@@ -8,7 +8,7 @@ vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
 vi.mock("@/app/(auth)/login/login-form", () => ({ LoginForm: () => <form>Switch account</form> }));
 vi.mock("@/lib/auth/authorization", async () => {
   const actual = await vi.importActual<typeof import("@/lib/auth/authorization")>("@/lib/auth/authorization");
-  return { ...actual, requireBackendUser: mocks.access };
+  return { ...actual, requireActiveUser: mocks.access };
 });
 import LoginPage from "./page";
 import { AuthorizationError } from "@/lib/auth/authorization";

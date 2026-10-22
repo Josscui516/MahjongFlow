@@ -39,14 +39,7 @@ export default async function DashboardLayout({
 
   return (
     <BackofficeShell
-      accountSlot={
-        <span>
-          Signed in as{" "}
-          <strong className="font-semibold text-slate-900">
-            {access.displayName?.trim() || "Committee member"}
-          </strong>
-        </span>
-      }
+      displayName={access.displayName}
       canManageAccounts={access.canManageAccounts}
       currentPath="/dashboard"
       role={access.role}

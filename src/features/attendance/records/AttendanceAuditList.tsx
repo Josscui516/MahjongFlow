@@ -45,7 +45,7 @@ export function AttendanceAuditList({
           Attendance audit
         </h2>
         <p className="text-sm text-slate-600">
-          {result.event.name} · {result.items.length}{" "}
+          {result.items.length}{" "}
           {result.items.length === 1 ? "record" : "records"}
         </p>
       </div>

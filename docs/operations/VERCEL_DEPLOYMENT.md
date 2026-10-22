@@ -85,3 +85,15 @@ direct push merely to test deployment automation.
 2026-09-30 实时复核：成员 PR [#95](https://github.com/Josscui516/MahjongFlow/pull/95) 已合入 `sprint/8-mvp-internal-acceptance`，Sprint 总 PR [#96](https://github.com/Josscui516/MahjongFlow/pull/96) 已合入 `main`，SHA `7e0c614b8a2f6e2bec06ab4df82cc2641858cdaa`。main 的 [Quality run 36673253441](https://github.com/Josscui516/MahjongFlow/actions/runs/36673253441) 五项全部成功；同 SHA 的 Vercel Production deployment `6752199649` 状态为 success。#94／#29 已关闭，Project 均 Done／Passed。非作者 PR 批准采用 Joshua 已明确授权的单次例外，未虚构 approval。
 
 本轮读取 GitHub deployment／status 记录，不重审 Vercel settings 或环境变量，不创建新部署；旧 Preview URL／配置表保留为 2026-08-06 审计快照。正式演示启动、干净配置、交接和回退演练仍属于 S10／M6，不能由平台 success 状态替代。
+
+## 8. Vercel 构建兼容修复与最新生产部署（2026-10-20）
+
+最新 `main` 提交 `e0ac9eaaf280da684d785c720f5ccf59d1dcaa17` 的首次生产构建在 Vercel `onBuildComplete` 阶段失败，错误为缺少 `.next/next-server.js.nft.json`。默认 Turbopack 构建虽完成编译和类型检查，但未满足该适配器的追踪文件要求。
+
+本次将 Vercel 项目 `mahjong-flow` 的 Build Command 设置为 `npm run build -- --webpack`，并重新部署相同提交。该设置保存在 Vercel 项目中；仓库默认构建命令及本地 Docker 配置保持原样。Linux Docker 验证该命令构建成功，且生成 `.next/next-server.js.nft.json` 与 `.next/standalone/server.js`。日后更换项目或恢复默认构建器时，须重新验证 Vercel 收尾阶段，不能仅凭本地 `next build` 成功判断可发布。
+
+生产部署 `dpl_BYX1nTLG4Fq78F8u5hYuM56XEpfa` 已达到 `READY`，正式域名 `mahjong-flow.vercel.app` 已绑定此部署；部署来源 SHA 与实时远程 `main` 完全一致。线上 `/login` 返回 HTTP `200`，`/api/health/supabase` 返回 HTTP `200` 和 `status: ok`。同 SHA 的 GitHub Quality run `39369844274` 全部通过。
+
+线上 Supabase migration history 已包含仓库全部 20 个迁移，最后一个版本为 `20261020014659`；本次未执行远程 migration、seed 或 reset。验证覆盖部署版本、公开登录页、数据库连通性与迁移记录，未使用真实参与者数据，也未执行线上业务写入验收。
+
+如需回退应用，可恢复此前已验证的生产部署；不要通过重置数据库回退。恢复原默认 Build Command 前应先解决并验证 Turbopack 与 Vercel 适配器的兼容性，否则会再次出现相同构建错误。

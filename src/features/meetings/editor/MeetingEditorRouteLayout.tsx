@@ -1,3 +1,4 @@
+import { PermissionDeniedFeedback } from "@/components/feedback";
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
 
@@ -33,11 +34,7 @@ export async function MeetingEditorRouteLayout({
 
       return (
         <main className={STANDALONE_MAIN_CLASS}>
-          <MeetingStatePanel
-            description="You do not have permission to access this meeting page."
-            state="permission"
-            title="Access required"
-          />
+          <PermissionDeniedFeedback />
         </main>
       );
     }

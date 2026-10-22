@@ -4,7 +4,7 @@ import { AppNavigation } from "./AppNavigation";
 import type { BackofficeRole } from "./navigation";
 
 export type BackofficeShellProps = Readonly<{
-  accountSlot?: ReactNode;
+  displayName?: string;
   canManageAccounts?: boolean;
   children: ReactNode;
   currentPath?: string;
@@ -25,13 +25,21 @@ const ROLE_LABELS: Readonly<Record<BackofficeRole, string>> = {
  * not replace route protection or database RLS.
  */
 export function BackofficeShell({
-  accountSlot,
+  displayName,
   canManageAccounts,
   children,
   currentPath,
   role,
   signOutSlot,
 }: BackofficeShellProps) {
+  const accountSlot = (
+    <span>
+      Signed in as{" "}
+      <strong className="font-semibold text-slate-900">
+        {displayName?.trim() || "Committee member"}
+      </strong>
+    </span>
+  );
   return (
     <div className="min-h-screen bg-slate-50 text-slate-950">
       <a
@@ -42,7 +50,7 @@ export function BackofficeShell({
       </a>
 
       <AppNavigation
-        accountSlot={<><p className="text-xs font-medium text-slate-600">Role: {ROLE_LABELS[role]}</p>{accountSlot}{signOutSlot}</>}
+        accountSlot={<><p className="text-xs font-medium text-slate-600">Role: {canManageAccounts ? "Superuser" : ROLE_LABELS[role]}</p>{accountSlot}{signOutSlot}</>}
         canManageAccounts={canManageAccounts}
         currentPath={currentPath}
         role={role}
@@ -52,7 +60,7 @@ export function BackofficeShell({
         <header className="hidden border-b border-slate-200 bg-white px-4 py-3 md:block sm:px-6 lg:px-10">
           <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-end gap-x-4 gap-y-2">
             <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-900 ring-1 ring-inset ring-emerald-200">
-              Role: {ROLE_LABELS[role]}
+              Role: {canManageAccounts ? "Superuser" : ROLE_LABELS[role]}
             </span>
             {accountSlot ? (
               <div className="text-sm text-slate-600">{accountSlot}</div>

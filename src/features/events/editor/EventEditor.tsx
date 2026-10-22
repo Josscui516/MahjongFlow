@@ -5,20 +5,15 @@ import { useRouter } from "next/navigation";
 import { FormErrorSummary, FormField } from "@/components/forms";
 import { EVENT_STATUSES, EVENT_TYPES, type EventDTO, type EventInput, type EventMutationResult, type EventStatus, type EventType, type EventValidationError } from "../core/contracts";
 import { EVENT_STATUS_LABELS } from "../presentation";
+import { eventCreateDefaults, localDateTime } from "./create-defaults";
 import { readEventForm } from "./form-input";
 import { validateEventInput } from "../core/validation";
 
-type Props = Readonly<{ createEventAction: (input: EventInput) => Promise<EventMutationResult>; initialRecord?: EventDTO; updateEventAction: (id: string, input: EventInput) => Promise<EventMutationResult> }>;
+type Props = Readonly<{ createEventAction: (input: EventInput) => Promise<EventMutationResult>; initialRecord?: EventDTO; createInstant?: string; updateEventAction: (id: string, input: EventInput) => Promise<EventMutationResult> }>;
 const labels: Record<keyof EventInput, string> = { name: "Name", description: "Description", location: "Location", startsAt: "Date and time (Sydney time)", eventType: "Type", status: "Status", requiresStudentId: "Student ID requirement" };
 const fieldOrder: readonly (keyof EventInput)[] = ["name", "startsAt", "location", "eventType", "status", "description", "requiresStudentId"];
-export function localDateTime(iso?: string) {
-  if (!iso) return "";
-  if (!/(?:Z|[+-]\d{2}:\d{2})$/i.test(iso)) return iso.slice(0, 16);
-  const parts = Object.fromEntries(new Intl.DateTimeFormat("en-CA", { day: "2-digit", hour: "2-digit", hourCycle: "h23", minute: "2-digit", month: "2-digit", timeZone: "Australia/Sydney", year: "numeric" }).formatToParts(new Date(iso)).map((part) => [part.type, part.value]));
-  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
-}
 
-export function EventEditor({ createEventAction, initialRecord, updateEventAction }: Props) {
+export function EventEditor({ createEventAction, initialRecord, createInstant, updateEventAction }: Props) {
   const router = useRouter();
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState("");
@@ -26,7 +21,7 @@ export function EventEditor({ createEventAction, initialRecord, updateEventActio
   const feedbackRef = useRef<HTMLDivElement>(null);
   const last = useRef("");
   const lock = useRef(false);
-  const [values, setValues] = useState<EventInput>(initialRecord ? { description: initialRecord.description, eventType: initialRecord.eventType, location: initialRecord.location, name: initialRecord.name, requiresStudentId: initialRecord.requiresStudentId, startsAt: localDateTime(initialRecord.startsAt), status: initialRecord.status } : { description: "", eventType: "weekly_session", location: "", name: "", requiresStudentId: false, startsAt: "", status: "scheduled" });
+  const [values, setValues] = useState<EventInput>(initialRecord ? { description: initialRecord.description, eventType: initialRecord.eventType, location: initialRecord.location, name: initialRecord.name, requiresStudentId: false, startsAt: localDateTime(initialRecord.startsAt), status: initialRecord.status } : createInstant ? eventCreateDefaults(new Date(createInstant)) : { description: "", eventType: "weekly_session", location: "", name: "", requiresStudentId: false, startsAt: "", status: "scheduled" });
   const set = <K extends keyof EventInput>(key: K, value: EventInput[K]) => setValues(current => ({ ...current, [key]: value }));
   const errorFor = (field: keyof EventInput) => errors.find(error => error.field === field)?.message;
   useEffect(() => {
@@ -62,13 +57,12 @@ export function EventEditor({ createEventAction, initialRecord, updateEventActio
     </div>
     <FormField id="event-name" label="Name" required error={errorFor("name")} control={<input disabled={pending} maxLength={200} name="name" onChange={e => set("name", e.target.value)} value={values.name} />} />
     <div className="grid gap-5 sm:grid-cols-2">
-      <FormField id="event-startsAt" label={labels.startsAt} required error={errorFor("startsAt")} control={<input disabled={pending} name="startsAt" type="datetime-local" defaultValue={initialRecord ? localDateTime(initialRecord.startsAt) : ""} />} />
+      <FormField id="event-startsAt" label={labels.startsAt} required error={errorFor("startsAt")} control={<input disabled={pending} name="startsAt" type="datetime-local" defaultValue={values.startsAt} />} />
       <FormField id="event-location" label="Location" required error={errorFor("location")} control={<input disabled={pending} maxLength={300} name="location" onChange={e => set("location", e.target.value)} value={values.location} />} />
       <FormField id="event-eventType" label="Type" required error={errorFor("eventType")} control={<select disabled={pending} name="eventType" onChange={e => set("eventType", e.target.value as EventType)} value={values.eventType}>{EVENT_TYPES.map(type => <option key={type} value={type}>{type === "weekly_session" ? "Weekly session" : "Tournament"}</option>)}</select>} />
       <FormField id="event-status" label="Status" required error={errorFor("status")} control={<select disabled={pending} name="status" onChange={e => set("status", e.target.value as EventStatus)} value={values.status}>{EVENT_STATUSES.map(status => <option key={status} value={status}>{EVENT_STATUS_LABELS[status]}</option>)}</select>} />
     </div>
-    <FormField id="event-description" label="Description" required error={errorFor("description")} control={<textarea className="min-h-24" disabled={pending} maxLength={10000} name="description" onChange={e => set("description", e.target.value)} value={values.description} />} />
-    <label className="flex min-h-11 items-center gap-3 text-sm font-semibold text-slate-800"><input id="event-requiresStudentId" checked={values.requiresStudentId} disabled={pending} name="requiresStudentId" onChange={e => set("requiresStudentId", e.target.checked)} type="checkbox" />Require student ID for registration</label>
+    <FormField id="event-description" label="Description" description="Outline the activities, who the event is for, and what to bring." required error={errorFor("description")} control={<textarea className="min-h-24" disabled={pending} maxLength={10000} name="description" onChange={e => set("description", e.target.value)} value={values.description} />} />
     <div className="flex flex-wrap items-center gap-3">
       <button className="min-h-11 rounded-lg bg-emerald-950 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-2 disabled:opacity-50" disabled={pending} type="submit">{pending ? "Saving…" : initialRecord ? "Save event" : "Create event"}</button>
       {!pending ? <Link className="inline-flex min-h-11 items-center rounded-lg px-3 text-sm font-semibold text-slate-700 underline focus-visible:outline-2 focus-visible:outline-offset-2" href={initialRecord ? `/events/${initialRecord.id}` : "/events"}>Cancel</Link> : null}

@@ -1,8 +1,12 @@
+> 2026-10-22 最新决定：移除独立 `/dinner-roster` 页面、维护表单及对应 Server Actions；旧地址返回 404。活动晚餐核验与发放保留。历史数据库表及内部兼容读取代码保留，不删除既有资格和发放记录；无需 schema migration。下方独立名册页面说明为历史记录。
+
+> 2026-10-22：活动页使用确认到场勾选清单，移除共享名册匹配、刷新按钮、焦点／可见性自动刷新和过期定时器。勾选保存成功后更新本地状态；错误保留原勾选。顶部统计已勾选人数。部署和回退见 `docs/project/DINNER_CHECK_IN_EMAIL_MATCHING.md` 最新决定，下方为历史实现说明。
+
 # 通用晚餐资格与活动发放
 
 2026-10-20 [最新权限](../../../docs/project/DINNER_PERMISSION_BOUNDARIES.md)：所有活跃后台成员可核验和记录本场发放，只有 authorised 可看完整名册，名册维护继续额外要求管理员能力。下方旧权限描述按原日期理解。
 
-通用资格与发放以[2026-10-18 决定](../../../docs/project/DINNER_CHECK_IN_EMAIL_MATCHING.md)为准；扫码已按[2026-10-20 修正](../../../docs/project/QR_SELF_CHECK_IN_CORRECTION.md)同时完成报名和确认签到，无需工作人员再手动确认。
+通用资格与发放以[2026-10-18 决定](../../../docs/project/DINNER_CHECK_IN_EMAIL_MATCHING.md)为准；扫码按[2026-10-21 决定](../../../docs/project/QR_REGISTRATION_STAFF_ATTENDANCE.md)仅注册，工作人员确认到场后才参与领取资格匹配。
 
 `/dinner-roster` 是独立的通用资格录入页面，无活动参数；管理员录入一次，持续用于所有活动。`roster.ts` 维护通用表，不消耗资格。原活动名册数据只保留历史，活跃邮箱由迁移去重转入通用表。
 

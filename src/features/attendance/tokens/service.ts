@@ -10,7 +10,7 @@ import {
 } from "@/lib/auth/authorization";
 import { getSupabaseAdminEnvironment } from "@/lib/supabase/env";
 import { requireQrManager } from "./authorization";
-import { isLocalPreviewRequest, isPrivateIPv4, localNetworkHosts, resolveCheckInOrigin } from "@/lib/network/check-in-origin";
+import { isLocalPreviewRequest, isNetworkIPv4, localQrHosts, resolveCheckInOrigin } from "@/lib/network/check-in-origin";
 
 import type {
   CheckInTokenRepository,
@@ -100,9 +100,9 @@ export const checkInTokenService = createCheckInTokenService({
   applicationUrl: async () => {
     const dockerHost = process.env.LOCAL_DOCKER_HOST_IP;
     const canonicalOrigin = getSupabaseAdminEnvironment().applicationUrl;
-    const hosts = dockerHost && isPrivateIPv4(dockerHost) ? [dockerHost] : localNetworkHosts(networkInterfaces());
+    const hosts = localQrHosts(dockerHost, networkInterfaces(), process.env.NEXT_PUBLIC_SUPABASE_SAME_ORIGIN === "true");
     const requestHost = (await headers()).get("host");
-    const local = process.env.NODE_ENV === "development" || Boolean(dockerHost && isPrivateIPv4(dockerHost))
+    const local = process.env.NODE_ENV === "development" || Boolean(dockerHost && isNetworkIPv4(dockerHost))
       // Docker must supply its host address; never use a container's private interface as the LAN destination.
       || (process.env.NEXT_PUBLIC_SUPABASE_SAME_ORIGIN !== "true"
         && isLocalPreviewRequest({ canonicalOrigin, requestHost, hosts }));

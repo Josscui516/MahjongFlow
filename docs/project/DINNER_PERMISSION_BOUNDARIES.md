@@ -1,5 +1,7 @@
 # 晚餐核验与完整资格名册权限分离
 
+> 2026-10-21 最新决定：General（committee）不再允许报名管理及活动晚餐核验／发放。本文较早的相关普通成员例外已被替代；独立晚餐名册提交能力保持原权限。见[当前权限与部署](GENERAL_EVENT_OPERATION_RESTRICTION.md)。
+
 > 2026-10-20 用户进一步澄清：普通委员可提交已知邮箱的报名／晚餐资格增删，只是不能看已有名单；安全员可看并直接维护，无需开发者权限。下方“维护需账号管理员”已由[最新决定](MEMBER_WRITE_PRIVATE_READ.md)替代。
 
 2026-10-20 用户明确确认：所有有效委员会成员均可在 Dinner verification 核验与记录发放；Dinner eligibility roster 的完整名单与 Registrations 一样，仅安全员 authorised 可查看。本决定替代之前将核验也限制为 authorised、将名册查看限制为管理员的解释。继续关联 Issue #102／PR #103，独立于二维码管理员权限 PR #101。

@@ -17,3 +17,10 @@ body {
   color: var(--foreground);
   font-family: var(--font-geist-sans), Arial, Helvetica, sans-serif;
 }
+
+/* Standalone access-denied routes share viewport-centered placement. */
+main:has(> [data-feedback-state="permission"]) {
+  display: grid;
+  min-height: 100dvh;
+  place-items: center;
+}

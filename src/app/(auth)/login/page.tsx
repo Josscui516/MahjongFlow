@@ -4,7 +4,7 @@ import { LoginForm } from "@/app/(auth)/login/login-form";
 import { LoginShell } from "@/components/layout";
 import { getSafeBackofficeRedirectPath } from "@/lib/auth/redirect";
 import { getAuthenticatedUser } from "@/lib/auth/session";
-import { AuthorizationError, requireBackendUser } from "@/lib/auth/authorization";
+import { AuthorizationError, requireActiveUser } from "@/lib/auth/authorization";
 
 export default async function LoginPage({
   searchParams,
@@ -18,7 +18,8 @@ export default async function LoginPage({
   if (authentication.ok) {
     let canEnterBackoffice = false;
     try {
-      await requireBackendUser();
+      const access = await requireActiveUser();
+      if (access.canManageAccounts) redirect("/admin/users");
       canEnterBackoffice = true;
     } catch (error) {
       if (!(error instanceof AuthorizationError)) throw error;

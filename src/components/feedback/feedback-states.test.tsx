@@ -111,6 +111,13 @@ describe("shared feedback states", () => {
     expect(html).not.toContain(protectedDetail);
   });
 
+  it("provides a safe default workspace exit for denied routes", () => {
+    const html = renderToStaticMarkup(<PermissionDeniedFeedback />);
+    expect(html).toContain('href="/backoffice"');
+    expect(html).toContain("Return to workspace");
+    expect(html).toContain("aria-describedby=");
+  });
+
   it("gives every acceptance state a distinct visible title", () => {
     const htmlByState = [
       renderToStaticMarkup(<LoadingFeedback />),

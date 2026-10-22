@@ -15,6 +15,7 @@ import {
 } from "@/lib/auth/authorization";
 import { RelatedTasksPanel } from "@/features/tasks/source-navigation/RelatedTasksPanel";
 import { listRelatedTasks } from "@/features/tasks/source-navigation/service";
+import { toAgendaSources } from "@/features/meetings/agenda/agenda";
 
 export default async function MeetingDetailPage({
   params,
@@ -86,7 +87,7 @@ export default async function MeetingDetailPage({
     <>
       <Link className="mb-3 inline-flex min-h-11 items-center text-sm font-semibold text-emerald-900 underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-2" href="/meetings">Back to meetings</Link>
       <MeetingPageHeader
-        description="Review the meeting record, capture discussion points, and save key decisions."
+        description="Review the meeting details and agenda, then turn follow-up actions into tasks."
         title="Meeting details"
       />
       <MeetingEditorFlow
@@ -97,8 +98,8 @@ export default async function MeetingDetailPage({
         justCreated={query.created === "1"}
         mode="update"
       />
-      <div className="mt-6">
-        <RelatedTasksPanel result={relatedTasksResult} />
+      <div className="mt-6 max-w-4xl">
+        <RelatedTasksPanel agendaItems={toAgendaSources(agenda)} result={relatedTasksResult} />
       </div>
     </>
   );

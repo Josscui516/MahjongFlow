@@ -10,6 +10,8 @@ vi.mock("@/features/meetings/editor/actions", () => ({
 }));
 
 import { createMeetingHistoryFixture } from "./meeting-history.fixture";
+import { MeetingHistorySort } from "./MeetingHistorySort";
+import { MeetingHistoryFilters } from "./MeetingHistoryFilters";
 import {
   formatMeetingStart,
   MeetingHistoryList,
@@ -39,6 +41,28 @@ function result(items = createMeetingHistoryFixture(), totalCount = items.length
 }
 
 describe("MeetingHistoryList", () => {
+  it("shows ten meetings on page two and retains filters in pagination", () => {
+    const criteria = { ...DEFAULT_CRITERIA, page: 2, pageSize: 10, search: "planning" };
+    const template = createMeetingHistoryFixture()[0];
+    const items = Array.from({ length: 10 }, (_, index) => ({ ...template, id: `fictional-${index}` }));
+    const html = renderToStaticMarkup(<MeetingHistoryList criteria={criteria} result={{ items, page: 2, pageCount: 3, pageSize: 10, totalCount: 21 }} />);
+    expect(html).toContain("Showing 11–20 of 21");
+    expect(html.match(/<article /g)).toHaveLength(10);
+    expect(html).toContain('href="/meetings?q=planning&amp;page=3"');
+  });
+  it("connects the external automatic sort to the filters without an Apply button", () => {
+    const html = renderToStaticMarkup(<><MeetingHistoryFilters criteria={{ ...DEFAULT_CRITERIA, search: "planning", time: "past", sort: "oldest" }} /><MeetingHistorySort criteria={{...DEFAULT_CRITERIA,sort:"oldest"}} /></>);
+    expect(html).not.toContain('type="submit"');
+    expect(html).toContain('value="planning"');
+    expect(html).toContain('value="past" selected=""');
+    expect(html).toContain('value="oldest" selected=""');
+    expect(html).toContain('href="/meetings"');
+    expect(html).toContain("Clear all");
+    expect(html).toContain('aria-label="Active meeting filters"');
+    expect(html).toContain("Search: planning");
+    expect(html).toContain("Meeting date: Past");
+    expect(renderToStaticMarkup(<MeetingHistoryFilters criteria={DEFAULT_CRITERIA} />)).not.toContain("Active meeting filters");
+  });
   it("renders updated fictional meetings newest-first with detail links", () => {
     const html = renderToStaticMarkup(
       <MeetingHistoryList criteria={DEFAULT_CRITERIA} result={result()} />,
@@ -51,7 +75,8 @@ describe("MeetingHistoryList", () => {
     );
     expect(html).toContain('dateTime="2026-08-12T10:30:00.000Z"');
     expect(html).toContain("Open meeting");
-    expect(html).toContain("Sorted by date · newest first");
+    expect(html).toContain('form="meeting-filters"');
+    expect(html).toContain('value="newest" selected=""');
     expect([...new Set([...html.matchAll(/href="([^"]+)"/g)].map((match) => match[1]))]).toEqual([
       "/meetings/00000000-0000-4000-8000-000000000003",
       "/meetings/00000000-0000-4000-8000-000000000001",
@@ -69,6 +94,9 @@ describe("MeetingHistoryList", () => {
 
     expect(html).toContain('data-feedback-state="empty"');
     expect(html).toContain("No meetings recorded");
+    expect(html).toContain("Create your first meeting");
+    expect(html).toContain('href="/meetings/new"');
+    expect(html).not.toContain('name="q"');
   });
 
   it("renders filter-specific empty feedback and pagination links", () => {
@@ -97,6 +125,10 @@ describe("MeetingHistoryList", () => {
 
     expect(filteredEmptyHtml).toContain("No matching meetings");
     expect(filteredEmptyHtml).toContain("Clear search and filters");
+    expect(filteredEmptyHtml).toContain("Meeting date");
+    expect(filteredEmptyHtml).toContain('name="q"');
+    expect(filteredEmptyHtml).not.toContain("or sort order");
+    expect(filteredEmptyHtml).not.toContain("Create your first meeting");
     expect(pagedHtml).toContain(
       'href="/meetings?q=planning&amp;time=past"',
     );
@@ -124,6 +156,8 @@ describe("MeetingHistoryList", () => {
 
     expect(html).toContain("Delete");
     expect(html).toContain("Delete meeting?");
+    expect(html).not.toContain("<details");
+    expect(html).not.toContain("More actions for");
     expect(html).toContain("This action cannot be undone.");
     expect(html).toContain("participants, discussion points, and key decisions");
     expect(html).not.toContain('data-method="delete"');

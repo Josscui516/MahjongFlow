@@ -53,7 +53,7 @@ function fieldError(
 }
 
 function SubmissionFeedback({ state }: Readonly<{ state: TaskConversionFormState }>) {
-  if (state.status === "idle" || state.status === "validation") return null;
+  if (state.status === "idle" || state.status === "validation" || state.status === "success") return null;
 
   const feedback = {
     duplicate: {
@@ -66,11 +66,6 @@ function SubmissionFeedback({ state }: Readonly<{ state: TaskConversionFormState
       description: "You do not have permission to create this task.",
       role: "alert" as const,
       title: "Access required",
-    },
-    success: {
-      description: "The task and its source link were saved.",
-      role: "status" as const,
-      title: "Task created",
     },
     "system-error": {
       description:
@@ -88,9 +83,7 @@ function SubmissionFeedback({ state }: Readonly<{ state: TaskConversionFormState
     >
       <h2 className="font-semibold">{feedback.title}</h2>
       <p className="mt-1 text-sm leading-5">{feedback.description}</p>
-      {state.status === "success" && state.taskId ? (
-        <Link className="mt-3 inline-flex min-h-11 items-center font-semibold text-emerald-900 underline underline-offset-4" href={`/tasks/${encodeURIComponent(state.taskId)}`}>Open created task</Link>
-      ) : null}
+
     </section>
   );
 }
@@ -124,7 +117,8 @@ export function TaskConversionForm({
     }
   }, [state.status]);
 
-  const summaryErrors = state.errors.map((item) => ({
+  const fieldOrder: readonly TaskConversionField[] = ["title", "assigneeId", "dueDate", "status", "description"];
+  const summaryErrors = [...state.errors].sort((a, b) => fieldOrder.indexOf(a.field) - fieldOrder.indexOf(b.field)).map((item) => ({
     fieldId: FIELD_IDS[item.field],
     label: item.label,
     message: item.message,
@@ -148,11 +142,11 @@ export function TaskConversionForm({
           className="text-sm font-semibold text-emerald-950"
           id="task-conversion-source-heading"
         >
-          Task source
+          Meeting agenda
         </h2>
         <p className="mt-1 text-sm leading-5 text-emerald-900">{sourceLabel}</p>
         <p className="mt-1 text-xs text-emerald-800">
-          This trusted source is kept if validation or saving fails.
+          This task will stay linked to the original meeting agenda.
         </p>
       </section>
 
@@ -172,7 +166,7 @@ export function TaskConversionForm({
           </p>
         </div>
 
-        <div className="mt-6 grid gap-5 lg:grid-cols-2">
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <FormField
             control={
               <input
@@ -183,7 +177,7 @@ export function TaskConversionForm({
                 name="title"
               />
             }
-            description="Use a concise action-oriented title."
+            description="e.g. Confirm the room booking"
             error={fieldError(state.errors, "title")}
             id={FIELD_IDS.title}
             label="Task title"
@@ -205,7 +199,7 @@ export function TaskConversionForm({
                 ))}
               </select>
             }
-            description="Only one primary assignee can be selected."
+            description="Choose one committee member."
             error={fieldError(state.errors, "assigneeId")}
             id={FIELD_IDS.assigneeId}
             label="Primary assignee"
@@ -220,7 +214,7 @@ export function TaskConversionForm({
                 type="date"
               />
             }
-            description="The date is interpreted in Australia/Sydney."
+            description="Use Australia/Sydney time."
             error={fieldError(state.errors, "dueDate")}
             id={FIELD_IDS.dueDate}
             label="Due date"
@@ -242,7 +236,7 @@ export function TaskConversionForm({
                 ))}
               </select>
             }
-            description="Overdue is derived from the due date; it is not a saved status."
+            description="Choose the current progress."
             error={fieldError(state.errors, "status")}
             id={FIELD_IDS.status}
             label="Status"
@@ -250,18 +244,18 @@ export function TaskConversionForm({
           />
         </div>
 
-        <div className="mt-5">
+        <div className="mt-4">
           <FormField
             control={
               <textarea
-                className="min-h-36 resize-y"
+                className="min-h-28 resize-y"
                 defaultValue={state.values.description}
                 disabled={pending}
                 maxLength={TASK_DESCRIPTION_MAX_LENGTH}
                 name="description"
               />
             }
-            description="Keep enough decision context for the assignee to act."
+            description="Start from the meeting agenda and add what the assignee needs to do."
             error={fieldError(state.errors, "description")}
             id={FIELD_IDS.description}
             label="Description"
@@ -279,7 +273,8 @@ export function TaskConversionForm({
         </p>
       ) : null}
 
-      <div className="flex justify-end">
+      <div className="flex flex-wrap justify-end gap-3">
+        <Link className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700" href={`/meetings/${sourceContext.meetingId}`}>Cancel</Link>
         <SubmitButton
           disabled={!hasAssignees || state.status === "success"}
           pending={pending}

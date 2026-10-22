@@ -6,7 +6,7 @@ describe("Sprint 5 task filter contract", () => {
     const parsed = parseTaskFilterCriteria({ assigneeId: "11111111-1111-4111-8111-111111111111", dueFrom: "2026-09-01", dueTo: "2026-09-08", eventId: "22222222-2222-4222-8222-222222222222", q: " venue ", sort: "updated_recent", status: "in_progress" });
     expect(parsed.ok).toBe(true);
     if (parsed.ok) {
-      expect(parsed.criteria).toMatchObject({ page: 1, pageSize: 20 });
+      expect(parsed.criteria).toMatchObject({ page: 1, pageSize: 10 });
       expect(buildTaskListHref(parsed.criteria, 3)).toBe("/tasks?q=venue&assigneeId=11111111-1111-4111-8111-111111111111&status=in_progress&dueFrom=2026-09-01&dueTo=2026-09-08&eventId=22222222-2222-4222-8222-222222222222&sort=updated_recent&page=3");
     }
   });

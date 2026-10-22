@@ -8,13 +8,12 @@ import {
 } from "./navigation";
 
 describe("role-aware navigation", () => {
-  it("shows submission entry points to both business roles without exposing records", () => {
+  it("hides registrations and dinner roster for both roles and administrator capabilities", () => {
     for (const role of ["committee", "authorised"] as const) for (const administrator of [false,true]) {
-      expect(getNavigationSections(role,administrator).some(section=>section.items.some(item=>item.href==="/dinner-roster")))
-        .toBe(true);
+      const hrefs = getNavigationSections(role, administrator).flatMap(section => section.items.map(item => item.href));
+      expect(hrefs).not.toContain("/registrations");
+      expect(hrefs).not.toContain("/dinner-roster");
     }
-    expect(getNavigationSections("authorised",true).find(section=>section.id==="registrations")?.items.map(item=>item.href))
-      .toEqual(["/registrations","/dinner-roster"]);
   });
   it("keeps section identities unique and stable across roles and capabilities", () => {
     for (const role of ["committee", "authorised"] as const) {
@@ -24,17 +23,14 @@ describe("role-aware navigation", () => {
         expect(ids.every((id) => typeof id === "string" && id.length > 0)).toBe(true);
         expect(new Set(ids).size).toBe(ids.length);
         expect(sections[0].id).toBe("primary");
-        if (role === "authorised") {
-          expect(sections.find((section) => section.items.some((item) => item.href === "/registrations"))?.id).toBe("registrations");
-        }
         if (canManageAccounts) {
-          expect(sections.find((section) => section.items.some((item) => item.href === "/admin/users"))?.id).toBe("administration");
+          expect(sections.find((section) => section.items.some((item) => item.href === "/admin/users"))?.id).toBe("primary");
         }
       }
     }
   });
 
-  it("returns shared and private-submission destinations for committee members", () => {
+  it("returns primary destinations for committee members", () => {
     expect(getNavigationSections("committee")).toEqual([
       {
         id: "primary",
@@ -45,11 +41,10 @@ describe("role-aware navigation", () => {
           { href: "/events", label: "Events" },
         ],
       },
-      { id: "registrations", items: [{ href: "/registrations", label: "Registrations" },{ href: "/dinner-roster", label: "Dinner eligibility roster" }] },
     ]);
   });
 
-  it("exposes registration entry points to authorised members", () => {
+  it("returns primary destinations for authorised members", () => {
     expect(getNavigationSections("authorised")).toEqual([
       {
         id: "primary",
@@ -60,19 +55,16 @@ describe("role-aware navigation", () => {
           { href: "/events", label: "Events" },
         ],
       },
-      { id: "registrations", items: [{ href: "/registrations", label: "Registrations" },{ href: "/dinner-roster", label: "Dinner eligibility roster" }] },
     ]);
   });
 
   it("adds account administration independently from the data role", () => {
     expect(getNavigationSections("committee", true)).toContainEqual({
-      id: "administration",
-      label: "Administration",
+      id: "primary",
       items: [{ href: "/admin/users", label: "Accounts" }],
     });
     expect(getNavigationSections("authorised", false)).not.toContainEqual({
-      id: "administration",
-      label: "Administration",
+      id: "primary",
       items: [{ href: "/admin/users", label: "Accounts" }],
     });
   });
@@ -109,7 +101,8 @@ describe("role-aware navigation", () => {
       /<a(?=[^>]*aria-current="page")(?=[^>]*href="\/tasks")[^>]*>Tasks<\/a>/,
     );
     expect(html).not.toContain("Sensitive operations");
-    expect(html).toContain('href="/registrations"');
+    expect(html).not.toContain('href="/registrations"');
+    expect(html).not.toContain('href="/dinner-roster"');
 
     const ids = [...html.matchAll(/ id="([^"]+)"/g)].map((match) => match[1]);
     expect(new Set(ids).size).toBe(ids.length);
@@ -122,7 +115,8 @@ describe("role-aware navigation", () => {
     );
 
     expect(html).not.toContain("Sensitive operations");
-    expect(html).toContain('href="/registrations"');
+    expect(html).not.toContain('href="/registrations"');
+    expect(html).not.toContain('href="/dinner-roster"');
     expect(html).toContain('href="/dashboard"');
     expect(html).not.toContain('href="/backoffice"');
     expect(html).toContain('href="/meetings"');

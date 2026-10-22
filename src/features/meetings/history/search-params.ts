@@ -4,7 +4,7 @@ import type {
   MeetingHistoryTimeFilter,
 } from "./contracts";
 
-export const MEETING_HISTORY_PAGE_SIZE = 8;
+export const MEETING_HISTORY_PAGE_SIZE = 10;
 export const MAX_MEETING_HISTORY_SEARCH_LENGTH = 100;
 
 export type MeetingHistorySearchParams = Readonly<

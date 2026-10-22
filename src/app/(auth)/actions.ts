@@ -14,6 +14,7 @@ import {
 } from "@/lib/auth/credentials";
 import { getSafeBackofficeRedirectPath } from "@/lib/auth/redirect";
 import { getAuthenticatedUser } from "@/lib/auth/session";
+import { requireActiveUser } from "@/lib/auth/authorization";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export async function loginAction(
@@ -31,7 +32,7 @@ export async function loginAction(
     return { error: AUTH_ERROR_CODES.INVALID_CREDENTIALS };
   }
 
-  const destination = getSafeBackofficeRedirectPath(formData.get("next"));
+  let destination = getSafeBackofficeRedirectPath(formData.get("next"));
   let errorCode: LoginErrorCode | null = null;
 
   try {
@@ -42,6 +43,12 @@ export async function loginAction(
       errorCode = mapPasswordSignInError(error);
     } else if (!data.session || !data.user) {
       errorCode = AUTH_ERROR_CODES.SERVICE_UNAVAILABLE;
+    } else {
+      // The action must send the browser to the real role-specific URL. A
+      // subsequent Proxy redirect can render Accounts at a stale /dashboard URL,
+      // causing its next Server Action (including sign-out) to be denied.
+      const access = await requireActiveUser();
+      if (access.canManageAccounts) destination = "/admin/users";
     }
   } catch {
     errorCode = AUTH_ERROR_CODES.SERVICE_UNAVAILABLE;

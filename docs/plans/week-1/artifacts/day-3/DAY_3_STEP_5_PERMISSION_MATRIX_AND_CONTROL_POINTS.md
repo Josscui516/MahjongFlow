@@ -1,4 +1,8 @@
+> 2026-10-22 最新决定：General 不得新增／移除长期晚餐资格，仅 Secretary 可操作，取代下文旧例外。见[权限决定](../../../../project/SECRETARY_ONLY_DINNER_ROSTER.md)。
+
 # 第 3 天步骤 5：可实施权限矩阵与控制点
+
+> 2026-10-21 最新权限：普通 committee 禁止报名管理与活动晚餐核验／发放。先应用 `20261021074810_restrict_general_event_operations.sql` 再发布应用；已有记录和原表 RLS 保留。见[当前决定及回退](../../../../project/GENERAL_EVENT_OPERATION_RESTRICTION.md)。
 
 > 2026-10-20 最新写入例外：committee 可以通过不返回记录的受控函数按已知邮箱新增／取消报名、维护晚餐资格；完整名单仍仅 authorised 可读，原表读取 RLS 不放宽。安全员维护不再额外要求开发者能力，见[当前决定](../../../../project/MEMBER_WRITE_PRIVATE_READ.md)。
 

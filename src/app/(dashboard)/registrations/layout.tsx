@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { LogoutForm } from "@/app/(auth)/backoffice/logout-form";
 import { PermissionDeniedFeedback, SystemErrorFeedback } from "@/components/feedback";
 import { BackofficeShell } from "@/components/layout";
-import { AuthorizationError, requireBackendUser } from "@/lib/auth/authorization";
+import { AuthorizationError, requireAuthorised } from "@/lib/auth/authorization";
 
 const STANDALONE_MAIN_CLASS =
   "mx-auto w-full max-w-7xl px-4 py-7 sm:px-6 sm:py-9 lg:px-10";
@@ -12,11 +12,11 @@ const STANDALONE_MAIN_CLASS =
 export default async function RegistrationsLayout({
   children,
 }: Readonly<{ children: ReactNode }>) {
-  let access: Awaited<ReturnType<typeof requireBackendUser>> | undefined;
+  let access: Awaited<ReturnType<typeof requireAuthorised>> | undefined;
   let accessError: unknown;
 
   try {
-    access = await requireBackendUser();
+    access = await requireAuthorised();
   } catch (error) {
     accessError = error;
   }
@@ -39,14 +39,7 @@ export default async function RegistrationsLayout({
 
   return (
     <BackofficeShell
-      accountSlot={
-        <span>
-          Signed in as{" "}
-          <strong className="font-semibold text-slate-900">
-            {access.displayName?.trim() || "Committee member"}
-          </strong>
-        </span>
-      }
+      displayName={access.displayName}
       canManageAccounts={access.canManageAccounts}
       currentPath="/registrations"
       role={access.role}

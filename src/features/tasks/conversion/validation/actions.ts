@@ -1,5 +1,6 @@
 "use server";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 import { AuthorizationError } from "@/lib/auth/authorization";
 
@@ -41,6 +42,7 @@ export async function submitTaskConversionAction(
     return safeFailureState(previousState, "system-error");
   }
 
+  let result: TaskConversionFormState;
   try {
     const sourceContext = await resolveTaskSource(
       sourceKind,
@@ -53,7 +55,7 @@ export async function submitTaskConversionAction(
 
     const assigneeOptions = await listAssigneeOptions();
 
-    const result = await submitTaskConversionForm(
+    result = await submitTaskConversionForm(
       {
         port: createTaskConversionPort(),
         sourceContext,
@@ -68,11 +70,15 @@ export async function submitTaskConversionAction(
       revalidatePath("/dashboard");
       revalidatePath(`/meetings/${sourceContext.meetingId}`);
     }
-    return result;
   } catch (error) {
     return safeFailureState(
       previousState,
       error instanceof AuthorizationError ? "permission" : "system-error",
     );
   }
+  if (result.status === "success" && result.taskId) {
+    redirect(`/tasks/${encodeURIComponent(result.taskId)}?created=1`);
+  }
+  return result;
+
 }

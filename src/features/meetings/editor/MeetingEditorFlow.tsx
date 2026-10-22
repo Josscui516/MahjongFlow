@@ -8,11 +8,11 @@ import { MeetingAgendaSection } from "@/features/meetings/agenda/MeetingAgendaSe
 import type { MeetingAgendaDTO } from "@/features/meetings/agenda/contracts";
 
 import { createMeetingAction, getMeetingAction, saveMeetingAgendaAction, updateMeetingAction } from "./actions";
-import type { MeetingAttendeeOption, MeetingEditorPort, MeetingRecordDTO } from "./contracts";
+import type { MeetingAttendeeOption, MeetingEditorValues, MeetingEditorPort, MeetingRecordDTO } from "./contracts";
 import { MeetingEditor } from "./MeetingEditor";
 
 type Props = Readonly<
-  | { attendeeOptions: readonly MeetingAttendeeOption[]; mode: "create" }
+  | { attendeeOptions: readonly MeetingAttendeeOption[]; createDefaults?: MeetingEditorValues; mode: "create" }
   | {
       agenda: MeetingAgendaDTO;
       relatedTasks?: RelatedTasksResult;
@@ -34,6 +34,7 @@ export function MeetingEditorFlow(props: Props) {
   if (props.mode === "create") {
     return (
       <MeetingEditor
+        createDefaults={props.createDefaults}
         attendeeOptions={props.attendeeOptions}
         mode="create"
         onSaved={(record) => router.push(`/meetings/${encodeURIComponent(record.id)}?created=1#meeting-agenda-heading`)}
@@ -51,7 +52,11 @@ export function MeetingEditorFlow(props: Props) {
             startInReadMode
             relatedTasks={props.relatedTasks}
             focusOnMount={props.justCreated}
-            onSave={(draft) => saveMeetingAgendaAction(props.initialRecord.id, draft)}
+            onSave={async (draft) => {
+              const result = await saveMeetingAgendaAction(props.initialRecord.id, draft);
+              if (result.ok) router.refresh();
+              return result;
+            }}
           />
         </div>
       }

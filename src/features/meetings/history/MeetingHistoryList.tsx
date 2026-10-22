@@ -1,4 +1,6 @@
+import { MeetingHistorySort } from "./MeetingHistorySort";
 import Link from "next/link";
+import { MeetingHistoryFilters } from "./MeetingHistoryFilters";
 
 import { EmptyFeedback } from "@/components/feedback";
 import { MeetingDeleteButton } from "@/features/meetings/MeetingDeleteButton";
@@ -12,6 +14,7 @@ import {
   hasMeetingHistoryFilters,
 } from "./search-params";
 import { sortMeetingHistoryItems } from "./projection";
+import { MeetingCreateLabel } from "./MeetingCreateLabel";
 
 export type MeetingHistoryListProps = Readonly<{
   criteria: MeetingHistoryCriteria;
@@ -24,8 +27,6 @@ const SYDNEY_MEETING_FORMATTER = new Intl.DateTimeFormat("en-AU", {
   timeZone: "Australia/Sydney",
 });
 
-const CONTROL_CLASS =
-  "min-h-11 w-full rounded-xl border border-slate-300 bg-white px-3 py-2.5 text-sm text-slate-900 shadow-sm outline-none transition focus:border-emerald-700 focus:ring-2 focus:ring-emerald-200";
 
 export function formatMeetingStart(startsAt: string) {
   return SYDNEY_MEETING_FORMATTER.format(new Date(startsAt));
@@ -35,67 +36,6 @@ export function getMeetingDetailsHref(meetingId: string) {
   return `/meetings/${encodeURIComponent(meetingId)}`;
 }
 
-function MeetingHistoryFilters({
-  criteria,
-}: Readonly<{ criteria: MeetingHistoryCriteria }>) {
-  const hasFilters = hasMeetingHistoryFilters(criteria);
-
-  return (
-    <form
-      action="/meetings"
-      className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
-      method="get"
-    >
-      <div className="grid gap-4 lg:grid-cols-[minmax(16rem,1fr)_12rem_12rem_auto] lg:items-end">
-        <label className="grid gap-1.5 text-sm font-semibold text-slate-800">
-          Search by title
-          <input
-            className={CONTROL_CLASS}
-            defaultValue={criteria.search}
-            maxLength={100}
-            name="q"
-            placeholder="e.g. Event planning"
-            type="search"
-          />
-        </label>
-
-        <label className="grid gap-1.5 text-sm font-semibold text-slate-800">
-          Time
-          <select className={CONTROL_CLASS} defaultValue={criteria.time} name="time">
-            <option value="all">All meetings</option>
-            <option value="upcoming">Upcoming</option>
-            <option value="past">Past</option>
-          </select>
-        </label>
-
-        <label className="grid gap-1.5 text-sm font-semibold text-slate-800">
-          Sort
-          <select className={CONTROL_CLASS} defaultValue={criteria.sort} name="sort">
-            <option value="newest">Newest first</option>
-            <option value="oldest">Oldest first</option>
-          </select>
-        </label>
-
-        <div className="flex min-h-11 items-center gap-2">
-          <button
-            className="inline-flex min-h-11 flex-1 items-center justify-center rounded-xl bg-emerald-950 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 lg:flex-none"
-            type="submit"
-          >
-            Apply
-          </button>
-          {hasFilters ? (
-            <Link
-              className="inline-flex min-h-11 items-center justify-center rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 hover:text-slate-950 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
-              href="/meetings"
-            >
-              Clear
-            </Link>
-          ) : null}
-        </div>
-      </div>
-    </form>
-  );
-}
 
 function MeetingHistoryPagination({
   criteria,
@@ -152,7 +92,19 @@ export function MeetingHistoryList({
 
   return (
     <div className="space-y-5" data-history-state="success">
-      <MeetingHistoryFilters criteria={criteria} />
+      {result.totalCount > 0 || hasFilters ? (
+        <MeetingHistoryFilters criteria={criteria} />
+      ) : null}
+
+      {result.totalCount > 0 || hasFilters ? (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm font-semibold text-slate-800" role="status">
+              Showing {orderedItems.length ? rangeStart : 0}–{orderedItems.length ? rangeEnd : 0} of {result.totalCount}{" "}
+              {result.totalCount === 1 ? "meeting" : "meetings"}
+            </p>
+            <MeetingHistorySort criteria={criteria} />
+          </div>
+      ) : null}
 
       {orderedItems.length === 0 ? (
         <EmptyFeedback
@@ -164,26 +116,25 @@ export function MeetingHistoryList({
               >
                 Clear search and filters
               </Link>
-            ) : undefined
+            ) : (
+              <Link
+                className="inline-flex min-h-11 items-center justify-center rounded-xl bg-emerald-950 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700"
+                href="/meetings/new"
+              >
+                <MeetingCreateLabel>Create your first meeting</MeetingCreateLabel>
+              </Link>
+            )
           }
           description={
             hasFilters
-              ? "Try a different title, time range, or sort order."
-              : "Create a meeting when the committee is ready to record its first discussion."
+              ? "Try a different meeting title or date range, or clear your filters to see all meetings."
+              : "Record your committee’s discussions and decisions, then turn follow-up actions into tasks."
           }
           title={hasFilters ? "No matching meetings" : "No meetings recorded"}
         />
       ) : (
         <>
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <p className="text-sm font-semibold text-slate-800" role="status">
-              Showing {rangeStart}–{rangeEnd} of {result.totalCount}{" "}
-              {result.totalCount === 1 ? "meeting" : "meetings"}
-            </p>
-            <p className="text-sm text-slate-500">
-              Sorted by date · {criteria.sort === "newest" ? "newest" : "oldest"} first
-            </p>
-          </div>
+
 
           <ol className="divide-y divide-slate-200 rounded-2xl border border-slate-200 bg-white shadow-sm">
             {orderedItems.map((item) => {

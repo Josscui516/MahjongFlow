@@ -34,7 +34,7 @@ describe("independent participation totals", () => {
   it("maps transport failure safely", async () => { const { service, fetcher } = setup(); fetcher.mockRejectedValue(new Error("private detail")); expect(await service.get(eventId)).toMatchObject({ ok: false, code: "SYSTEM_ERROR" }); });
   it("renders separate numbers without deriving attendance or dinner eligibility", () => {
     const html = renderToStaticMarkup(<ParticipationSummary result={{ ok: true, registrationCount: 0, confirmedAttendanceCount: 3 }} />);
-    expect(html).toContain('data-testid="registered-count">0'); expect(html).toContain('data-testid="attendance-count">3'); expect(html).toContain("Registration does not confirm attendance or dinner eligibility"); expect(html).toContain("self-service registration is not enabled");
+    expect(html).toContain('data-testid="registered-count">0'); expect(html).toContain('data-testid="attendance-count">3'); expect(html).toContain("Registration does not confirm attendance or dinner eligibility"); expect(html).toContain("Authorised staff confirm attendance separately");
   });
   it("shows loading and failure without fabricated zero counts", () => { expect(renderToStaticMarkup(<ParticipationSummary />)).toContain("Loading participation totals"); const html = renderToStaticMarkup(<ParticipationSummary result={{ ok: false, code: "SYSTEM_ERROR" }} />); expect(html).toContain('role="alert"'); expect(html).not.toContain('data-testid="attendance-count"'); });
 });

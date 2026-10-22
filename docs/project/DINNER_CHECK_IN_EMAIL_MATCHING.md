@@ -1,3 +1,11 @@
+> 2026-10-22 汇总权限与同步：General 和 authorised 均可通过 `get_event_dinner_eligibility_total(uuid)` 读取指定活动的安全计数（已勾选且当前确认到场），不返回人员身份。General 的晚餐名单与写操作权限不变。勾选／取消保存成功后，Server Action 对 `/events/{eventId}` 执行 `revalidatePath`，返回详情页时重新读取数字；不恢复晚餐页自动刷新。
+>
+> 部署：新增 `20261021134221_dinner_eligibility_safe_total.sql` 后重新生成类型，再发布应用。无表、约束、索引或 RLS policy 变更，仅新增显式活跃后台权限检查的聚合 RPC；PUBLIC／anon 不可执行。已有数据和 seed 不变。回退时先撤下汇总调用，再通过前向 migration 撤销并删除该函数，不删除勾选数据。本次只应用本地数据库。
+
+> 2026-10-22 最新决定：活动晚餐页改为 Confirmed Attendance 勾选清单；不再要求共享资格名单匹配。顶部 Eligibility 数字为当前确认到场名单内已勾选人数。勾选／取消仅在服务器保存成功后更新本地行和总数，不自动刷新，也无手动刷新或名单管理入口。authorised 权限、有效报名与确认到场校验、并发状态检查及审计字段保留。共享名册数据和独立管理页保留，但不再参与活动勾选资格。下方旧规则为历史记录。
+>
+> 部署：先应用 `20261021133257_confirmed_attendance_dinner_checklist.sql`，重新生成类型，再发布前端。此 migration 仅替换两个函数，不新增表、约束、索引或 policy，也不改写已有标记与种子。现有联合主键、外键、RLS 和执行授权继续生效。回退时先撤下新勾选界面，再用新的前向 migration 恢复 `20261021074810` 中两个晚餐函数定义；已保存的勾选记录仍保留。不要 reset 数据库。
+
 # 通用晚餐资格名册与活动发放记录
 
 > 2026-10-20 权限更新：普通成员可操作活动核验／发放，完整名册仅安全员可见；非管理员安全员只读。下方旧的 authorised-only 核验限制已由[最新权限决定](DINNER_PERMISSION_BOUNDARIES.md)替代。

@@ -19,11 +19,7 @@ export function MeetingRouteShell({
 }>) {
   return (
     <BackofficeShell
-      accountSlot={
-        <span className="font-medium text-slate-700">
-          {displayName?.trim() || "Committee member"}
-        </span>
-      }
+      displayName={displayName}
       canManageAccounts={canManageAccounts}
       currentPath={currentPath}
       role={role}

@@ -79,6 +79,11 @@ describe("meeting editor presentation", () => {
     expect(html).toContain('maxLength="200"');
     expect(html).toContain('maxLength="10000"');
     expect(html).toContain("AEST or AEDT is applied automatically");
+    expect(html).toContain("Select at least one committee member.");
+    expect(html.match(/id="meeting-attendeeIds-description"/g)).toHaveLength(1);
+    expect(html).toContain("purpose and main topics");
+    expect(html).toContain("in the next step");
+    expect(html).not.toContain("committee-facing");
   });
 
   it("blocks creation and explains recovery when no committee profiles exist", () => {

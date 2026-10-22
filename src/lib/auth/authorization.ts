@@ -1,4 +1,5 @@
 import "server-only";
+import { cache } from "react";
 
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
@@ -95,7 +96,7 @@ async function createDefaultDependencies(): Promise<AuthorizationDependencies> {
   };
 }
 
-async function resolveAccessContext(): Promise<AccessContext> {
+const resolveAccessContext = cache(async (): Promise<AccessContext> => {
   const dependencies = await createDefaultDependencies();
   const user = await dependencies.getAuthenticatedUser();
 
@@ -115,9 +116,15 @@ async function resolveAccessContext(): Promise<AccessContext> {
     userId: user.id,
     role: profileAccess.role,
   };
-}
+});
 
 export async function requireBackendUser(): Promise<AccessContext> {
+  const context = await resolveAccessContext();
+  if (context.canManageAccounts) throw new AuthorizationError("FORBIDDEN");
+  return context;
+}
+
+export async function requireActiveUser(): Promise<AccessContext> {
   return resolveAccessContext();
 }
 
@@ -126,7 +133,7 @@ export async function requireAuthorised(): Promise<
 > {
   const context = await resolveAccessContext();
 
-  if (context.role !== "authorised") {
+  if (context.role !== "authorised" || context.canManageAccounts) {
     throw new AuthorizationError("FORBIDDEN");
   }
 

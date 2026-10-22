@@ -45,7 +45,7 @@ function ErrorSummary({ errors }: Readonly<{ errors: readonly MeetingEditorError
   return (
     <section aria-labelledby="meeting-error-title" className="rounded-2xl border border-rose-300 bg-rose-50 p-4 text-rose-950" role="alert" tabIndex={-1}>
       <h2 className="font-semibold" id="meeting-error-title">Fix the following before saving</h2>
-      <p className="mt-1 text-sm">The meeting could not be saved.</p>
+      <p className="mt-1 text-sm">Complete the required fields to continue.</p>
       <ul className="mt-3 list-disc space-y-1 pl-5 text-sm">
         {errors.map((error) => <li key={error.field}><a className="font-medium underline underline-offset-2" href={`#meeting-${error.field}`}>{error.label}: {error.message}</a></li>)}
       </ul>
@@ -57,16 +57,17 @@ function fieldError(errors: readonly MeetingEditorError[], field: MeetingEditorE
   return errors.find((error) => error.field === field)?.message;
 }
 
-function CharacterCounter({ current, id, maximum }: Readonly<{
+function CharacterCounter({ current, id, maximum, showWhenNearLimit = false }: Readonly<{
   current: number;
   id: string;
   maximum: number;
+  showWhenNearLimit?: boolean;
 }>) {
   const nearingLimit = current >= maximum * 0.9;
 
   return (
     <p
-      className={`mt-2 text-right text-xs tabular-nums ${nearingLimit ? "font-semibold text-amber-800" : "text-slate-500"}`}
+      className={showWhenNearLimit && !nearingLimit ? "sr-only" : `mt-2 text-right text-xs tabular-nums ${nearingLimit ? "font-semibold text-amber-800" : "text-slate-500"}`}
       id={id}
     >
       {current.toLocaleString("en-AU")} / {maximum.toLocaleString("en-AU")} characters
@@ -99,6 +100,7 @@ function MeetingCreationProgress() {
 
 type MeetingEditorCommonProps = Readonly<{
   agendaSlot?: ReactNode;
+  createDefaults?: MeetingEditorValues;
   attendeeOptions: readonly MeetingAttendeeOption[];
   onSaved?: (record: MeetingRecordDTO) => void;
   port: MeetingEditorPort;
@@ -109,8 +111,8 @@ type MeetingEditorProps = MeetingEditorCommonProps & Readonly<
   | { initialRecord: MeetingRecordDTO; justCreated?: boolean; mode: "update" }
 >;
 
-export function MeetingEditor({ agendaSlot, attendeeOptions, initialRecord, justCreated = false, mode, onSaved, port }: MeetingEditorProps) {
-  const initialValues = useMemo(() => initialRecord ? valuesFromRecord(initialRecord) : EMPTY_VALUES, [initialRecord]);
+export function MeetingEditor({ createDefaults, agendaSlot, attendeeOptions, initialRecord, justCreated = false, mode, onSaved, port }: MeetingEditorProps) {
+  const initialValues = useMemo(() => initialRecord ? valuesFromRecord(initialRecord) : createDefaults ?? EMPTY_VALUES, [initialRecord, createDefaults]);
   const [editing, setEditing] = useState(mode === "create");
   const [errors, setErrors] = useState<readonly MeetingEditorError[]>([]);
   const [pending, setPending] = useState(false);
@@ -186,7 +188,9 @@ export function MeetingEditor({ agendaSlot, attendeeOptions, initialRecord, just
 
     return (
       <div className="max-w-4xl space-y-5">
-          {justCreated ? <MeetingStatePanel description="The meeting record is ready. Add discussion points and key decisions next." state="success" title="Meeting created" /> : null}
+          {justCreated ? <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl bg-emerald-50 px-4 py-3 text-sm text-emerald-950">
+            <p role="status"><strong>Meeting created.</strong> Add agenda items next.</p>
+          </div> : null}
           {status === "success" ? <MeetingStatePanel description="Your meeting changes are saved." state="success" title="Meeting saved" /> : null}
           <section aria-labelledby="recorded-meeting-heading" className="rounded-2xl border border-slate-200 bg-white p-5 sm:p-6">
             <div className="flex flex-wrap items-start justify-between gap-4">
@@ -226,11 +230,11 @@ export function MeetingEditor({ agendaSlot, attendeeOptions, initialRecord, just
               Meeting details
             </h2>
             <p className="mt-1 text-sm leading-5 text-slate-600">
-              Add the information committee members need to recognise this meeting.
+              Only include information that committee members may view. All fields are required.
             </p>
           </div>
 
-          <div className="mt-6 grid gap-5 lg:grid-cols-2">
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <div>
               <FormField
                 control={
@@ -244,7 +248,7 @@ export function MeetingEditor({ agendaSlot, attendeeOptions, initialRecord, just
                     value={values.title}
                   />
                 }
-                description="Use a concise committee-facing title."
+                description="e.g. Weekly committee planning"
                 error={fieldError(errors, "title")}
                 id="meeting-title"
                 label="Meeting title"
@@ -273,32 +277,25 @@ export function MeetingEditor({ agendaSlot, attendeeOptions, initialRecord, just
           <fieldset
             aria-describedby={attendeeDescribedBy}
             aria-invalid={attendeeError ? true : undefined}
-            className="mt-7 border-t border-slate-200 pt-6"
+            className="mt-4 border-t border-slate-200 pt-3"
             disabled={pending}
           >
             <legend className="text-sm font-semibold text-slate-900">Participants <span className="text-rose-700">*</span></legend>
-            <p className="mt-1 text-sm text-slate-600">Select current committee members.</p>
+            <p className="mt-1 text-sm text-slate-600" id="meeting-attendeeIds-description">Select at least one committee member.</p>
             <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
               {attendeeOptions.map((option, index) => <label className="flex min-h-11 items-center gap-3 rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-emerald-950 transition hover:border-slate-400 has-[:checked]:border-emerald-700 has-[:checked]:bg-emerald-50 has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-emerald-700" key={option.id}><input aria-describedby={attendeeDescribedBy} aria-invalid={attendeeError ? true : undefined} checked={selectedAttendees.has(option.id)} className="size-4 accent-emerald-800" id={index === 0 ? "meeting-attendeeIds" : undefined} name="attendeeIds" onChange={(event) => { const next = new Set(values.attendeeIds); if (event.target.checked) next.add(option.id); else next.delete(option.id); setValue("attendeeIds", [...next]); }} type="checkbox" value={option.id} />{option.label}</label>)}
             </div>
             {!hasAttendeeOptions ? <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-5 text-amber-900" role="status">No committee profiles are available. Ask an administrator to add a profile before creating this meeting.</p> : null}
-            <p className="sr-only" id="meeting-attendeeIds-description">Select at least one committee participant.</p>
             {attendeeError ? <p className="mt-2 text-sm text-rose-800" id="meeting-attendeeIds-error"><span className="font-semibold">Error:</span> {attendeeError}</p> : null}
           </fieldset>
 
-          <div aria-labelledby="meeting-summary-heading" className="mt-7 border-t border-slate-200 pt-6">
-            <h2 className="text-lg font-bold tracking-tight text-slate-950" id="meeting-summary-heading">
-              Meeting summary
-            </h2>
-            <p className="mt-1 text-sm leading-5 text-slate-600">
-              Capture a committee-safe overview. Ordered agenda items are added after creation.
-            </p>
-            <div className="mt-5">
+          <div className="mt-4 border-t border-slate-200 pt-4">
+            <div>
               <FormField
                 control={
                   <textarea
                     aria-describedby="meeting-summary-counter"
-                    className="min-h-36 resize-y"
+                    className="min-h-28 resize-y"
                     disabled={pending}
                     maxLength={MEETING_SUMMARY_MAX_LENGTH}
                     name="summary"
@@ -306,13 +303,15 @@ export function MeetingEditor({ agendaSlot, attendeeOptions, initialRecord, just
                     value={values.summary}
                   />
                 }
-                description="This summary is shown on the meeting detail page."
+                description={mode === "create"
+                  ? "Briefly describe the meeting’s purpose and main topics. Add detailed discussion points and decisions in the next step."
+                  : "Briefly describe the meeting’s purpose and main topics. Record detailed discussion points and decisions in the agenda."}
                 error={fieldError(errors, "summary")}
                 id="meeting-summary"
-                label="Summary"
+                label="Meeting summary"
                 required
               />
-              <CharacterCounter current={values.summary.length} id="meeting-summary-counter" maximum={MEETING_SUMMARY_MAX_LENGTH} />
+              <CharacterCounter current={values.summary.length} id="meeting-summary-counter" maximum={MEETING_SUMMARY_MAX_LENGTH} showWhenNearLimit />
             </div>
           </div>
         </section>

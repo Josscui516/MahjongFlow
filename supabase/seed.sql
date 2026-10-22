@@ -65,7 +65,7 @@ insert into public.events (
   check_in_opens_at, check_in_closes_at, requires_student_id, created_by
 ) values
   ('40000000-0000-4000-8000-000000000001', 'weekly_session', 'Fictional Open Session', now() + interval '1 hour', 'Test Room A', 'Standard fictional event.', 'scheduled', now() - interval '1 hour', now() + interval '2 hours', false, '22222222-2222-4222-8222-222222222222'),
-  ('40000000-0000-4000-8000-000000000002', 'tournament', 'Fictional ID Tournament', now() + interval '2 hours', 'Test Room B', 'Fictional event requiring a student ID.', 'scheduled', now() - interval '1 hour', now() + interval '3 hours', true, '22222222-2222-4222-8222-222222222222'),
+  ('40000000-0000-4000-8000-000000000002', 'tournament', 'Fictional Open Tournament', now() + interval '2 hours', 'Test Room B', 'Fictional event without a student ID requirement.', 'scheduled', now() - interval '1 hour', now() + interval '3 hours', false, '22222222-2222-4222-8222-222222222222'),
   ('40000000-0000-4000-8000-000000000003', 'weekly_session', 'Fictional Expired Session', now() - interval '1 day', 'Test Room C', 'Fictional event with an expired window.', 'scheduled', now() - interval '2 days', now() - interval '1 day', false, '22222222-2222-4222-8222-222222222222'),
   ('40000000-0000-4000-8000-000000000004', 'tournament', 'Fictional Cancelled Tournament', now() + interval '1 day', 'Test Room D', 'Fictional cancelled event.', 'cancelled', now(), now() + interval '1 day', false, '22222222-2222-4222-8222-222222222222');
 

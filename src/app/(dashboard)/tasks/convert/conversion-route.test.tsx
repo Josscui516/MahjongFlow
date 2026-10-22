@@ -72,6 +72,19 @@ describe("task conversion route", () => {
     expect(html).not.toContain("Task fields are supplied");
   });
 
+  it("defaults to the signed-in member rather than the first assignee", async () => {
+    const currentId = "22222222-2222-4222-8222-222222222222";
+    authMocks.requireBackendUser.mockResolvedValue({ role: "committee", userId: currentId });
+    assigneeMocks.listAssigneeOptions.mockResolvedValue([
+      { id: "11111111-1111-4111-8111-111111111111", label: "Other Example" },
+      { id: currentId, label: "Current Example" },
+    ]);
+    const html = renderToStaticMarkup(await TaskConversionPage({ params: Promise.resolve({ sourceId: source.sourceId, sourceKind: source.sourceKind }) }));
+    expect(html).toContain('value="Approve the"');
+    expect(html).toContain(`value="${currentId}" selected=""`);
+    expect(html).toContain("Approve the fictional venue booking.");
+  });
+
   it("uses the route not-found boundary for an invalid source identifier", async () => {
     await expect(TaskConversionPage({
       params: Promise.resolve({ sourceId: "not-a-uuid", sourceKind: "decision" }),

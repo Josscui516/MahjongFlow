@@ -1,15 +1,16 @@
 import type { ParticipationSummaryResult } from "./contracts";
 import { registrationErrors } from "../records/messages";
 
-export function ParticipationSummary({ result }: Readonly<{ result?: ParticipationSummaryResult }>) {
-  return <section aria-label="Registration and attendance totals" className="space-y-3 rounded-xl border border-slate-200 bg-white p-5">
-    <h2 className="text-xl font-semibold">Registration and attendance</h2>
-    {!result ? <p role="status">Loading participation totals…</p> : !result.ok ? <p role="alert">Participation totals unavailable. {registrationErrors[result.code]}</p> : <dl className="grid grid-cols-2 gap-4">
-      <div><dt className="text-sm text-slate-600">Currently registered</dt><dd className="text-3xl font-bold" data-testid="registered-count">{result.registrationCount}</dd></div>
-      <div><dt className="text-sm text-slate-600">Confirmed attendance</dt><dd className="text-3xl font-bold" data-testid="attendance-count">{result.confirmedAttendanceCount}</dd></div>
+export function ParticipationSummary({ result, compact = false, showExplanation = true, registrationOnly = false, title = "Registration and attendance", dinnerEligibilityCount }: Readonly<{ result?: ParticipationSummaryResult; compact?: boolean; showExplanation?: boolean; registrationOnly?: boolean; title?: string; dinnerEligibilityCount?: number | null }>) {
+  return <section aria-label={registrationOnly ? "Registration total" : title === "Participation overview" ? "Participation overview" : "Registration and attendance totals"} className={registrationOnly ? "w-fit rounded-xl border border-emerald-100 bg-emerald-50/60 px-5 py-4" : `${compact ? "space-y-2 p-4" : "space-y-3 p-5"} rounded-xl border border-slate-200 bg-white`}>
+    {!registrationOnly && <h2 className={`${compact ? "text-base" : "text-xl"} font-semibold`}>{title}</h2>}
+    {!result ? <p role="status">Loading participation totals…</p> : !result.ok ? <p role="alert">Participation totals unavailable. {registrationErrors[result.code]}</p> : <dl className={`grid gap-4 ${registrationOnly ? "" : dinnerEligibilityCount !== undefined ? "sm:grid-cols-3" : compact ? "sm:grid-cols-2" : "grid-cols-2"}`}>
+      <div className={registrationOnly ? "flex flex-row-reverse items-center justify-end gap-3" : compact ? "flex items-center gap-3" : undefined}><dt className="text-sm text-slate-600">Currently registered</dt><dd className={`${registrationOnly ? "text-4xl tabular-nums tracking-tight text-emerald-950" : compact ? "text-2xl" : "text-3xl"} font-bold`} data-testid="registered-count">{result.registrationCount}</dd></div>
+      {!registrationOnly && <div className={compact ? "flex items-center gap-3 sm:border-l sm:border-slate-200 sm:pl-4" : undefined}><dt className="text-sm text-slate-600">Confirmed attendance</dt><dd className={`${compact ? "text-2xl" : "text-3xl"} font-bold`} data-testid="attendance-count">{result.confirmedAttendanceCount}</dd></div>}
+      {!registrationOnly && dinnerEligibilityCount !== undefined && <div className={compact ? "flex items-center gap-3 sm:border-l sm:border-slate-200 sm:pl-4" : undefined}><dt className="text-sm text-slate-600">Dinner Eligibility</dt><dd className={`${compact ? "text-2xl" : "text-3xl"} font-bold`} data-testid="dinner-eligibility-count">{dinnerEligibilityCount === null ? <span className="text-sm font-normal text-slate-600">Unavailable</span> : dinnerEligibilityCount}</dd></div>}
     </dl>}
-    <details className="text-sm text-slate-600"><summary className="min-h-11 cursor-pointer py-3 font-semibold text-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-2">How these totals work</summary><p>Registration does not confirm attendance or dinner eligibility. Cancelled registrations are excluded from the registration total. Confirmed attendance is counted independently from attendance records.</p>
-    <p className="text-sm text-slate-600">Back-office entry can leave privacy acknowledgement unrecorded. Participant self-service registration is not enabled.</p>
-    </details>
+    {showExplanation ? <details className="text-sm text-slate-600"><summary className={`min-h-11 cursor-pointer ${compact ? "py-2" : "py-3"} font-semibold text-emerald-900 focus-visible:outline-2 focus-visible:outline-offset-2`}>How these totals work</summary><p>Registration does not confirm attendance or dinner eligibility. Cancelled registrations are excluded from the registration total. Confirmed attendance is counted independently from attendance records.</p>
+    <p className="text-sm text-slate-600">Participants can register through the event QR code. Authorised staff confirm attendance separately.</p>
+    </details> : null}
   </section>;
 }

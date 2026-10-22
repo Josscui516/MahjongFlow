@@ -11,7 +11,7 @@ import {
 import { BackofficeShell, PageFrame } from "@/components/layout";
 import {
   AuthorizationError,
-  requireBackendUser,
+  requireAuthorised,
 } from "@/lib/auth/authorization";
 
 const eventDateFormatter = new Intl.DateTimeFormat("en-AU", { dateStyle: "medium", timeStyle: "short", timeZone: "Australia/Sydney" });
@@ -43,10 +43,12 @@ function RegistrationAccessFailure({
 
 export default async function RegistrationsPage() {
   let canManageAccounts = false;
+  let displayName: string | undefined;
   let role: "committee"|"authorised"="committee";
 
   try {
-    const context = await requireBackendUser();
+    const context = await requireAuthorised();
+    displayName = context.displayName;
     canManageAccounts = context.canManageAccounts;role=context.role;
   } catch (error) {
     if (error instanceof AuthorizationError) {
@@ -63,7 +65,7 @@ export default async function RegistrationsPage() {
   const events = await listEvents();
   return (
     <BackofficeShell
-      accountSlot={<span>Signed in</span>}
+      displayName={displayName}
       canManageAccounts={canManageAccounts}
       currentPath="/registrations"
       role={role}

@@ -72,6 +72,7 @@ function createServiceUnavailableResponse(
 
 export async function proxy(request: NextRequest) {
   let authResponse = NextResponse.next({ request });
+  let accountAdministrator = false;
 
   const authentication = await resolveAuthenticatedUser(async () => {
     const { publishableKey, url } = getSupabasePublicEnvironment();
@@ -98,7 +99,15 @@ export async function proxy(request: NextRequest) {
       },
     });
 
-    return supabase.auth.getUser();
+    const result = await supabase.auth.getUser();
+    if (result.data.user) {
+      const { data, error } = await supabase.from("profiles")
+        .select("can_manage_accounts, is_active")
+        .eq("id", result.data.user.id).maybeSingle();
+      if (error) throw error;
+      accountAdministrator = data?.is_active === true && data.can_manage_accounts;
+    }
+    return result;
   });
 
   authResponse.headers.set(
@@ -112,6 +121,13 @@ export async function proxy(request: NextRequest) {
       : createServiceUnavailableResponse(request, authResponse);
   }
 
+  const path = request.nextUrl.pathname;
+  if (accountAdministrator && path !== "/admin/users" && !path.startsWith("/admin/users/")) {
+    return applyAuthState(authResponse,
+      request.method === "GET" || request.method === "HEAD"
+        ? NextResponse.redirect(new URL("/admin/users", request.url))
+        : NextResponse.json({ error: "FORBIDDEN" }, { status: 403 }));
+  }
   return authResponse;
 }
 
@@ -126,7 +142,6 @@ export const config = {
     "/attendance/:path*",
     "/admin/:path*",
     "/dinner-verification/:path*",
-    "/dinner-roster/:path*",
     "/api/backoffice/:path*",
   ],
 };

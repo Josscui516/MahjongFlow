@@ -8,6 +8,6 @@ export function readEventForm(form: FormData): EventInput {
     startsAt: String(form.get("startsAt") ?? ""),
     eventType: String(form.get("eventType") ?? "") as EventType,
     status: String(form.get("status") ?? "") as EventStatus,
-    requiresStudentId: form.has("requiresStudentId"),
+    requiresStudentId: false,
   };
 }

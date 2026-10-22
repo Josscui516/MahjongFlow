@@ -11,8 +11,9 @@ export default async function TasksPage({ searchParams }: Readonly<{ searchParam
   const query = await searchParams;
   const parsed = parseTaskFilterCriteria(query);
   const result = parsed.ok ? await listTasks(parsed.criteria) : null;
-  const assignees = result?.ok ? await listAssigneeOptions() : [];
-  const events = result?.ok ? await listTaskEventOptions() : null;
+  const [assignees, events] = result?.ok
+    ? await Promise.all([listAssigneeOptions(), listTaskEventOptions()])
+    : [[], null];
   return (
     <div className="space-y-6">
       <header className="flex items-start justify-between gap-3 border-b border-slate-200 pb-4 sm:items-end">

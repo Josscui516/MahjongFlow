@@ -7,9 +7,10 @@ const event = { id: "33000000-0000-4000-8000-000000000001", name: "Fictional man
 describe("ManualAttendanceForm initial markup", () => {
   it("offers an explicit no-records state without an available correction action", () => {
     const html = renderToStaticMarkup(<ManualAttendanceForm event={event} records={[]} action={async () => ({ status: "idle" })} />);
-    expect(html).toContain("No attendance records yet");
+    expect(html).toContain('type="hidden" name="operation" value="create"');
     expect(html).toContain("existing participant");
-    expect(html).toContain('value="correct" disabled=""');
+    expect(html).not.toContain("Correct an existing record");
+    expect(html).not.toContain(event.name);
     expect(html).toContain('name="confirmation"');
     expect(html).not.toContain('name="eventId"');
     expect(html).not.toContain('name="recordedBy"');

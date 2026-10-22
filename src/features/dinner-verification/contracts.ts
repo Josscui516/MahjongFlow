@@ -18,6 +18,7 @@ export type DinnerVerificationResult = DinnerFailure | Readonly<{
   ok: true;
   event: Readonly<{ id: string; name: string }>;
   items: readonly DinnerVerificationItem[];
+  previousIssuedItems?: readonly DinnerVerificationItem[];
   eligibleCount: number;
   readAt: string;
 }>;

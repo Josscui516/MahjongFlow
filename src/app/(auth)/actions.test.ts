@@ -5,6 +5,7 @@ import { AUTH_ERROR_CODES } from "@/lib/auth/contracts";
 const mocks = vi.hoisted(() => ({
   createServerSupabaseClient: vi.fn(),
   getAuthenticatedUser: vi.fn(),
+  requireActiveUser: vi.fn(),
   redirect: vi.fn(() => {
     throw new Error("NEXT_REDIRECT");
   }),
@@ -13,6 +14,7 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("next/navigation", () => ({ redirect: mocks.redirect }));
+vi.mock("@/lib/auth/authorization", () => ({ requireActiveUser: mocks.requireActiveUser }));
 vi.mock("@/lib/auth/session", () => ({
   getAuthenticatedUser: mocks.getAuthenticatedUser,
 }));
@@ -32,12 +34,27 @@ function createLoginSubmission(next = "/backoffice") {
 
 describe("loginAction", () => {
   beforeEach(() => {
+    mocks.requireActiveUser.mockResolvedValue({ canManageAccounts: false });
     mocks.createServerSupabaseClient.mockResolvedValue({
       auth: {
         signInWithPassword: mocks.signInWithPassword,
         signOut: mocks.signOut,
       },
     });
+  });
+
+  test.each(["/dashboard", "/events", "/admin/users"])("redirects Superuser directly to Accounts when next is %s", async next => {
+    mocks.signInWithPassword.mockResolvedValue({ data: { session: {}, user: { id: "fictional-admin" } }, error: null });
+    mocks.requireActiveUser.mockResolvedValue({ canManageAccounts: true });
+    await expect(loginAction({ error: null }, createLoginSubmission(next))).rejects.toThrow("NEXT_REDIRECT");
+    expect(mocks.redirect).toHaveBeenCalledWith("/admin/users");
+  });
+
+  test("keeps a failed access lookup inside the safe error boundary", async () => {
+    mocks.signInWithPassword.mockResolvedValue({ data: { session: {}, user: { id: "fictional-user" } }, error: null });
+    mocks.requireActiveUser.mockRejectedValue(new Error("private provider failure"));
+    await expect(loginAction({ error: null }, createLoginSubmission())).resolves.toEqual({ error: AUTH_ERROR_CODES.SERVICE_UNAVAILABLE });
+    expect(mocks.redirect).not.toHaveBeenCalled();
   });
 
   test("X-01 redirects a valid login to the approved back-office path", async () => {

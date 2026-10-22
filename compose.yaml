@@ -1,3 +1,4 @@
+name: mahjongflow
 services:
   frontend:
     build:
@@ -6,7 +7,7 @@ services:
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:?Run start-local.ps1 first}
     image: mahjongflow-frontend:local
     container_name: mahjongflow-frontend
-    restart: always
+    restart: unless-stopped
     ports:
       - "3000:3000"
     environment:

@@ -25,7 +25,6 @@ const SHARED_NAVIGATION_SECTION = {
 
 const ACCOUNT_ADMINISTRATION_SECTION = {
   id: "administration",
-  label: "Administration",
   items: [{ href: "/admin/users", label: "Accounts" }],
 } as const satisfies NavigationSection;
 
@@ -38,23 +37,9 @@ export function getNavigationSections(
   _role: BackofficeRole,
   canManageAccounts = false,
 ): readonly NavigationSection[] {
-  const sections: NavigationSection[] = [SHARED_NAVIGATION_SECTION];
-
-  {
-    sections.push({
-      id: "registrations",
-      items: [
-        { href: "/registrations", label: "Registrations" },
-        { href: "/dinner-roster", label: "Dinner eligibility roster" },
-      ],
-    });
-  }
-
-  if (canManageAccounts) {
-    sections.push(ACCOUNT_ADMINISTRATION_SECTION);
-  }
-
-  return sections;
+  return canManageAccounts
+    ? [{ ...ACCOUNT_ADMINISTRATION_SECTION, id: "primary" }]
+    : [SHARED_NAVIGATION_SECTION];
 }
 
 export function isNavigationItemCurrent(

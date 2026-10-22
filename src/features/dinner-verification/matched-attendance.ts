@@ -1,6 +1,6 @@
 import "server-only";
 
-import { requireBackendUser } from "@/lib/auth/authorization";
+import { requireAuthorised } from "@/lib/auth/authorization";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import type { Database } from "@/types/database.generated";
 import { rosterFailure, type DinnerRosterReadPort, type DinnerRosterRecord } from "./roster";
@@ -9,7 +9,7 @@ import { rosterFailure, type DinnerRosterReadPort, type DinnerRosterRecord } fro
 export const matchedDinnerAttendance: DinnerRosterReadPort = {
   async listForEvent(eventId) {
     try {
-      await requireBackendUser();
+      await requireAuthorised();
       if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(eventId)) {
         return { ok: false, code: "VALIDATION" };
       }

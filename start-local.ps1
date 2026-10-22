@@ -1,4 +1,8 @@
-param([switch]$Build)
+param(
+  [switch]$Build,
+  [ValidateSet('Development', 'Production')]
+  [string]$Mode = 'Production'
+)
 $ErrorActionPreference = 'Stop'
 Set-Location $PSScriptRoot
 function Test-DockerReady {
@@ -17,11 +21,23 @@ if (!(Test-DockerReady)) {
   }
   if (!(Test-DockerReady)) { throw 'Docker Desktop did not start. Check its status and retry.' }
 }
-$containers = @(docker ps -a --filter 'name=^supabase_.*_MahjongFlow$' --format '{{.Names}}')
-if (!$containers.Count) { throw 'The existing MahjongFlow Supabase stack is missing; refusing to create or reset a database.' }
+$containers = @('db', 'auth', 'rest', 'kong', 'inbucket', 'pg_meta', 'studio') |
+  ForEach-Object { 'supabase_' + $_ + '_MahjongFlow' }
+foreach ($container in $containers) {
+  docker container inspect --format '{{.Name}}' $container 2>$null | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw ('Required existing container missing: ' + $container + '. No database was created or reset.') }
+}
 docker start @containers | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'Could not start existing Supabase containers.' }
-docker update --restart=always @containers | Out-Null
+for ($attempt = 0; $attempt -lt 90; $attempt++) {
+  $states = @(docker container inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}{{.State.Status}}{{end}}' @containers)
+  if ($LASTEXITCODE -ne 0) { throw 'Could not inspect Supabase readiness.' }
+  if (@($states | Where-Object { $_ -notin @('healthy', 'running') }).Count -eq 0) { break }
+  Start-Sleep -Seconds 1
+}
+if (@($states | Where-Object { $_ -notin @('healthy', 'running') }).Count -gt 0) {
+  throw 'Supabase services did not become ready. Existing database volumes were retained.'
+}
 # Generate credentials privately; never show the status JSON or environment values.
 $ErrorActionPreference = 'Continue'
 $statusRaw = & "$PSScriptRoot\node_modules\.bin\supabase.cmd" status --output json 2>$null
@@ -40,8 +56,8 @@ $values = @(
   ('LOCAL_DOCKER_HOST_IP=' + $address.IPAddress)
 )
 [IO.File]::WriteAllLines((Join-Path $PSScriptRoot 'compose.local.env'), $values)
-$arguments = @('compose', '--env-file', 'compose.local.env', 'up', '-d')
+$arguments = @('supabase/local-stack.mjs', 'start', '--mode', $Mode.ToLowerInvariant())
 if ($Build) { $arguments += '--build' }
-& docker @arguments
-if ($LASTEXITCODE -ne 0) { throw 'Frontend startup failed.' }
+& node @arguments
+if ($LASTEXITCODE -ne 0) { throw 'Unified local stack startup failed. Existing database volumes were retained.' }
 Write-Output ('MahjongFlow: http://localhost:3000 | LAN: http://' + $address.IPAddress + ':3000')

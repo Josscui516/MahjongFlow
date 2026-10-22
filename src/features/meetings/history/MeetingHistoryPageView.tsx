@@ -12,6 +12,7 @@ import type {
   MeetingHistoryPageResult,
 } from "./contracts";
 import { MeetingHistoryList } from "./MeetingHistoryList";
+import { MeetingCreateLabel } from "./MeetingCreateLabel";
 
 export const MEETING_HISTORY_DESCRIPTION =
   "Find, review, and reopen committee meeting records.";
@@ -45,7 +46,7 @@ export function MeetingHistoryPageHeader() {
             strokeWidth="2"
           />
         </svg>
-        Create meeting
+        <MeetingCreateLabel>Create meeting</MeetingCreateLabel>
       </Link>
     </header>
   );

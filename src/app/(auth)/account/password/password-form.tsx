@@ -116,10 +116,11 @@ export function PasswordSetupForm() {
       }
 
       setState({
-        message: "Password saved. You can now continue to the committee back office.",
+        message: "Password saved. Opening your back office…",
         status: "success",
       });
       form.reset();
+      window.location.replace("/backoffice");
     } catch {
       setState({
         message: "The authentication service is unavailable. Try again shortly.",
@@ -197,22 +198,14 @@ export function PasswordSetupForm() {
       ) : null}
 
       <button
-        aria-busy={state.status === "pending" || undefined}
+        aria-busy={state.status === "pending" || state.status === "success" || undefined}
         className="inline-flex min-h-11 w-full items-center justify-center rounded-xl bg-emerald-950 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-900 disabled:cursor-not-allowed disabled:bg-slate-400"
-        disabled={state.status === "pending"}
+        disabled={state.status === "pending" || state.status === "success"}
         type="submit"
       >
-        {state.status === "pending" ? "Saving password…" : "Save password"}
+        {state.status === "success" ? "Opening back office…" : state.status === "pending" ? "Saving password…" : "Save password"}
       </button>
 
-      {state.status === "success" ? (
-        <a
-          className="block text-center text-sm font-semibold text-emerald-900 underline underline-offset-4"
-          href="/backoffice"
-        >
-          Continue to back office
-        </a>
-      ) : null}
     </form>
   );
 }

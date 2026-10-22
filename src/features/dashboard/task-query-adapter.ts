@@ -47,6 +47,17 @@ function failure(key: DashboardTaskSectionKey, results: readonly ProviderResult[
 }
 
 export function createDashboardTaskQuery({ classifyDueRisk, listTasks }: DashboardTaskQueryDependencies): DashboardTaskQuery {
+  // One adapter belongs to one dashboard snapshot; never keep it at module scope.
+  const pending = new Map<string, Promise<readonly ProviderResult[]>>();
+  function sharedUnfinishedStatus(status: Exclude<TaskStatus, "completed">, assigneeId?: string) {
+    const key = JSON.stringify([status, assigneeId]);
+    let result = pending.get(key);
+    if (!result) {
+      result = listUnfinishedStatus(status, assigneeId);
+      pending.set(key, result);
+    }
+    return result;
+  }
   async function listUnfinishedStatus(status: Exclude<TaskStatus, "completed">, assigneeId?: string): Promise<readonly ProviderResult[]> {
     const criteria = { assigneeId, pageSize: DASHBOARD_PAGE_SIZE, search: "", sort: "due_soonest" as const, status };
     const first = await listTasks({ ...criteria, page: 1 });
@@ -59,10 +70,9 @@ export function createDashboardTaskQuery({ classifyDueRisk, listTasks }: Dashboa
 
   return {
     async querySection({ key, now, userId }) {
-      const assigneeId = key === "mine" ? userId : undefined;
       const pages = await Promise.all([
-        listUnfinishedStatus("not_started", assigneeId),
-        listUnfinishedStatus("in_progress", assigneeId),
+        sharedUnfinishedStatus("not_started"),
+        sharedUnfinishedStatus("in_progress"),
       ]);
       const results = pages.flat();
       const failed = failure(key, results);
@@ -70,6 +80,7 @@ export function createDashboardTaskQuery({ classifyDueRisk, listTasks }: Dashboa
 
       const unfinished = stableMerge(results as readonly Extract<ProviderResult, { ok: true }>[]);
       let items = unfinished;
+      if (key === "mine") items = unfinished.filter(task => task.assigneeId === userId);
       if (key === "dueSoon" || key === "overdue") {
         items = [];
         for (const task of unfinished) {

@@ -43,7 +43,7 @@ function formIntent(data: FormData): string {
 }
 
 /** Client state only; authorisation, trusted audit values and atomic writes stay in the action. */
-export function ManualAttendanceForm({ event, records, action, onUpdated, onRefresh }: Props) {
+export function ManualAttendanceForm({ records, action, onUpdated, onRefresh }: Props) {
   const prefix = useId();
   const [operation, setOperation] = useState<"create" | "correct">("create");
   const [email, setEmail] = useState("");
@@ -111,7 +111,6 @@ export function ManualAttendanceForm({ event, records, action, onUpdated, onRefr
     >
       <header className="space-y-2">
         <h2 className="text-xl font-semibold text-slate-950">Manual attendance</h2>
-        {!accessLost && <p className="text-sm text-slate-600">{event.name}</p>}
       </header>
 
       {state.status !== "idle" && (
@@ -143,13 +142,12 @@ export function ManualAttendanceForm({ event, records, action, onUpdated, onRefr
 
       {!accessLost && <fieldset className="space-y-5 rounded-2xl border border-slate-200 bg-white p-5" disabled={pending}>
         <legend className="px-1 font-semibold">Authorised staff action</legend>
-        <FormField id={ids.operation} label="Operation" error={errors.find((error) => error.field === "operation" || error.field === "eventId")?.message} control={
+        {records.length > 0 ? <FormField id={ids.operation} label="Operation" error={errors.find((error) => error.field === "operation" || error.field === "eventId")?.message} control={
           <select name="operation" value={operation} onChange={(event) => setOperation(event.target.value as "create" | "correct")}>
             <option value="create">Add manual attendance</option>
             <option value="correct" disabled={records.length === 0}>Correct an existing record</option>
           </select>
-        } />
-        {records.length === 0 && <p role="status" className="text-sm text-slate-600">No attendance records yet. You can add manual attendance for an existing participant.</p>}
+        } /> : <input id={ids.operation} type="hidden" name="operation" value="create" />}
         {operation === "create" ? <>
           <FormField id={ids.email} label="Participant email" required description="Enter the exact email of an existing participant after confirming their identity. This does not create a participant or registration." error={errors.find((error) => error.field === "email")?.message} control={
             <input name="email" type="email" autoComplete="off" maxLength={254} value={email} onChange={(event) => setEmail(event.target.value)} />
@@ -165,7 +163,7 @@ export function ManualAttendanceForm({ event, records, action, onUpdated, onRefr
           <input type="hidden" name="expectedUpdatedAt" value={selected?.updatedAt ?? ""} />
           <input type="hidden" name="targetStatus" value={targetStatus} />
           {selected && <div className="space-y-2 rounded-xl bg-amber-50 p-4 text-sm text-amber-950">
-            <p><strong>{selected.status === "confirmed" ? "Void attendance" : "Restore attendance"}</strong> for {selected.participantName} in {event.name}.</p>
+            <p><strong>{selected.status === "confirmed" ? "Void attendance" : "Restore attendance"}</strong> for {selected.participantName} in this event.</p>
             <p className="[overflow-wrap:anywhere]">{selected.participantEmail}</p>
             <p>Original method: {selected.method === "qr" ? "QR" : "Manual"}. Checked in: <time dateTime={selected.checkedInAt}>{dateFormatter.format(new Date(selected.checkedInAt))}</time> (Australia/Sydney). These original details will not change.</p>
             <p>Only the status, current authorised operator, and update time change. Dinner eligibility is derived from the updated attendance.</p>
@@ -184,7 +182,7 @@ export function ManualAttendanceForm({ event, records, action, onUpdated, onRefr
               aria-invalid={errors.some((error) => error.field === "confirmation") || undefined}
               aria-describedby={errors.some((error) => error.field === "confirmation") ? `${ids.confirmation}-error` : undefined}
             />
-            <span>I have verified the participant and confirm this attendance change for {event.name}.</span>
+            <span>I have verified the participant and confirm this attendance change for this event.</span>
           </label>
           {errors.filter((error) => error.field === "confirmation").map((error) => <p id={`${ids.confirmation}-error`} key={error.field} className="text-sm text-rose-800">{error.message}</p>)}
         </div>

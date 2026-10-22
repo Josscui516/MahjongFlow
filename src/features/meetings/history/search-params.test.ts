@@ -16,7 +16,7 @@ describe("meeting history search params", () => {
       }),
     ).toEqual({
       page: 3,
-      pageSize: 8,
+      pageSize: 10,
       search: "planning",
       sort: "oldest",
       time: "upcoming",
@@ -32,7 +32,7 @@ describe("meeting history search params", () => {
       }),
     ).toEqual({
       page: 1,
-      pageSize: 8,
+      pageSize: 10,
       search: "",
       sort: "newest",
       time: "all",
@@ -44,7 +44,7 @@ describe("meeting history search params", () => {
       buildMeetingHistoryHref(
         {
           page: 2,
-          pageSize: 8,
+          pageSize: 10,
           search: "event planning",
           sort: "oldest",
           time: "past",

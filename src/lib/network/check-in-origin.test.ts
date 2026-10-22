@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isLocalPreviewRequest, localNetworkHosts, resolveCheckInOrigin } from "./check-in-origin";
+import { isLocalPreviewRequest, localNetworkHosts, localQrHosts, resolveCheckInOrigin } from "./check-in-origin";
 
 describe("check-in origin", () => {
   const defaults = { canonicalOrigin: "http://localhost:3000", development: true,
@@ -66,4 +66,18 @@ describe("check-in origin", () => {
   it("rejects a local HTTP origin in a deployed environment", () => {
     expect(() => resolveCheckInOrigin({ ...defaults, development: false })).toThrow("public HTTPS");
   });
+});
+
+it("uses an explicitly configured public IPv4 host on campus Wi-Fi instead of Docker interfaces", () => {
+  const hosts = localQrHosts("49.100.10.20", { eth0: [{ address:"172.20.0.9",family:"IPv4",internal:false }] }, true);
+  expect(resolveCheckInOrigin({ canonicalOrigin:"http://localhost:3000", development:true, requestHost:"localhost:3000", hosts })).toBe("http://49.100.10.20:3000");
+});
+it("refuses to advertise a container address without an explicit host setting", () => {
+  expect(() => localQrHosts(undefined,{ eth0:[{address:"172.20.0.9",family:"IPv4",internal:false}] },true)).toThrow("host LAN address");
+});
+it.each(["127.0.0.1","0.0.0.0","169.254.1.2","224.1.2.3","999.1.2.3","host.example"])("rejects unusable configured hosts: %s", host => {
+  expect(() => localQrHosts(host,{},true)).toThrow("Invalid configured");
+});
+it("recognises public IPv4 addresses assigned to a physical adapter", () => {
+  expect(localNetworkHosts({ WLAN:[{address:"49.100.10.20",family:"IPv4",internal:false}] })).toEqual(["49.100.10.20"]);
 });

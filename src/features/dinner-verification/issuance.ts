@@ -1,11 +1,11 @@
 import "server-only";
-import { requireBackendUser } from "@/lib/auth/authorization";
+import { requireAuthorised } from "@/lib/auth/authorization";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { rosterFailure } from "./roster";
 
 export async function recordDinnerIssued(eventId: string, participantId: string, issued: boolean, expectedIssued: boolean) {
   try {
-    await requireBackendUser();
+    await requireAuthorised();
     const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     if (!uuid.test(eventId) || !uuid.test(participantId) || typeof issued !== "boolean" || typeof expectedIssued !== "boolean") {
       return { ok: false, code: "VALIDATION" } as const;

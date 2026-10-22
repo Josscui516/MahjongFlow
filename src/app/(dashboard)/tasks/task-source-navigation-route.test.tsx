@@ -49,6 +49,13 @@ describe("task source navigation route", () => {
     });
   });
 
+  it("shows a single-line creation notice only on the created destination", async () => {
+    const created = renderToStaticMarkup(await TaskPage({ params: Promise.resolve({ taskId }), searchParams: Promise.resolve({ created: "1" }) }));
+    const regular = renderToStaticMarkup(await TaskPage({ params: Promise.resolve({ taskId }), searchParams: Promise.resolve({}) }));
+    expect(created).toContain('role="status">Task created successfully.</p>');
+    expect(regular).not.toContain("Task created successfully.");
+  });
+
   it("renders task-to-meeting source context and a descriptive return link", async () => {
     const html = renderToStaticMarkup(
       await TaskPage({

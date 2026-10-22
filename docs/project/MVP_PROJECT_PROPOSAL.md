@@ -1,4 +1,14 @@
+> 2026-10-22 最新决定：General 不得新增／移除长期晚餐资格，仅 Secretary 可操作，取代下文旧例外。见[权限决定](SECRETARY_ONLY_DINNER_ROSTER.md)。
+
+> 2026-10-22 用户明确调整活动晚餐流程：以 Confirmed Attendance 为名单，authorised 人员可直接勾选／取消，Eligibility 统计当前名单已勾选人数；不再依赖共享资格名单匹配。移除活动页刷新及自动刷新、资格名单入口和资格状态文案。数据与权限边界保持，部署说明见 [晚餐流程最新决定](DINNER_CHECK_IN_EMAIL_MATCHING.md)。此决定替代本文下方历史晚餐匹配规则。
+
 # MahjongFlow MVP 项目企划书
+
+> 2026-10-21 最新决定：公开扫码只注册，确认到场必须由 authorised 工作人员手动执行，替代此前扫码自动确认到场的解释。已有记录保留；见[注册与到场分离](QR_REGISTRATION_STAFF_ATTENDANCE.md)。
+
+> 2026-10-21 最新决定：General（committee）不再允许报名管理及活动晚餐核验／发放。本文较早的相关普通成员例外已被替代；独立晚餐名册提交能力保持原权限。见[当前权限与部署](GENERAL_EVENT_OPERATION_RESTRICTION.md)。
+
+> 2026-10-21 用户确认停用活动报名的学号要求，创建活动默认使用打开页面时的悉尼当前时间、weekly_session 和 scheduled；部署及兼容性见[活动创建默认值与学号要求停用](EVENT_CREATION_DEFAULTS_AND_STUDENT_ID_RETIREMENT.md)。
 
 > 2026-10-20 最新名单权限：普通委员可按已知邮箱提交报名与晚餐资格增删，但不读取已有名单；安全员可查看并维护，日常操作不再要求开发者／账号管理能力。此约定覆盖下方旧权限，见[写入与读取分离](MEMBER_WRITE_PRIVATE_READ.md)。
 
@@ -720,3 +730,6 @@ MVP 经用户验证后，再根据真实使用反馈决定是否开发：
 ## 13. 2026-09-30 执行状态同步
 
 M1–M5 的工程能力已集成至 main，Sprint 8 PR #96 已合并，M5 由 Joshua 确认完成。S10／M6 尚待干净配置与正式交接确认，原成功标准不降低。当前结果及证据见[项目状态](CURRENT_PROJECT_STATUS.md)；本文排期保留计划语义，不把部署成功视为所有交付标准通过。#62–#65 的历史范围协调及真实数据保留政策仍需独立决定。
+# 2026-10-22 账户管理权限修订
+
+用户批准拥有 `can_manage_accounts` 的账号作为账户管理专用 Superuser，禁止协调和参与者功能；具体边界、部署与回退见 [Superuser 账户管理边界](SUPERUSER_ACCOUNTS_ONLY.md)。本节覆盖下文历史描述中将账户管理能力与协调权限叠加的约定。

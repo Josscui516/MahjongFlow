@@ -6,20 +6,32 @@ import { RegistrationCount } from "./RegistrationCount";
 import { RegistrationCreateForm } from "./RegistrationForms";
 import { registrationMessage } from "./messages";
 const eventId = "27000000-0000-4000-8000-000000000001";
-const changeStatus = vi.fn();
 describe("registration UI projections", () => {
-  it("renders independent registered/cancelled labels and the appropriate action", () => {
-    const html = renderToStaticMarkup(<RegistrationList changeStatus={changeStatus} result={{ ok: true, eventId, page: 1, total: 30, items: [
+  it("renders names and emails without status actions or privacy metadata", () => {
+    const html = renderToStaticMarkup(<RegistrationList result={{ ok: true, eventId, page: 1, total: 30, items: [
       { id: "1", privacyNoticeAcknowledgedAt: null, participantName: "Fictional One", participantEmail: "one@example.test", status: "registered", updatedAt: "2026-09-08T00:00:00Z" },
       { id: "2", privacyNoticeAcknowledgedAt: null, participantName: "Fictional Two", participantEmail: "two@example.test", status: "cancelled", updatedAt: "2026-09-08T00:00:00Z" },
     ] }} />);
-    expect(html).toContain("Registered"); expect(html).toContain("Cancelled");
-    expect(html).toContain("Cancel registration"); expect(html).toContain("Restore registration");
-    expect(html).toContain("Next page"); expect(html).not.toContain("Previous page");
+    expect(html).toContain("Fictional One"); expect(html).toContain("two@example.test");
+    expect(html).not.toContain("Cancel registration"); expect(html).not.toContain("Restore registration"); expect(html).not.toContain("Privacy acknowledgement");
+    expect(html).toContain("Next page"); expect(html).toContain("Previous page"); expect(html).toContain("disabled");
+  });
+  it.each([0, 34, null])("renders the independently sourced count %s without key warnings", registrationCount => {
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      const html = renderToStaticMarkup(<RegistrationList registrationCount={registrationCount} result={{ ok: true, eventId, page: 1, total: 1, items: [] }} />);
+      if (registrationCount === null) {
+        expect(html).toContain("Count unavailable");
+        expect(html).not.toContain('data-testid="registered-count"');
+      } else {
+        expect(html).toContain(`aria-label="${registrationCount} currently registered"`);
+      }
+      expect(consoleError).not.toHaveBeenCalled();
+    } finally { consoleError.mockRestore(); }
   });
   it("renders empty and denied states without sensitive fields", () => {
-    expect(renderToStaticMarkup(<RegistrationList changeStatus={changeStatus} result={{ ok: true, eventId, page: 1, total: 0, items: [] }} />)).toContain("No registrations");
-    const denied = renderToStaticMarkup(<RegistrationList changeStatus={changeStatus} result={{ ok: false, code: "PERMISSION_DENIED" }} />);
+    expect(renderToStaticMarkup(<RegistrationList result={{ ok: true, eventId, page: 1, total: 0, items: [] }} />)).toContain("No registrations");
+    const denied = renderToStaticMarkup(<RegistrationList result={{ ok: false, code: "PERMISSION_DENIED" }} />);
     expect(denied).toContain('role="alert"'); expect(denied).not.toContain("@example.test");
   });
   it("does not misrepresent a count failure as zero", () => {

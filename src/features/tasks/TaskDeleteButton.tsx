@@ -11,7 +11,7 @@ const ERROR_COPY: Readonly<Record<DeleteError, string>> = {
   system: "The task could not be deleted. Try again.",
 };
 
-export function TaskDeleteButton({ hasSource, successHref, taskId, taskTitle }: Readonly<{ hasSource: boolean; successHref: string; taskId: string; taskTitle: string }>) {
+export function TaskDeleteButton({ direct = false, hasSource, successHref, taskId, taskTitle }: Readonly<{ direct?: boolean; hasSource: boolean; successHref: string; taskId: string; taskTitle: string }>) {
   const router = useRouter();
   const dialogRef = useRef<HTMLDialogElement>(null);
   const [error, setError] = useState<DeleteError | null>(null);
@@ -29,8 +29,10 @@ export function TaskDeleteButton({ hasSource, successHref, taskId, taskTitle }: 
     } catch { setError("system"); } finally { setPending(false); }
   }
 
+  const trigger = <button aria-label={`Delete ${taskTitle}`} className="inline-flex min-h-11 items-center justify-center rounded-xl border border-rose-200 bg-white px-4 py-2.5 text-sm font-semibold text-rose-800 transition hover:border-rose-300 hover:bg-rose-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-700" onClick={() => setOpen(true)} type="button">Delete</button>;
+
   return <>
-    <details className="relative"><summary className="inline-flex min-h-11 cursor-pointer items-center rounded-lg px-3 text-sm font-semibold text-slate-600 focus-visible:outline-2 focus-visible:outline-offset-2" aria-label={`More actions for ${taskTitle}`}>More</summary><div className="absolute right-0 z-10 mt-1 rounded-lg border border-slate-200 bg-white p-2 shadow-lg">    <button aria-label={`Delete ${taskTitle}`} className="inline-flex min-h-11 items-center justify-center rounded-lg border border-rose-200 bg-white px-3 py-2 text-sm font-semibold text-rose-800 transition hover:border-rose-300 hover:bg-rose-50 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-rose-700" onClick={() => setOpen(true)} type="button">Delete</button></div></details>
+    {direct ? trigger : <details className="relative"><summary className="inline-flex min-h-11 cursor-pointer items-center rounded-lg px-3 text-sm font-semibold text-slate-600 focus-visible:outline-2 focus-visible:outline-offset-2" aria-label={`More actions for ${taskTitle}`}>Actions</summary><div className="absolute right-0 z-10 mt-1 rounded-lg border border-slate-200 bg-white p-2 shadow-lg">{trigger}</div></details>}
     <dialog aria-labelledby={`delete-task-title-${taskId}`} className="m-auto w-[calc(100%-2rem)] max-w-lg rounded-2xl border border-slate-200 bg-white p-0 text-slate-950 shadow-2xl backdrop:bg-slate-950/50" onCancel={(event) => { event.preventDefault(); closeDialog(); }} onClick={(event) => { if (event.target === event.currentTarget) closeDialog(); }} ref={dialogRef}>
       <div className="p-5 sm:p-6">
         <div className="flex items-start gap-4">

@@ -35,14 +35,7 @@ export default async function MeetingHistoryLayout({
 
   return (
     <BackofficeShell
-      accountSlot={
-        <span>
-          Signed in as{" "}
-          <strong className="font-semibold text-slate-900">
-            {access.context.displayName?.trim() || "Committee member"}
-          </strong>
-        </span>
-      }
+      displayName={access.context.displayName}
       canManageAccounts={access.context.canManageAccounts}
       currentPath="/meetings"
       role={access.context.role}

@@ -30,5 +30,5 @@ export function validateEventInput(input: EventInput) {
   if (!EVENT_TYPES.includes(input.eventType)) errors.push({ field: "eventType", message: "Select a valid event type." });
   if (!EVENT_STATUSES.includes(input.status)) errors.push({ field: "status", message: "Select a valid event status." });
   const instant = sydneyInstant(input.startsAt); if (!instant) errors.push({ field: "startsAt", message: "Enter a valid event date and time." });
-  return errors.length || !instant ? { errors, ok: false as const } : { ok: true as const, value: { ...input, description, location, name, startsAt: instant.toISOString() } };
+  return errors.length || !instant ? { errors, ok: false as const } : { ok: true as const, value: { ...input, requiresStudentId: false, description, location, name, startsAt: instant.toISOString() } };
 }

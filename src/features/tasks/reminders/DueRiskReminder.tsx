@@ -46,7 +46,7 @@ export function DueRiskReminder({ risk, taskTitle, taskHref, compact = false, du
     if (due.ok && today.ok) {
       const days = due.value.ordinal - today.value.ordinal;
       if (state === "overdue" && days < 0) label = `Overdue ${-days} ${days === -1 ? "day" : "days"}`;
-      if (state === "dueSoon" && days >= 0 && days <= 7) label = days === 0 ? "Due today" : `Due in ${days} ${days === 1 ? "day" : "days"}`;
+      if (state === "dueSoon" && days >= 0 && days <= 7) label = days === 0 ? "Due today" : days === 1 ? "Due tomorrow" : `Due in ${days} days`;
     }
   }
   // Never turn a mistaken external/missing-source link into an active control.

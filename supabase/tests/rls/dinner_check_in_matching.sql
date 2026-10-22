@@ -4,7 +4,7 @@ insert into auth.users(id,aud,role,email,confirmation_token,recovery_token,email
 ('a2000000-0000-4000-8000-000000000001','authenticated','authenticated','dinner-match-admin@example.test','','','',''),
 ('a2000000-0000-4000-8000-000000000002','authenticated','authenticated','dinner-match-committee@example.test','','','','');
 insert into public.profiles(id,display_name,committee_role,can_manage_accounts) values
-('a2000000-0000-4000-8000-000000000001','Fictional dinner administrator','authorised',true),
+('a2000000-0000-4000-8000-000000000001','Fictional dinner administrator','authorised',false),
 ('a2000000-0000-4000-8000-000000000002','Fictional dinner committee','committee',false);
 insert into public.events(id,name,event_type,starts_at,location,description,created_by) values
 ('a2100000-0000-4000-8000-000000000001','Fictional dinner matching','weekly_session',now(),'Test room','Fixture','a2000000-0000-4000-8000-000000000001'),
@@ -38,8 +38,8 @@ select is((select count(*)::int from public.list_matched_dinner_attendees('a2100
 select lives_ok($$select public.set_event_dinner_issued('a2100000-0000-4000-8000-000000000001','a2200000-0000-4000-8000-000000000001',true,false)$$,'authorised staff can tick a qualifying attendee as issued');
 select ok((select issued_at is not null from public.list_event_dinner_service('a2100000-0000-4000-8000-000000000001') where participant_id='a2200000-0000-4000-8000-000000000001'),'issued state persists in the current event list');
 select lives_ok($$select public.set_event_dinner_issued('a2100000-0000-4000-8000-000000000001','a2200000-0000-4000-8000-000000000001',true,false)$$,'a repeated serving request is idempotent');
-select is((select count(*)::int from public.event_dinner_issuance),1,'repeated clicks produce one serving record');
-select is((select issued_by::text from public.event_dinner_issuance limit 1),'a2000000-0000-4000-8000-000000000001','operator identity is taken from the real session');
+select is((select count(*)::int from public.event_dinner_issuance where event_id='a2100000-0000-4000-8000-000000000001'),1,'repeated clicks produce one serving record');
+select is((select issued_by::text from public.event_dinner_issuance where event_id='a2100000-0000-4000-8000-000000000001' and participant_id='a2200000-0000-4000-8000-000000000001'),'a2000000-0000-4000-8000-000000000001','operator identity is taken from the real session');
 select throws_ok($$select public.set_event_dinner_issued('a2100000-0000-4000-8000-000000000001','a2200000-0000-4000-8000-000000000002',true,false)$$,'PDI01',null,'a roster member without check-in cannot be marked served');
 select lives_ok($$select public.set_event_dinner_issued('a2100000-0000-4000-8000-000000000002','a2200000-0000-4000-8000-000000000006',true,false)$$,'the shared entitlement also allows serving at another event');
 select is((select count(*)::int from public.dinner_eligibility_roster where is_active),6,'serving never consumes standing eligibility');
@@ -64,9 +64,13 @@ select is((select count(*)::int from public.dinner_eligibility_roster where emai
 select set_config('request.jwt.claim.sub','a2000000-0000-4000-8000-000000000002',true);
 select throws_ok($$select * from public.list_matched_dinner_attendees('a2100000-0000-4000-8000-000000000001')$$,'42501',null,'ordinary committee cannot read matched identities');
 select is((select count(*)::int from public.dinner_eligibility_roster),0,'committee cannot read standing roster identities');
-select is((select count(*)::int from public.list_event_dinner_service('a2100000-0000-4000-8000-000000000002')),1,'committee can read the scoped event serving projection');
-select lives_ok($$select public.set_event_dinner_issued('a2100000-0000-4000-8000-000000000002','a2200000-0000-4000-8000-000000000006',false,true)$$,'committee can correct an issued mark');
-select lives_ok($$select public.set_event_dinner_issued('a2100000-0000-4000-8000-000000000002','a2200000-0000-4000-8000-000000000006',true,false)$$,'committee can record issuance after current eligibility validation');
+select throws_ok($$select * from public.list_event_dinner_service('a2100000-0000-4000-8000-000000000002')$$,'42501',null,'committee cannot read the event serving projection');
+select throws_ok($$select public.set_event_dinner_issued('a2100000-0000-4000-8000-000000000002','a2200000-0000-4000-8000-000000000006',false,true)$$,'42501',null,'committee cannot correct an issued mark');
+select throws_ok($$select public.set_event_dinner_issued('a2100000-0000-4000-8000-000000000002','a2200000-0000-4000-8000-000000000006',true,false)$$,'42501',null,'committee cannot record issuance');
+reset role;
+update public.profiles set can_manage_accounts=true where id='a2000000-0000-4000-8000-000000000002';
+set local role authenticated;
+select throws_ok($$select * from public.list_event_dinner_service('a2100000-0000-4000-8000-000000000002')$$,'42501',null,'committee account-management capability does not allow dinner access');
 reset role;
 update public.profiles set is_active=false where id='a2000000-0000-4000-8000-000000000001';
 set local role authenticated;
@@ -75,6 +79,7 @@ select throws_ok($$select * from public.list_matched_dinner_attendees('a2100000-
 select throws_ok($$select public.set_event_dinner_issued('a2100000-0000-4000-8000-000000000001','a2200000-0000-4000-8000-000000000002',true,false)$$,'42501',null,'inactive administrator cannot record a serving');
 reset role;
 set local role anon;
+select throws_ok($$select * from public.list_event_dinner_service('a2100000-0000-4000-8000-000000000001')$$,'42501',null,'anonymous callers cannot list dinner service');
 select throws_ok($$select * from public.list_matched_dinner_attendees('a2100000-0000-4000-8000-000000000001')$$,'42501',null,'anonymous callers cannot execute the matching RPC');
 select throws_ok($$select public.set_event_dinner_issued('a2100000-0000-4000-8000-000000000001','a2200000-0000-4000-8000-000000000002',true,false)$$,'42501',null,'anonymous callers cannot execute the serving RPC');
 reset role;

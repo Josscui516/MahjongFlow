@@ -5,7 +5,7 @@ import { ParticipantIdentityInput, type ParticipantIdentityFieldErrors } from "@
 import { registerIdentityAction } from "./identity-action";
 import { registrationMessage } from "./messages";
 
-export function IdentityRegistrationForm({ eventId, requiresStudentId }: Readonly<{ eventId: string; requiresStudentId: boolean }>) {
+export function IdentityRegistrationForm({ eventId, requiresStudentId, onSuccess }: Readonly<{ eventId: string; requiresStudentId: boolean; onSuccess?: (message: string) => void }>) {
   const router = useRouter();
   const lock = useRef(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -30,7 +30,10 @@ export function IdentityRegistrationForm({ eventId, requiresStudentId }: Readonl
         if (Object.keys(fields).length) return;
       }
       setMessage(registrationMessage(result)); setSucceeded(result.ok);
-      if (result.ok) router.refresh();
+      if (result.ok) {
+        if (result.status === "registered") { formRef.current?.reset(); onSuccess?.(registrationMessage(result)); }
+        router.refresh();
+      }
     } catch { setMessage("Registration could not be confirmed. Retry with the same details; duplicates are safely detected."); }
     finally { lock.current = false; setPending(false); }
   }

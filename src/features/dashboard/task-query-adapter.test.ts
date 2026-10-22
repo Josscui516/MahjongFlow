@@ -23,6 +23,24 @@ function task(id: string, status: TaskStatus, dueDate: string, assigneeId = "fic
 }
 
 describe("createDashboardTaskQuery", () => {
+  it("derives mine from the same authorised snapshot without including another owner's tasks", async () => {
+    const listTasks = vi.fn<DashboardTaskQueryDependencies["listTasks"]>(async () => ({
+      ok: true, total: 2, items: [task("mine", "not_started", "2026-09-10"), task("other", "not_started", "2026-09-10", "other-user")],
+    }));
+    const query = createDashboardTaskQuery({ listTasks, classifyDueRisk: () => ({ ok: true, value: "normal" }) });
+    const result = await query.querySection({ key: "mine", now: new Date("2026-09-10T00:00:00Z"), userId: "fictional-user" });
+    expect(result.ok && result.section.items.map(item => item.id)).toEqual(["mine"]);
+  });
+  it("shares global pages across concurrent sections and isolates snapshots", async () => {
+    const listTasks = vi.fn<DashboardTaskQueryDependencies["listTasks"]>(async () => ({ ok: true, items: [], total: 0 }));
+    const dependencies = { listTasks, classifyDueRisk: () => ({ ok: true as const, value: "normal" as const }) };
+    const query = createDashboardTaskQuery(dependencies);
+    const input = { now: new Date("2026-09-10T00:00:00Z"), userId: "fictional-user" };
+    await Promise.all((["mine", "unfinished", "dueSoon", "overdue"] as const).map(key => query.querySection({ ...input, key })));
+    expect(listTasks).toHaveBeenCalledTimes(2);
+    await createDashboardTaskQuery(dependencies).querySection({ ...input, key: "unfinished" });
+    expect(listTasks).toHaveBeenCalledTimes(4);
+  });
   it("combines both unfinished statuses through the shared provider", async () => {
     const listTasks = vi.fn<DashboardTaskQueryDependencies["listTasks"]>(async ({ status }) => {
       const items = status === "not_started" ? [task("b", status, "2026-09-11")] : [task("a", status, "2026-09-10")];
@@ -32,7 +50,7 @@ describe("createDashboardTaskQuery", () => {
     const result = await query.querySection({ key: "mine", now: new Date("2026-09-10T00:00:00Z"), userId: "fictional-user" });
     expect(result.ok && result.section.items.map(({ id }) => id)).toEqual(["a", "b"]);
     expect(listTasks).toHaveBeenCalledTimes(2);
-    expect(listTasks.mock.calls.every(([criteria]) => criteria.assigneeId === "fictional-user")).toBe(true);
+    expect(listTasks.mock.calls.every(([criteria]) => criteria.assigneeId === undefined)).toBe(true);
     expect(listTasks.mock.calls.every(([criteria]) => criteria.page === 1 && criteria.pageSize === 100)).toBe(true);
   });
 

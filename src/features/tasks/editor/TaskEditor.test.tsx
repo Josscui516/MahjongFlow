@@ -14,6 +14,9 @@ it("shows multiple selected meetings and keeps the original source visibly locke
   expect(html.match(/checked=""/g)).toHaveLength(2);
   expect(html).toContain("Original source · always linked");
   expect(html).toContain(`value="${sourceId}"`);
+  const fieldOrder = [...html.matchAll(/id="task-(title|assigneeId|dueDate|status|description)"/g)].map(match => match[1]);
+  expect(fieldOrder).toEqual(["title", "assigneeId", "dueDate", "status", "description"]);
+  expect(html).toContain(`href="/tasks/${record.id}?returnTo=%2Ftasks"`);
 });
 
 it("requires an explicit assignee instead of silently choosing the first member", () => {

@@ -1,3 +1,4 @@
+import { meetingCreateDefaults } from "@/features/meetings/editor/create-defaults";
 import { redirect } from "next/navigation";
 
 import { MeetingEditorFlow } from "@/features/meetings/editor/MeetingEditorFlow";
@@ -10,8 +11,10 @@ import {
 } from "@/lib/auth/authorization";
 
 export default async function NewMeetingPage() {
+  let currentUserId: string;
   try {
-    await requireBackendUser();
+    const access = await requireBackendUser();
+    currentUserId = access.userId;
   } catch (error) {
     if (error instanceof AuthorizationError) {
       if (error.code === "UNAUTHENTICATED") {
@@ -67,10 +70,11 @@ export default async function NewMeetingPage() {
   return (
     <>
       <MeetingPageHeader
-        description="Record committee-safe meeting details and participants. Add ordered agenda items after the meeting is created."
+        description="Enter the meeting details, then add discussion points and decisions."
         title="Create meeting"
       />
       <MeetingEditorFlow
+        createDefaults={meetingCreateDefaults(new Date(), currentUserId, attendeeResult.options)}
         attendeeOptions={attendeeResult.options}
         mode="create"
       />

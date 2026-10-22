@@ -1,5 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+vi.mock("next/navigation", () => ({ redirect: vi.fn((href: string) => { throw new Error(`Redirect: ${href}`); }) }));
 
 vi.mock("server-only", () => ({}));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
@@ -65,14 +67,13 @@ describe("integrated task conversion action", () => {
       taskId: "77777777-7777-4777-8777-777777777777",
     });
 
-    const result = await submitTaskConversionAction(
+    await expect(submitTaskConversionAction(
       "decision",
       source.sourceId,
       createInitialTaskConversionState(source, values),
       formData(),
-    );
-
-    expect(result).toMatchObject({ status: "success" });
+    )).rejects.toThrow("Redirect: /tasks/77777777-7777-4777-8777-777777777777?created=1");
+    expect(redirect).toHaveBeenCalledWith("/tasks/77777777-7777-4777-8777-777777777777?created=1");
     expect(mocks.readSource).toHaveBeenCalledWith("decision", source.sourceId);
     expect(mocks.createFromSource).toHaveBeenCalledWith(source, values);
     expect(revalidatePath).toHaveBeenCalledWith("/tasks", "layout");

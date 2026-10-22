@@ -13,11 +13,13 @@ import Page from "./[eventId]/page";
 const params = Promise.resolve({ eventId: "27000000-0000-4000-8000-000000000001" });
 describe("registration route access boundary", () => {
   beforeEach(() => {vi.clearAllMocks();mocks.access.mockResolvedValue({role:"authorised"});});
-  it("gives committee a write-only form without reading existing registrations",async()=>{
+  it("denies committee before loading event, form, or registrations",async()=>{
     mocks.access.mockResolvedValue({role:"committee"});
     mocks.event.mockResolvedValue({ok:true,record:{name:"Fictional event",requiresStudentId:false}});
     const html=renderToStaticMarkup(await Page({params,searchParams:Promise.resolve({})}));
-    expect(html).toContain("Submit registration changes");
+    expect(html).toContain("You cannot access this page");
+    expect(html).not.toContain("Submit registration changes");
+    expect(mocks.event).not.toHaveBeenCalled();
     expect(html).not.toContain("Registration records");
     expect(mocks.list).not.toHaveBeenCalled();expect(mocks.summary).not.toHaveBeenCalled();
   });
@@ -42,7 +44,7 @@ describe("registration route access boundary", () => {
     mocks.summary.mockResolvedValue({ ok: true, registrationCount: 0, confirmedAttendanceCount: 3 });
     mocks.event.mockResolvedValue({ ok: true, record: { name: "Fictional Event", requiresStudentId: true } });
     const html = renderToStaticMarkup(await Page({ params, searchParams: Promise.resolve({}) }));
-    expect(html).toContain('data-testid="registered-count">0'); expect(html).toContain('data-testid="attendance-count">3'); expect(html).toContain("Student ID"); expect(html).toContain("Register participant");
+    expect(html).toMatch(/data-testid="registered-count"[^>]*>0/); expect(html).not.toContain('data-testid="attendance-count"'); expect(html).toContain("Student ID"); expect(html).toContain("Register participant");
     expect(mocks.summary).toHaveBeenCalledWith(eventId); expect(mocks.count).not.toHaveBeenCalled();
   });
 });

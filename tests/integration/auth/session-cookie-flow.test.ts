@@ -162,6 +162,9 @@ function createFictionalAuthService() {
           );
     }
 
+    if (request.method === "GET" && url.pathname === "/rest/v1/profiles") {
+      return jsonResponse({ committee_role: "committee", can_manage_accounts: false, display_name: "Fictional Member", is_active: true });
+    }
     return jsonResponse({ message: "Unexpected fictional Auth request" }, 404);
   };
 
@@ -236,12 +239,14 @@ describe("Supabase SSR session cookie flow", () => {
       error: AUTH_ERROR_CODES.INVALID_SESSION,
       ok: false,
     });
-    expect(authService.requests).toEqual([
+    expect(authService.requests.filter(request => !request.includes("/rest/v1/profiles"))).toEqual([
       "POST /auth/v1/token?grant_type=password",
+      "GET /auth/v1/user",
       "GET /auth/v1/user",
       "GET /auth/v1/user",
       "POST /auth/v1/logout?scope=local",
     ]);
+    expect(authService.requests.filter(request => request.includes("/rest/v1/profiles"))).toHaveLength(1);
   });
 
   test.each(["wrong-password", "unknown-account"] as const)(
